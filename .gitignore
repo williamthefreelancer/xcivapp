@@ -1,0 +1,25 @@
+# WordPress
+wp-config.php
+.mysql-local.json
+mysql-setup.log
+mysql-*.txt
+wordpress.zip
+wp-cli.phar
+/deploy/
+
+# Uploads and caches
+wp-content/uploads/
+wp-content/cache/
+wp-content/upgrade/
+wp-content/backup-db/
+wp-content/advanced-cache.php
+wp-content/wp-cache-config.php
+wp-content/debug.log
+
+# Dependencies / local tooling
+/vendor/
+/node_modules/
+.cursor/
+*.log
+.DS_Store
+Thumbs.db
