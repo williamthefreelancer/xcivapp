@@ -7,12 +7,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'SNF_VERSION', '2.3.0' );
+define( 'SNF_VERSION', '2.5.3' );
 
 require_once get_template_directory() . '/inc/account-hub.php';
 require_once get_template_directory() . '/inc/access-control.php';
 require_once get_template_directory() . '/inc/messages.php';
 require_once get_template_directory() . '/inc/reciprocal.php';
+require_once get_template_directory() . '/inc/home.php';
 require_once get_template_directory() . '/inc/events.php';
 require_once get_template_directory() . '/inc/expo-marketplace.php';
 require_once get_template_directory() . '/inc/lead-rider.php';
@@ -64,34 +65,6 @@ add_action( 'init', 'snf_register_event_cpt' );
  */
 function snf_get_site_pages() {
 	return array(
-		'select-events-by-members' => array(
-			'title'    => 'Select Events by Members',
-			'template' => 'page-templates/select-events.php',
-		),
-		'select-events-by-non-members' => array(
-			'title'    => 'Select Events (non-members)',
-			'template' => 'page-templates/select-events.php',
-		),
-		'expo-marketplace-by-members' => array(
-			'title'    => 'Expo Marketplace by Members',
-			'template' => 'page-templates/expo-marketplace.php',
-		),
-		'expo-marketplace-by-non-members' => array(
-			'title'    => 'Expo Marketplace (non-members)',
-			'template' => 'page-templates/expo-marketplace.php',
-		),
-		'dashboard' => array(
-			'title'    => 'Dashboard',
-			'template' => 'page-templates/dashboard.php',
-		),
-		'member-concierge' => array(
-			'title'    => 'Member Concierge',
-			'template' => 'page-templates/member-concierge.php',
-		),
-		'settings' => array(
-			'title'    => 'Settings',
-			'template' => 'page-templates/settings.php',
-		),
 		'find-other-reciprocal-programs' => array(
 			'title'    => 'Find Other Reciprocal Programs',
 			'template' => 'page-templates/reciprocal-hub.php',
@@ -99,46 +72,6 @@ function snf_get_site_pages() {
 		'messages' => array(
 			'title'    => 'Messages',
 			'template' => 'page-templates/messages.php',
-		),
-		'my-profile' => array(
-			'title'    => 'My Profile',
-			'template' => 'page-templates/my-profile.php',
-		),
-		'reciprocal-programs' => array(
-			'title'    => 'Reciprocal Programs',
-			'template' => 'page-templates/reciprocal-hub.php',
-		),
-		'the-clubs-at-wyoma-square' => array(
-			'title'    => 'The Clubs at Wyoma Square',
-			'template' => 'page-templates/reciprocal-club.php',
-		),
-		'the-city-clubs-at-super-ninety-four' => array(
-			'title'    => 'The City Clubs of SUPER NINETY FOUR',
-			'template' => 'page-templates/reciprocal-club.php',
-		),
-		'the-clubs-at-back-creek' => array(
-			'title'    => 'The Clubs at Back Creek',
-			'template' => 'page-templates/reciprocal-club.php',
-		),
-		'the-badlands-bra-club' => array(
-			'title'    => 'The Badlands Bra Club',
-			'template' => 'page-templates/reciprocal-club.php',
-		),
-		'service-inquiries' => array(
-			'title'    => 'Service Inquiries (only)',
-			'template' => 'page-templates/blank-canvas.php',
-		),
-		'grounds-litter-pickup' => array(
-			'title'    => 'Grounds Litter Pickup',
-			'template' => 'page-templates/service-inquiry.php',
-		),
-		'line-sitting-service' => array(
-			'title'    => 'Line Sitting Service',
-			'template' => 'page-templates/service-inquiry.php',
-		),
-		'commercial-janitor-cleaning' => array(
-			'title'    => 'Commercial Janitor Cleaning',
-			'template' => 'page-templates/service-inquiry.php',
 		),
 		'billing-details' => array(
 			'title'    => 'Billing Details',
@@ -151,10 +84,6 @@ function snf_get_site_pages() {
 		'apply' => array(
 			'title'    => 'Apply',
 			'template' => 'page-templates/apply.php',
-		),
-		'about' => array(
-			'title'    => 'About',
-			'template' => 'page-templates/about.php',
 		),
 		'under-consideration' => array(
 			'title'    => 'Under Consideration',
@@ -169,6 +98,24 @@ function snf_get_obsolete_page_slugs() {
 		'select-events-non-members',
 		'select-events-by-admission-for-non-members',
 		'select-events-members',
+		'select-events-by-members',
+		'select-events-by-non-members',
+		'expo-marketplace-by-members',
+		'expo-marketplace-by-non-members',
+		'dashboard',
+		'member-concierge',
+		'my-profile',
+		'settings',
+		'reciprocal-programs',
+		'the-clubs-at-wyoma-square',
+		'the-city-clubs-at-super-ninety-four',
+		'the-clubs-at-back-creek',
+		'the-badlands-bra-club',
+		'service-inquiries',
+		'grounds-litter-pickup',
+		'line-sitting-service',
+		'commercial-janitor-cleaning',
+		'about',
 		'event-by-admission',
 		'account-settings-for-profile',
 	);
@@ -183,28 +130,7 @@ function snf_get_page_url( $slug ) {
 }
 
 function snf_ensure_site_pages() {
-	// Migrate legacy combined page to the non-members page if needed.
-	$slug_migrations = array(
-		'select-events-members-non-members'          => 'select-events-by-non-members',
-		'select-events-by-admission-for-non-members' => 'select-events-by-non-members',
-		'account-settings-for-profile'               => 'my-profile',
-	);
 	$site_pages = snf_get_site_pages();
-	foreach ( $slug_migrations as $old_slug => $new_slug ) {
-		$old_page = get_page_by_path( $old_slug );
-		$new_page = get_page_by_path( $new_slug );
-		if ( $old_page && ! $new_page ) {
-			wp_update_post(
-				array(
-					'ID'         => $old_page->ID,
-					'post_name'  => $new_slug,
-					'post_title' => $site_pages[ $new_slug ]['title'] ?? $old_page->post_title,
-				)
-			);
-		} elseif ( $old_page && $new_page && (int) $old_page->ID !== (int) $new_page->ID ) {
-			wp_delete_post( $old_page->ID, true );
-		}
-	}
 
 	foreach ( snf_get_obsolete_page_slugs() as $obsolete_slug ) {
 		if ( isset( $site_pages[ $obsolete_slug ] ) ) {
@@ -321,10 +247,7 @@ function snf_scripts() {
 	}
 
 	$hub_templates = array(
-		'page-templates/my-profile.php',
 		'page-templates/billing-details.php',
-		'page-templates/member-concierge.php',
-		'page-templates/settings.php',
 		'page-templates/member-login.php',
 		'page-templates/apply.php',
 		'page-templates/messages.php',
@@ -332,10 +255,7 @@ function snf_scripts() {
 		'page-templates/under-consideration.php',
 	);
 	$hub_slugs = array(
-		'my-profile',
 		'billing-details',
-		'member-concierge',
-		'settings',
 		'member-login',
 		'apply',
 		'messages',
@@ -410,15 +330,6 @@ function snf_scripts() {
 		);
 	}
 
-	if ( is_singular( 'event' ) && ! snf_is_lifestyle_concierge_workshop( get_queried_object_id() ) ) {
-		wp_enqueue_script(
-			'snf-event-single',
-			get_template_directory_uri() . '/assets/js/event-single.js',
-			array(),
-			SNF_VERSION,
-			true
-		);
-	}
 }
 add_action( 'wp_enqueue_scripts', 'snf_scripts' );
 
@@ -726,18 +637,19 @@ function snf_get_dashboard_event_listings() {
  * @return array<int, array{label:string,url:string}>
  */
 function snf_primary_menu_items() {
+	$events_url = get_post_type_archive_link( 'event' );
+	if ( ! $events_url ) {
+		$events_url = home_url( '/events/' );
+	}
+
 	return array(
 		array(
-			'label' => __( 'Dashboard', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'dashboard' ),
+			'label' => __( 'Apply', 'super-ninety-four' ),
+			'url'   => snf_get_page_url( 'apply' ),
 		),
 		array(
-			'label' => __( 'Member Concierge', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'member-concierge' ),
-		),
-		array(
-			'label' => __( 'Settings', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'settings' ),
+			'label' => __( 'Events', 'super-ninety-four' ),
+			'url'   => $events_url,
 		),
 	);
 }
@@ -748,6 +660,11 @@ function snf_primary_menu_items() {
  * @return array<int, array<string, mixed>>
  */
 function snf_account_menu_items() {
+	$events_url = get_post_type_archive_link( 'event' );
+	if ( ! $events_url ) {
+		$events_url = home_url( '/events/' );
+	}
+
 	return array(
 		array(
 			'type'        => 'search',
@@ -757,37 +674,14 @@ function snf_account_menu_items() {
 		),
 		array(
 			'type'  => 'link',
-			'label' => __( 'Messages', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'messages' ),
-			'icon'  => 'messages',
-		),
-		array(
-			'type'     => 'club',
-			'label'    => __( 'The City Clubs of SUPER NINETY FOUR', 'super-ninety-four' ),
-			'url'      => snf_get_page_url( 'the-city-clubs-at-super-ninety-four' ),
-			'children' => array(
-				array(
-					'label' => __( 'Select Events (members)', 'super-ninety-four' ),
-					'url'   => snf_get_page_url( 'select-events-by-members' ),
-				),
-				array(
-					'label' => __( 'Select Events (non-members)', 'super-ninety-four' ),
-					'url'   => snf_get_page_url( 'select-events-by-non-members' ),
-				),
-				array(
-					'label' => __( 'Expo Marketplace (members)', 'super-ninety-four' ),
-					'url'   => snf_get_page_url( 'expo-marketplace-by-members' ),
-				),
-				array(
-					'label' => __( 'Expo Marketplace (non-members)', 'super-ninety-four' ),
-					'url'   => snf_get_page_url( 'expo-marketplace-by-non-members' ),
-				),
-			),
+			'label' => __( 'Search events', 'super-ninety-four' ),
+			'url'   => $events_url,
 		),
 		array(
 			'type'  => 'link',
-			'label' => __( 'My Profile', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'my-profile' ),
+			'label' => __( 'Messages', 'super-ninety-four' ),
+			'url'   => snf_get_page_url( 'messages' ),
+			'icon'  => 'messages',
 		),
 		array(
 			'type'  => 'link',

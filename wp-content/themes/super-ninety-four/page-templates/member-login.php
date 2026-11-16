@@ -25,14 +25,14 @@ $redirect = snf_get_page_url( 'dashboard' );
 		<div class="snf-hub__auth" data-figma-slot="member-login-form" data-bp-module="members">
 			<?php if ( is_user_logged_in() ) : ?>
 				<p class="snf-hub__lede">
-					<?php esc_html_e( 'You are already signed in. Continue to your dashboard or profile.', 'super-ninety-four' ); ?>
+					<?php esc_html_e( 'You are already signed in. Continue to Messages or Billing.', 'super-ninety-four' ); ?>
 				</p>
 				<div class="snf-hub__actions">
-					<a class="snf-hub__action snf-hub__action--primary" href="<?php echo esc_url( snf_get_page_url( 'dashboard' ) ); ?>">
-						<?php esc_html_e( 'Open dashboard', 'super-ninety-four' ); ?>
+					<a class="snf-hub__action snf-hub__action--primary" href="<?php echo esc_url( snf_get_page_url( 'messages' ) ); ?>">
+						<?php esc_html_e( 'Open messages', 'super-ninety-four' ); ?>
 					</a>
-					<a class="snf-hub__action" href="<?php echo esc_url( snf_get_page_url( 'my-profile' ) ); ?>">
-						<?php esc_html_e( 'My profile', 'super-ninety-four' ); ?>
+					<a class="snf-hub__action" href="<?php echo esc_url( snf_get_page_url( 'billing-details' ) ); ?>">
+						<?php esc_html_e( 'Billing details', 'super-ninety-four' ); ?>
 					</a>
 				</div>
 			<?php else : ?>

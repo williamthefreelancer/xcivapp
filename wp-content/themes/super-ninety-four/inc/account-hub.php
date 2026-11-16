@@ -37,7 +37,7 @@ function snf_get_hub_member_context() {
 		}
 	}
 
-	$profile_url = snf_get_page_url( 'my-profile' );
+	$profile_url = home_url( '/' );
 	if ( snf_buddypress_active() && $user_id && function_exists( 'bp_members_get_user_url' ) ) {
 		$profile_url = bp_members_get_user_url( $user_id );
 	} elseif ( snf_buddypress_active() && $user_id && function_exists( 'bp_core_get_user_domain' ) ) {
@@ -66,29 +66,14 @@ function snf_get_hub_member_context() {
 function snf_get_account_hub_nav() {
 	return array(
 		array(
-			'slug'  => 'my-profile',
-			'label' => __( 'My Profile', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'my-profile' ),
-		),
-		array(
 			'slug'  => 'billing-details',
 			'label' => __( 'Billing', 'super-ninety-four' ),
 			'url'   => snf_get_page_url( 'billing-details' ),
 		),
 		array(
-			'slug'  => 'member-concierge',
-			'label' => __( 'Concierge', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'member-concierge' ),
-		),
-		array(
 			'slug'  => 'messages',
 			'label' => __( 'Messages', 'super-ninety-four' ),
 			'url'   => snf_get_page_url( 'messages' ),
-		),
-		array(
-			'slug'  => 'settings',
-			'label' => __( 'Settings', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'settings' ),
 		),
 		array(
 			'slug'  => 'member-login',
@@ -99,80 +84,6 @@ function snf_get_account_hub_nav() {
 			'slug'  => 'apply',
 			'label' => __( 'Apply', 'super-ninety-four' ),
 			'url'   => snf_get_page_url( 'apply' ),
-		),
-	);
-}
-
-/**
- * Profile page boilerplate sections (BuddyPress-ready).
- *
- * @return array<string, mixed>
- */
-function snf_get_profile_hub_data() {
-	$member = snf_get_hub_member_context();
-
-	return array(
-		'member'  => $member,
-		'metrics' => array(
-			array(
-				'label' => __( 'Club seat', 'super-ninety-four' ),
-				'value' => __( 'Principal', 'super-ninety-four' ),
-				'hint'  => __( 'City Clubs reciprocal', 'super-ninety-four' ),
-			),
-			array(
-				'label' => __( 'Events this season', 'super-ninety-four' ),
-				'value' => '06',
-				'hint'  => __( 'Members + guests', 'super-ninety-four' ),
-			),
-			array(
-				'label' => __( 'Concierge open', 'super-ninety-four' ),
-				'value' => '02',
-				'hint'  => __( 'Awaiting confirmation', 'super-ninety-four' ),
-			),
-		),
-		'fields'  => array(
-			array(
-				'label' => __( 'Preferred name', 'super-ninety-four' ),
-				'value' => $member['name'],
-				'bp'    => 'xprofile:preferred_name',
-			),
-			array(
-				'label' => __( 'Member email', 'super-ninety-four' ),
-				'value' => $member['email'] ? $member['email'] : __( 'Add a contact email', 'super-ninety-four' ),
-				'bp'    => 'xprofile:email',
-			),
-			array(
-				'label' => __( 'Home club', 'super-ninety-four' ),
-				'value' => $member['club'],
-				'bp'    => 'xprofile:home_club',
-			),
-			array(
-				'label' => __( 'Hospitality notes', 'super-ninety-four' ),
-				'value' => __( 'Quiet table preference · No shellfish · Late seating welcome', 'super-ninety-four' ),
-				'bp'    => 'xprofile:hospitality_notes',
-			),
-		),
-		'modules' => array(
-			array(
-				'id'    => 'activity',
-				'title' => __( 'Recent club activity', 'super-ninety-four' ),
-				'bp'    => 'activity',
-				'items' => array(
-					__( 'RSVP confirmed — Select Events (members)', 'super-ninety-four' ),
-					__( 'Guest pass requested for reciprocal evening', 'super-ninety-four' ),
-					__( 'Profile visibility set to members only', 'super-ninety-four' ),
-				),
-			),
-			array(
-				'id'    => 'groups',
-				'title' => __( 'Clubs & circles', 'super-ninety-four' ),
-				'bp'    => 'groups',
-				'items' => array(
-					__( 'The City Clubs of SUPER NINETY FOUR', 'super-ninety-four' ),
-					__( 'Lifestyle Concierge Workshop cohort', 'super-ninety-four' ),
-					__( 'Reciprocal Programs discovery', 'super-ninety-four' ),
-				),
-			),
 		),
 	);
 }
@@ -309,125 +220,3 @@ function snf_get_billing_hub_data() {
 	);
 }
 
-/**
- * Member Concierge page boilerplate.
- *
- * @return array<string, mixed>
- */
-function snf_get_concierge_hub_data() {
-	return array(
-		'services' => array(
-			array(
-				'title' => __( 'Table & private dining', 'super-ninety-four' ),
-				'meta'  => __( 'Reserve rooms, tasting menus, host notes', 'super-ninety-four' ),
-				'bp'    => 'messages',
-			),
-			array(
-				'title' => __( 'Guest passes', 'super-ninety-four' ),
-				'meta'  => __( 'Introduce guests to reciprocal evenings', 'super-ninety-four' ),
-				'bp'    => 'friends',
-			),
-			array(
-				'title' => __( 'Event desk', 'super-ninety-four' ),
-				'meta'  => __( 'Hold seats, change parties, waitlists', 'super-ninety-four' ),
-				'bp'    => 'events',
-			),
-			array(
-				'title' => __( 'Reciprocal letters', 'super-ninety-four' ),
-				'meta'  => __( 'Introduction to partner clubs worldwide', 'super-ninety-four' ),
-				'bp'    => 'groups',
-			),
-			array(
-				'title' => __( 'Transport & arrival', 'super-ninety-four' ),
-				'meta'  => __( 'Car service, porte-cochère timing', 'super-ninety-four' ),
-				'bp'    => 'messages',
-			),
-			array(
-				'title' => __( 'Housekeeping liaison', 'super-ninety-four' ),
-				'meta'  => __( 'Suite prep and amenity requests', 'super-ninety-four' ),
-				'bp'    => 'messages',
-			),
-		),
-		'requests' => array(
-			array(
-				'title'  => __( 'Corner table for four — Friday 8:00p', 'super-ninety-four' ),
-				'meta'   => __( 'Dining · Awaiting host confirmation', 'super-ninety-four' ),
-				'status' => __( 'In review', 'super-ninety-four' ),
-			),
-			array(
-				'title'  => __( 'Guest pass — reciprocal evening', 'super-ninety-four' ),
-				'meta'   => __( 'City Clubs · Approved for one guest', 'super-ninety-four' ),
-				'status' => __( 'Ready', 'super-ninety-four' ),
-			),
-		),
-	);
-}
-
-/**
- * Settings page boilerplate.
- *
- * @return array<string, mixed>
- */
-function snf_get_settings_hub_data() {
-	return array(
-		'groups' => array(
-			array(
-				'id'      => 'notifications',
-				'title'   => __( 'Notifications', 'super-ninety-four' ),
-				'bp'      => 'settings',
-				'options' => array(
-					array(
-						'label'   => __( 'Event reminders', 'super-ninety-four' ),
-						'checked' => true,
-					),
-					array(
-						'label'   => __( 'Concierge updates', 'super-ninety-four' ),
-						'checked' => true,
-					),
-					array(
-						'label'   => __( 'Billing receipts', 'super-ninety-four' ),
-						'checked' => true,
-					),
-					array(
-						'label'   => __( 'Club announcements', 'super-ninety-four' ),
-						'checked' => false,
-					),
-				),
-			),
-			array(
-				'id'      => 'privacy',
-				'title'   => __( 'Privacy & visibility', 'super-ninety-four' ),
-				'bp'      => 'settings',
-				'options' => array(
-					array(
-						'label'   => __( 'Show profile to members only', 'super-ninety-four' ),
-						'checked' => true,
-					),
-					array(
-						'label'   => __( 'Allow reciprocal introductions', 'super-ninety-four' ),
-						'checked' => true,
-					),
-					array(
-						'label'   => __( 'List me in guest directories', 'super-ninety-four' ),
-						'checked' => false,
-					),
-				),
-			),
-			array(
-				'id'      => 'club-defaults',
-				'title'   => __( 'Club defaults', 'super-ninety-four' ),
-				'bp'      => 'settings',
-				'options' => array(
-					array(
-						'label'   => __( 'Default to City Clubs calendar', 'super-ninety-four' ),
-						'checked' => true,
-					),
-					array(
-						'label'   => __( 'Prefer member-only event listings', 'super-ninety-four' ),
-						'checked' => true,
-					),
-				),
-			),
-		),
-	);
-}

@@ -19,18 +19,6 @@
 			>
 		</a>
 
-		<nav class="snf-primary-nav" aria-label="<?php esc_attr_e( 'Primary', 'super-ninety-four' ); ?>">
-			<ul class="snf-primary-nav__list">
-				<?php foreach ( snf_primary_menu_items() as $item ) : ?>
-					<li class="snf-primary-nav__item">
-						<a class="snf-primary-nav__link" href="<?php echo esc_url( $item['url'] ); ?>">
-							<?php echo esc_html( $item['label'] ); ?>
-						</a>
-					</li>
-				<?php endforeach; ?>
-			</ul>
-		</nav>
-
 		<div class="snf-account">
 			<button
 				class="snf-account__toggle"

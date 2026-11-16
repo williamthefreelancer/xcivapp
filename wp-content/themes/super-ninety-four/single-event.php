@@ -1,35 +1,23 @@
 <?php
 /**
- * Single event — Figma Event #1 layout for all event posts.
+ * Single event — blank canvas for per-event content.
  */
 get_header();
 
 while ( have_posts() ) :
 	the_post();
-
-	// Workshop keeps its dedicated landing with reserve form.
-	if ( snf_is_lifestyle_concierge_workshop( get_the_ID() ) ) {
-		$event = get_post();
-		get_template_part( 'template-parts/workshop', 'lifestyle-concierge', array( 'event' => $event ) );
-		continue;
-	}
-
-	$data = snf_get_event_single_data( get_post() );
-	if ( ! $data ) {
-		?>
-		<main class="snf-page">
-			<section class="snf-page__frame snf-container">
-				<div class="snf-canvas snf-canvas--message">
-					<h1 class="snf-archive__title"><?php the_title(); ?></h1>
-					<p class="snf-archive__meta"><?php esc_html_e( 'Event details are not available yet.', 'super-ninety-four' ); ?></p>
-				</div>
-			</section>
-		</main>
-		<?php
-		continue;
-	}
-
-	get_template_part( 'template-parts/event', 'single', array( 'event' => $data ) );
+	?>
+	<main class="snf-page snf-event-single" data-figma-ready="true">
+		<section class="snf-page__frame snf-container" aria-label="<?php echo esc_attr( get_the_title() ); ?>">
+			<div class="snf-canvas snf-event-single__canvas">
+				<?php
+				// Dynamic per-event content from the editor (and future Figma builds).
+				the_content();
+				?>
+			</div>
+		</section>
+	</main>
+	<?php
 endwhile;
 
 get_footer();

@@ -75,7 +75,7 @@ function snf_reciprocal_faq() {
 		),
 		array(
 			'q' => __( 'How do I contact my Lead Rider & Member Concierge?', 'super-ninety-four' ),
-			'a' => __( 'Use the Messages inbox or Member Concierge page inside the SUPER NINETY FOUR app after your account is approved.', 'super-ninety-four' ),
+			'a' => __( 'Use the Messages inbox inside the SUPER NINETY FOUR app after your account is approved.', 'super-ninety-four' ),
 		),
 		array(
 			'q' => __( 'Does my membership have a minimum duration?', 'super-ninety-four' ),

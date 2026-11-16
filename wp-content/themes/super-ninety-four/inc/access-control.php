@@ -62,14 +62,8 @@ function snf_get_member_access_roles() {
  */
 function snf_get_protected_page_slugs() {
 	return array(
-		'dashboard',
-		'my-profile',
 		'billing-details',
-		'member-concierge',
 		'messages',
-		'settings',
-		'select-events-by-members',
-		'expo-marketplace-by-members',
 		'members',
 		'activity',
 		'groups',
@@ -85,11 +79,9 @@ function snf_get_public_page_slugs() {
 	return array(
 		'home',
 		'apply',
-		'select-events-by-non-members',
-		'expo-marketplace-by-non-members',
 		'under-consideration',
-		'about',
 		'member-login',
+		'find-other-reciprocal-programs',
 	);
 }
 
