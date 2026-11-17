@@ -32,14 +32,12 @@ if ( $is_members ) {
 	$listing_id = 'select-events-members';
 	$bp_module  = 'events';
 	$title      = __( 'Select events (members)', 'super-ninety-four' );
-	$lede       = __( 'Private member gatherings and club circuit events reserved for principals and reciprocal members.', 'super-ninety-four' );
 	$cards      = snf_get_dashboard_member_event_cards();
 	$empty      = __( 'No member events are listed yet.', 'super-ninety-four' );
 } else {
 	$listing_id = 'events-non-members';
 	$bp_module  = 'events';
 	$title      = __( 'Select events (non-members)', 'super-ninety-four' );
-	$lede       = __( 'Open workshops and admission events for guests exploring SUPER NINETY FOUR hospitality.', 'super-ninety-four' );
 	$cards      = snf_get_dashboard_non_member_event_cards();
 	$empty      = __( 'No non-member events are listed yet.', 'super-ninety-four' );
 }
@@ -54,24 +52,6 @@ get_header();
 ?>
 <main class="snf-page snf-dashboard snf-dashboard--select-events" data-figma-ready="true">
 	<section class="snf-dashboard__shell snf-container" aria-label="<?php echo esc_attr( $title ); ?>">
-
-		<div class="snf-dashboard__intro" data-figma-slot="select-events-intro">
-			<p class="snf-hub__eyebrow">
-				<?php
-				echo esc_html(
-					$is_members
-						? __( 'Members only', 'super-ninety-four' )
-						: __( 'Open admission', 'super-ninety-four' )
-				);
-				?>
-			</p>
-			<h1 class="snf-dashboard__intro-title"><?php echo esc_html( $title ); ?></h1>
-			<p class="snf-hub__lede"><?php echo esc_html( $lede ); ?></p>
-			<div class="snf-dashboard__search" data-figma-slot="select-events-search">
-				<?php get_template_part( 'template-parts/search', 'events' ); ?>
-			</div>
-		</div>
-
 		<section
 			class="<?php echo esc_attr( $row_class ); ?>"
 			data-listing="<?php echo esc_attr( $listing_id ); ?>"

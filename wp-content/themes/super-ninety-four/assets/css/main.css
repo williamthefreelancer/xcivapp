@@ -2118,20 +2118,6 @@ a.snf-panel-card:focus-visible {
 	background: rgba(27, 19, 19, 0.28);
 }
 
-.snf-dashboard--select-events .snf-dashboard__intro {
-	justify-items: start;
-	text-align: left;
-}
-
-.snf-dashboard--select-events .snf-dashboard__intro-title {
-	max-width: 18ch;
-}
-
-.snf-dashboard--select-events .snf-dashboard__search {
-	justify-content: flex-start;
-	width: 100%;
-}
-
 .snf-dashboard__card {
 	position: relative;
 	display: block;
@@ -2213,14 +2199,6 @@ a.snf-panel-card:focus-visible {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 
-	.snf-dashboard--select-events .snf-dashboard__intro {
-		justify-items: center;
-		text-align: center;
-	}
-
-	.snf-dashboard--select-events .snf-dashboard__search {
-		justify-content: center;
-	}
 }
 
 @media (max-width: 640px) {
