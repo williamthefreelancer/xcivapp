@@ -80,45 +80,15 @@ function snf_get_theme_code_snippets() {
 	$snippets = array();
 
 	$snippets[] = array(
-		'name'     => 'SNF — Assign Club Member after Woo purchase',
-		'desc'     => 'When a logged-in customer completes a WooCommerce order, upgrade them to the Club Member role (skips staff/reciprocal/admins). Powers Membership endpoint + Content Control access.',
+		'name'     => 'SNF — Memberships owned by theme',
+		'desc'     => 'Membership activation now lives in theme inc/memberships.php (roles/meta + order hooks + Action Scheduler). This snippet stays inactive so Code Snippets does not double-assign roles.',
 		'scope'    => 'global',
-		'active'   => true,
+		'active'   => false,
 		'priority' => 20,
 		'tags'     => array( 'snf', 'woocommerce', 'membership' ),
 		'code'     => <<<'PHP'
-if ( ! function_exists( 'snf_cs_assign_member_on_completed_order' ) ) {
-	function snf_cs_assign_member_on_completed_order( $order_id ) {
-		if ( ! function_exists( 'wc_get_order' ) || ! function_exists( 'snf_assign_club_role' ) ) {
-			return;
-		}
-
-		$order = wc_get_order( $order_id );
-		if ( ! $order ) {
-			return;
-		}
-
-		$user_id = (int) $order->get_user_id();
-		if ( $user_id <= 0 ) {
-			return;
-		}
-
-		$user = get_userdata( $user_id );
-		if ( ! $user ) {
-			return;
-		}
-
-		$skip = array( 'administrator', 'snf_staff', 'snf_reciprocal', 'snf_member' );
-		if ( array_intersect( $skip, (array) $user->roles ) ) {
-			return;
-		}
-
-		snf_assign_club_role( $user_id, 'snf_member' );
-	}
-}
-
-add_action( 'woocommerce_order_status_completed', 'snf_cs_assign_member_on_completed_order', 20 );
-add_action( 'woocommerce_order_status_processing', 'snf_cs_assign_member_on_completed_order', 20 );
+// Intentionally inactive — snf_process_membership_order() in the theme handles
+// membership products, initiation fees, role assignment, and renewal schedules.
 PHP
 	,
 	);
@@ -241,7 +211,7 @@ function snf_sync_code_snippets() {
 		return;
 	}
 
-	$version = '2.9.2-snippets-c';
+	$version = '2.11.0-snippets-memberships';
 	if ( get_option( 'snf_code_snippets_version' ) === $version ) {
 		return;
 	}

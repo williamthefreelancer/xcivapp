@@ -287,18 +287,19 @@ function snf_membership_rows_from_subscriptions( $user_id ) {
 }
 
 /**
- * Theme club-role + plan catalog fallback (Content Control gates access).
+ * Theme club-role + live membership meta (Content Control gates access).
  *
  * @param int $user_id User ID.
  * @return array<int, array<string, string>>
  */
 function snf_membership_rows_from_theme( $user_id ) {
-	$rows    = array();
-	$billing = snf_get_billing_hub_data();
-	$plan    = isset( $billing['plan'] ) ? $billing['plan'] : array();
-	$user    = $user_id ? get_userdata( $user_id ) : null;
-	$roles   = $user ? (array) $user->roles : array();
-	$club    = snf_get_club_roles();
+	$rows     = array();
+	$billing  = snf_get_billing_hub_data();
+	$plan     = isset( $billing['plan'] ) ? $billing['plan'] : array();
+	$user     = $user_id ? get_userdata( $user_id ) : null;
+	$roles    = $user ? (array) $user->roles : array();
+	$club     = snf_get_club_roles();
+	$mem      = function_exists( 'snf_get_user_membership' ) ? snf_get_user_membership( $user_id ) : array();
 
 	$role_label = __( 'Guest', 'super-ninety-four' );
 	$tone       = 'neutral';
@@ -318,7 +319,7 @@ function snf_membership_rows_from_theme( $user_id ) {
 		array(
 			'eyebrow' => __( 'Club status', 'super-ninety-four' ),
 			'title'   => $role_label,
-			'meta'    => __( 'Protected by Content Control + club roles.', 'super-ninety-four' ),
+			'meta'    => __( 'Roles + Content Control. Subscriptions via theme memberships (no paid plugin).', 'super-ninety-four' ),
 			'status'  => __( 'Access', 'super-ninety-four' ),
 			'tone'    => $tone,
 			'url'     => snf_get_page_url( 'apply' ),
@@ -326,15 +327,27 @@ function snf_membership_rows_from_theme( $user_id ) {
 		)
 	);
 
+	$plan_meta = isset( $plan['price'] ) ? (string) $plan['price'] : '';
+	if ( ! empty( $mem['expires_at'] ) ) {
+		$plan_meta = trim(
+			$plan_meta . ' · ' . sprintf(
+				/* translators: %s: date */
+				__( 'Ends %s', 'super-ninety-four' ),
+				date_i18n( get_option( 'date_format' ), strtotime( (string) $mem['expires_at'] ) )
+			),
+			' ·'
+		);
+	}
+
 	$rows[] = snf_normalize_membership_row(
 		array(
 			'eyebrow' => __( 'Current plan', 'super-ninety-four' ),
 			'title'   => isset( $plan['name'] ) ? $plan['name'] : __( 'Membership plan', 'super-ninety-four' ),
-			'meta'    => isset( $plan['price'] ) ? $plan['price'] : '',
+			'meta'    => $plan_meta,
 			'status'  => isset( $plan['status'] ) ? $plan['status'] : __( 'Catalog', 'super-ninety-four' ),
-			'tone'    => 'info',
-			'url'     => snf_get_woo_account_url( 'edit-address' ),
-			'action'  => __( 'Billing', 'super-ninety-four' ),
+			'tone'    => ! empty( $mem['is_active'] ) ? 'success' : 'info',
+			'url'     => snf_get_woo_account_url( 'orders' ),
+			'action'  => __( 'Orders', 'super-ninety-four' ),
 		)
 	);
 
@@ -343,26 +356,35 @@ function snf_membership_rows_from_theme( $user_id ) {
 			'eyebrow' => __( 'Initiation', 'super-ninety-four' ),
 			'title'   => isset( $billing['initiation']['label'] ) ? $billing['initiation']['label'] : __( 'Initiation fee', 'super-ninety-four' ),
 			'meta'    => isset( $billing['initiation']['amount'] ) ? $billing['initiation']['amount'] : '',
-			'status'  => __( 'Required', 'super-ninety-four' ),
-			'tone'    => 'neutral',
+			'status'  => ! empty( $mem['initiation_paid'] ) ? __( 'Paid', 'super-ninety-four' ) : __( 'Required', 'super-ninety-four' ),
+			'tone'    => ! empty( $mem['initiation_paid'] ) ? 'success' : 'neutral',
 			'url'     => snf_get_woo_account_url( 'orders' ),
 			'action'  => __( 'Statements', 'super-ninety-four' ),
 		)
 	);
 
 	$catalog = snf_get_membership_plans();
-	foreach ( array_slice( $catalog['plans'], 0, 3 ) as $catalog_plan ) {
-		$rows[] = snf_normalize_membership_row(
+	foreach ( array_slice( $catalog['plans'], 0, 4 ) as $catalog_plan ) {
+		$product = get_page_by_path( 'membership-' . $catalog_plan['slug'], OBJECT, 'product' );
+		$url     = $product ? get_permalink( $product ) : snf_get_page_url( 'apply' );
+		$rows[]  = snf_normalize_membership_row(
 			array(
 				'eyebrow' => __( 'Available plan', 'super-ninety-four' ),
 				'title'   => $catalog_plan['name'],
 				'meta'    => $catalog_plan['price'] . $catalog_plan['cadence'] . ' · ' . $catalog_plan['term'],
 				'status'  => __( 'Catalog', 'super-ninety-four' ),
 				'tone'    => 'neutral',
-				'url'     => snf_get_page_url( 'apply' ),
+				'url'     => $url,
 				'action'  => __( 'Choose plan', 'super-ninety-four' ),
 			)
 		);
+	}
+
+	// Append live reciprocal program subscriptions when that module is loaded.
+	if ( function_exists( 'snf_membership_rows_from_reciprocal_subscriptions' ) ) {
+		foreach ( snf_membership_rows_from_reciprocal_subscriptions( $user_id ) as $reciprocal_row ) {
+			$rows[] = snf_normalize_membership_row( $reciprocal_row );
+		}
 	}
 
 	return $rows;
@@ -407,7 +429,7 @@ function snf_get_membership_endpoint_data( $user_id = 0 ) {
 		'memberpress'              => __( 'MemberPress', 'super-ninety-four' ),
 		'pmpro'                    => __( 'Paid Memberships Pro', 'super-ninety-four' ),
 		'woocommerce-subscriptions'=> __( 'WooCommerce Subscriptions', 'super-ninety-four' ),
-		'theme'                    => __( 'Club roles + plan catalog', 'super-ninety-four' ),
+		'theme'                    => __( 'Theme memberships (roles + user meta + Woo orders)', 'super-ninety-four' ),
 	);
 
 	return apply_filters(

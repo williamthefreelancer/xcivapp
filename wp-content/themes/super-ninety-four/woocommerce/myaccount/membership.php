@@ -29,7 +29,7 @@ $panel = snf_get_membership_endpoint_panel();
 			<?php
 			printf(
 				/* translators: %s: engine label */
-				esc_html__( 'Data source: %s. Install WooCommerce Memberships, MemberPress, PMPro, or Subscriptions to drive live plan status — club roles + Content Control still gate member areas.', 'super-ninety-four' ),
+				esc_html__( 'Data source: %s. Plan status is stored in user meta, activated from WooCommerce orders, and renewed/expired with Action Scheduler (or WP-Cron). Club roles + Content Control still gate member areas.', 'super-ninety-four' ),
 				esc_html( $data['engine_label'] )
 			);
 			?>

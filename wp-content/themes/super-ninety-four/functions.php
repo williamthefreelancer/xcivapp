@@ -7,9 +7,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'SNF_VERSION', '2.10.4' );
+define( 'SNF_VERSION', '2.11.0' );
 
 require_once get_template_directory() . '/inc/account-hub.php';
+require_once get_template_directory() . '/inc/memberships.php';
 require_once get_template_directory() . '/inc/dashboard-shell.php';
 require_once get_template_directory() . '/inc/dashboard-panels.php';
 require_once get_template_directory() . '/inc/buddypress-profile.php';
@@ -17,6 +18,7 @@ require_once get_template_directory() . '/inc/access-control.php';
 require_once get_template_directory() . '/inc/plugin-integrations.php';
 require_once get_template_directory() . '/inc/messages.php';
 require_once get_template_directory() . '/inc/reciprocal.php';
+require_once get_template_directory() . '/inc/membership-subscriptions.php';
 require_once get_template_directory() . '/inc/home.php';
 require_once get_template_directory() . '/inc/events.php';
 require_once get_template_directory() . '/inc/expo-marketplace.php';

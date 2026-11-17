@@ -44,6 +44,22 @@ function snf_get_hub_member_context() {
 		$profile_url = bp_core_get_user_domain( $user_id );
 	}
 
+	$membership_label = __( 'Guest preview', 'super-ninety-four' );
+	$status_label     = $user_id ? __( 'Signed in', 'super-ninety-four' ) : __( 'Preview', 'super-ninety-four' );
+	if ( $user_id && function_exists( 'snf_get_user_membership' ) ) {
+		$mem = snf_get_user_membership( $user_id );
+		if ( ! empty( $mem['plan_row']['name'] ) ) {
+			$membership_label = $mem['plan_row']['name'];
+		} elseif ( function_exists( 'snf_user_can_access_member_areas' ) && snf_user_can_access_member_areas() ) {
+			$membership_label = __( 'Club Member', 'super-ninety-four' );
+		}
+		if ( ! empty( $mem['status'] ) ) {
+			$status_label = ucwords( str_replace( '-', ' ', (string) $mem['status'] ) );
+		} elseif ( $mem['is_active'] ) {
+			$status_label = __( 'Active', 'super-ninety-four' );
+		}
+	}
+
 	return array(
 		'user_id'     => $user_id,
 		'name'        => $name,
@@ -51,21 +67,24 @@ function snf_get_hub_member_context() {
 		'handle'      => $handle,
 		'avatar'      => $avatar,
 		'club'        => __( 'The City Clubs of SUPER NINETY FOUR', 'super-ninety-four' ),
-		'membership'  => __( 'Reciprocal Principal', 'super-ninety-four' ),
-		'status'      => $user_id ? __( 'Active', 'super-ninety-four' ) : __( 'Preview', 'super-ninety-four' ),
+		'membership'  => $membership_label,
+		'status'      => $status_label,
 		'profile_url' => $profile_url,
 		'bp_active'   => snf_buddypress_active(),
 	);
 }
 
 /**
- * Membership plan catalog for billing.
+ * Membership plan catalog for billing / Apply UI.
  *
  * @return array<string, mixed>
  */
 function snf_get_membership_plans() {
-	$renewal_note = __( 'You will get a reminder before renewal.', 'super-ninety-four' );
+	if ( function_exists( 'snf_membership_plans_compat_shape' ) ) {
+		return snf_membership_plans_compat_shape();
+	}
 
+	$renewal_note = __( 'You will get a reminder before renewal.', 'super-ninety-four' );
 	return array(
 		'initiation_fee' => array(
 			'amount' => '$75,000.00',
@@ -74,51 +93,29 @@ function snf_get_membership_plans() {
 		),
 		'term'           => __( '12 months', 'super-ninety-four' ),
 		'renewal_note'   => $renewal_note,
-		'plans'          => array(
-			array(
-				'slug'   => 'back-creek',
-				'name'   => __( 'Back Creek Plan', 'super-ninety-four' ),
-				'price'  => '$1,000.00',
-				'cadence'=> __( '/mo', 'super-ninety-four' ),
-				'term'   => __( 'for 12 months', 'super-ninety-four' ),
-				'note'   => $renewal_note,
-			),
-			array(
-				'slug'   => 'badlands',
-				'name'   => __( 'Badlands Plan', 'super-ninety-four' ),
-				'price'  => '$2,129.00',
-				'cadence'=> __( '/mo', 'super-ninety-four' ),
-				'term'   => __( 'for 12 months', 'super-ninety-four' ),
-				'note'   => $renewal_note,
-			),
-			array(
-				'slug'   => 'regions-ne',
-				'name'   => __( 'Regions NE Plan', 'super-ninety-four' ),
-				'price'  => '$2,899.00',
-				'cadence'=> __( '/mo', 'super-ninety-four' ),
-				'term'   => __( 'for 12 months', 'super-ninety-four' ),
-				'note'   => $renewal_note,
-			),
-			array(
-				'slug'   => 'city-to-city',
-				'name'   => __( 'City to City', 'super-ninety-four' ),
-				'price'  => '$3,649.00',
-				'cadence'=> __( '/mo', 'super-ninety-four' ),
-				'term'   => __( 'for 12 months', 'super-ninety-four' ),
-				'note'   => $renewal_note,
-			),
-		),
+		'plans'          => array(),
 	);
 }
 
 /**
- * Billing page boilerplate.
+ * Billing page data — live membership meta when available.
  *
  * @return array<string, mixed>
  */
 function snf_get_billing_hub_data() {
+	if ( function_exists( 'snf_get_live_billing_hub_data' ) ) {
+		return snf_get_live_billing_hub_data();
+	}
+
 	$catalog = snf_get_membership_plans();
-	$current = $catalog['plans'][0];
+	$current = isset( $catalog['plans'][0] ) ? $catalog['plans'][0] : array(
+		'name'    => __( 'Membership plan', 'super-ninety-four' ),
+		'price'   => '',
+		'cadence' => '',
+		'term'    => '',
+		'note'    => '',
+		'slug'    => '',
+	);
 
 	return array(
 		'initiation' => $catalog['initiation_fee'],
@@ -126,67 +123,13 @@ function snf_get_billing_hub_data() {
 		'plan'       => array(
 			'name'   => $current['name'],
 			'price'  => $current['price'] . $current['cadence'],
-			'renews' => sprintf(
-				/* translators: 1: term length, 2: renewal reminder */
-				__( '%1$s · %2$s', 'super-ninety-four' ),
-				$current['term'],
-				$current['note']
-			),
-			'status' => __( 'Current', 'super-ninety-four' ),
+			'renews' => trim( $current['term'] . ' · ' . $current['note'], ' ·' ),
+			'status' => __( 'Catalog', 'super-ninety-four' ),
 			'slug'   => $current['slug'],
 		),
-		'metrics'    => array(
-			array(
-				'label' => __( 'Initiation fee', 'super-ninety-four' ),
-				'value' => $catalog['initiation_fee']['amount'],
-				'hint'  => __( 'All plans', 'super-ninety-four' ),
-			),
-			array(
-				'label' => __( 'Current dues', 'super-ninety-four' ),
-				'value' => $current['price'],
-				'hint'  => __( 'Monthly · 12-month term', 'super-ninety-four' ),
-			),
-			array(
-				'label' => __( 'Renewal notice', 'super-ninety-four' ),
-				'value' => __( 'Before term', 'super-ninety-four' ),
-				'hint'  => __( 'Reminder sent prior to renewal', 'super-ninety-four' ),
-			),
-		),
-		'methods'    => array(
-			array(
-				'label'  => __( 'Visa ···· 4242', 'super-ninety-four' ),
-				'meta'   => __( 'Primary · Expires 08/28', 'super-ninety-four' ),
-				'action' => __( 'Replace', 'super-ninety-four' ),
-			),
-			array(
-				'label'  => __( 'House account', 'super-ninety-four' ),
-				'meta'   => __( 'Club ledger for dining & guest fees', 'super-ninety-four' ),
-				'action' => __( 'Manage', 'super-ninety-four' ),
-			),
-		),
-		'invoices'   => array(
-			array(
-				'id'     => 'INV-2101',
-				'label'  => __( 'Initiation fee', 'super-ninety-four' ),
-				'date'   => 'Nov 01, 2026',
-				'amount' => '$75,000.00',
-				'status' => __( 'Paid', 'super-ninety-four' ),
-			),
-			array(
-				'id'     => 'INV-2102',
-				'label'  => __( 'Back Creek Plan — monthly dues', 'super-ninety-four' ),
-				'date'   => 'Nov 01, 2026',
-				'amount' => '$1,000.00',
-				'status' => __( 'Paid', 'super-ninety-four' ),
-			),
-			array(
-				'id'     => 'INV-2041',
-				'label'  => __( 'Lifestyle Concierge Workshop', 'super-ninety-four' ),
-				'date'   => 'Oct 12, 2026',
-				'amount' => '$97.00',
-				'status' => __( 'Paid', 'super-ninety-four' ),
-			),
-		),
+		'metrics'    => array(),
+		'methods'    => array(),
+		'invoices'   => array(),
 	);
 }
 
