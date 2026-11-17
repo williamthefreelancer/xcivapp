@@ -23,7 +23,12 @@ $snf_year        = (int) gmdate( 'Y' );
 				>
 			</a>
 			<p class="snf-footer__tagline">
-				<?php esc_html_e( 'Private club circuit · lifestyle concierge · reciprocal access.', 'super-ninety-four' ); ?>
+				<?php
+				esc_html_e(
+					'The Super Ninety Four App is a club platform of SUPR XCIV PLATFORM HOLDINGS LLC & the SUPER NINETY FOUR EVENTS COMPANY. A registered limited liability holding company.',
+					'super-ninety-four'
+				);
+				?>
 			</p>
 		</div>
 
@@ -44,7 +49,7 @@ $snf_year        = (int) gmdate( 'Y' );
 
 		<p class="snf-footer__copy">
 			&copy; <?php echo esc_html( (string) $snf_year ); ?>
-			<?php echo esc_html( get_bloginfo( 'name' ) ); ?>.
+			<?php esc_html_e( 'SUPR XCIV PLATFORM HOLDINGS LLC', 'super-ninety-four' ); ?>.
 			<?php esc_html_e( 'All rights reserved.', 'super-ninety-four' ); ?>
 		</p>
 	</div>
