@@ -2586,33 +2586,177 @@ a.snf-panel-card:focus-visible {
 	outline-offset: 1px;
 }
 
-.snf-apply-steps {
-	grid-template-columns: 1fr;
+/* Apply — Figma XCIV Social / Apply (2139:2) */
+body:has(.snf-hub--apply) .snf-header__meta,
+body:has(.snf-hub--apply) .snf-header__apply {
+	display: none;
 }
 
-.snf-apply-steps__tabs {
+.snf-hub--apply {
+	min-height: calc(100vh - 2rem);
+	display: grid;
+	align-items: stretch;
+}
+
+.snf-apply {
+	width: min(100%, 720px);
+	margin-inline: auto;
+	padding: clamp(5.5rem, 12vh, 7.5rem) var(--snf-pad-x) clamp(2rem, 5vh, 3.5rem);
+	display: grid;
+	justify-items: center;
+	gap: clamp(1.5rem, 3.5vh, 2.4rem);
+	text-align: center;
+}
+
+.snf-apply__intro {
+	display: grid;
+	gap: 0.55rem;
+	justify-items: center;
+}
+
+.snf-apply__title {
+	margin: 0;
+	font-family: var(--snf-font-body);
+	font-weight: 600;
+	font-size: clamp(2.1rem, 5vw, 3rem);
+	letter-spacing: -0.03em;
+	line-height: 1.1;
+	color: #fff;
+}
+
+.snf-apply__lede {
+	margin: 0;
+	font-size: clamp(1rem, 2vw, 1.15rem);
+	line-height: 1.4;
+	color: rgba(255, 255, 255, 0.92);
+}
+
+.snf-apply__context {
+	margin: 0;
+	max-width: 40rem;
+	font-size: 0.9rem;
+	color: var(--snf-ink-muted);
 	display: flex;
 	flex-wrap: wrap;
-	gap: 0.75rem 1.25rem;
-	margin-bottom: 0.25rem;
+	justify-content: center;
+	gap: 0.45rem 0.85rem;
 }
 
-.snf-apply-steps__tab {
+.snf-apply__context-link {
+	text-decoration: underline;
+	text-underline-offset: 0.16em;
+}
+
+.snf-apply__steps {
+	width: min(100%, 577px);
+}
+
+.snf-apply__stepper {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	align-items: start;
+	gap: 0;
+	position: relative;
+}
+
+.snf-apply__stepper::before {
+	content: "";
+	position: absolute;
+	top: 17px;
+	left: calc(16.666% + 18px);
+	right: calc(16.666% + 18px);
+	height: 1px;
+	background: rgba(255, 255, 255, 0.85);
+	pointer-events: none;
+}
+
+.snf-apply__step {
+	display: grid;
+	justify-items: center;
+	position: relative;
+	z-index: 1;
+}
+
+.snf-apply__step-btn {
+	display: grid;
+	justify-items: center;
+	gap: 0.55rem;
 	padding: 0;
 	border: 0;
 	background: transparent;
-	font: inherit;
-	font-size: 0.9rem;
-	font-weight: 600;
-	color: var(--snf-ink-muted);
+	color: inherit;
 	cursor: pointer;
 }
 
-.snf-apply-steps__tab.is-active,
-.snf-apply-steps__tab:hover,
-.snf-apply-steps__tab:focus-visible {
-	color: var(--snf-ink);
-	outline: none;
+.snf-apply__step-btn:focus-visible {
+	outline: 2px solid rgba(243, 235, 232, 0.45);
+	outline-offset: 4px;
+	border-radius: 8px;
+}
+
+.snf-apply__step-num {
+	width: 34px;
+	height: 34px;
+	border-radius: 50%;
+	display: grid;
+	place-items: center;
+	font-size: 0.95rem;
+	font-weight: 600;
+	line-height: 1;
+	border: 1.5px solid #fff;
+	background: transparent;
+	color: #fff;
+	transition: background-color 160ms ease, color 160ms ease;
+}
+
+.snf-apply__step.is-active .snf-apply__step-num,
+.snf-apply__step.is-complete .snf-apply__step-num {
+	background: #fff;
+	color: #1b1313;
+}
+
+.snf-apply__step-label {
+	font-size: 0.72rem;
+	font-weight: 600;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: rgba(255, 255, 255, 0.92);
+}
+
+.snf-apply__form {
+	width: min(100%, 520px);
+	text-align: left;
+}
+
+.snf-apply__auth-foot {
+	margin: 0;
+	font-size: 0.88rem;
+	color: var(--snf-ink-muted);
+}
+
+.snf-apply__auth-foot a {
+	text-decoration: underline;
+	text-underline-offset: 0.16em;
+}
+
+.snf-apply__footnote {
+	margin: 0;
+	max-width: 42rem;
+	font-size: 0.78rem;
+	line-height: 1.55;
+	color: rgba(255, 255, 255, 0.78);
+}
+
+.snf-apply__footnote a {
+	text-decoration: underline;
+	text-underline-offset: 0.14em;
+}
+
+.snf-apply-steps {
+	grid-template-columns: 1fr;
 }
 
 .snf-apply-steps__panel {
@@ -2693,6 +2837,16 @@ a.snf-panel-card:focus-visible {
 .snf-apply-steps__panel .snf-hub__action,
 .snf-apply-steps__panel .snf-hub__control--full {
 	grid-column: 1 / -1;
+}
+
+@media (max-width: 640px) {
+	.snf-apply-steps__panel.is-active {
+		grid-template-columns: 1fr;
+	}
+
+	.snf-apply__step-label {
+		letter-spacing: 0.08em;
+	}
 }
 
 .snf-hub__check {
