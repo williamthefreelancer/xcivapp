@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'SNF_VERSION', '2.17.3' );
+define( 'SNF_VERSION', '2.18.0' );
 
 require_once get_template_directory() . '/inc/account-hub.php';
 require_once get_template_directory() . '/inc/memberships.php';
@@ -28,6 +28,7 @@ require_once get_template_directory() . '/inc/lead-rider.php';
 require_once get_template_directory() . '/inc/woocommerce-serp.php';
 require_once get_template_directory() . '/inc/woocommerce-endpoints.php';
 require_once get_template_directory() . '/inc/service-quotes.php';
+require_once get_template_directory() . '/inc/schema.php';
 
 function snf_setup() {
 	add_theme_support( 'title-tag' );

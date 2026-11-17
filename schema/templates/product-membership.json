@@ -1,0 +1,25 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "@id": "https://www.example.com/REPLACE-product-path/#product",
+  "name": "REPLACE: Membership or reciprocal club product name",
+  "description": "REPLACE: Visible product description.",
+  "url": "https://www.example.com/REPLACE-product-path/",
+  "image": [
+    "https://www.example.com/wp-content/themes/super-ninety-four/assets/images/REPLACE.jpg"
+  ],
+  "brand": {
+    "@type": "Brand",
+    "name": "Super Ninety Four"
+  },
+  "offers": {
+    "@type": "Offer",
+    "url": "https://www.example.com/REPLACE-product-path/",
+    "priceCurrency": "USD",
+    "price": "REPLACE",
+    "availability": "https://schema.org/InStock",
+    "seller": {
+      "@id": "https://www.example.com/#organization"
+    }
+  }
+}

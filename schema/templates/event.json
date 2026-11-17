@@ -1,0 +1,43 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Event",
+  "@id": "https://www.example.com/event/REPLACE-EVENT-SLUG/#event",
+  "name": "REPLACE: Exact public event title",
+  "description": "REPLACE: First paragraph from the event page. Keep identical to calendar listings.",
+  "url": "https://www.example.com/event/REPLACE-EVENT-SLUG/",
+  "eventStatus": "https://schema.org/EventScheduled",
+  "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+  "startDate": "2026-12-01T18:00:00-05:00",
+  "endDate": "2026-12-01T23:00:00-05:00",
+  "image": [
+    "https://www.example.com/wp-content/themes/super-ninety-four/assets/images/REPLACE-hero.jpg"
+  ],
+  "location": {
+    "@type": "Place",
+    "name": "REPLACE: Venue or city label",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "REPLACE",
+      "addressLocality": "REPLACE",
+      "addressRegion": "REPLACE",
+      "postalCode": "REPLACE",
+      "addressCountry": "US"
+    }
+  },
+  "organizer": {
+    "@id": "https://www.example.com/#organization"
+  },
+  "performer": {
+    "@id": "https://www.example.com/#organization"
+  },
+  "offers": {
+    "@type": "Offer",
+    "url": "https://www.example.com/apply/?event=REPLACE_ID_OR_SLUG",
+    "price": "0",
+    "priceCurrency": "USD",
+    "availability": "https://schema.org/InStock",
+    "validFrom": "2026-11-17T00:00:00-05:00"
+  },
+  "isAccessibleForFree": false,
+  "keywords": ["Super Ninety Four", "REPLACE topic keywords"]
+}

@@ -1,0 +1,30 @@
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is Super Ninety Four?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "REPLACE: Short factual answer that appears on the page."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I apply?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "REPLACE: Steps matching the Apply page. Include the URL https://www.example.com/apply/"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Are events open to the public or members only?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "REPLACE: Clarify Select Events (members) vs non-member / workshop paths exactly as shown on the site."
+      }
+    }
+  ]
+}
