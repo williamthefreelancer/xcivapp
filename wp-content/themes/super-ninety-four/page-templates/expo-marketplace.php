@@ -4,18 +4,17 @@
  * Description: Select events, scenic drives, and gatherings with Mapbox lead rider + walkie.
  */
 
-$is_members = is_page( 'expo-marketplace-by-members' );
+$is_members = snf_is_expo_members_audience();
 $audience   = $is_members ? 'members' : 'non-members';
 $rails      = snf_get_expo_catalog_rails( $audience );
 $routes     = snf_get_lead_rider_routes();
+$title      = __( 'Expo', 'super-ninety-four' );
 
 if ( $is_members ) {
-	$title = __( 'Expo Marketplace (members)', 'super-ninety-four' );
-	$lede  = __( 'Curated select events, scenic city-to-city drives, and gatherings — not networking. Ride with lead rider William A. Johnson on the road.', 'super-ninety-four' );
+	$lede    = __( 'Curated select events, scenic city-to-city drives, and gatherings — not networking. Ride with lead rider William A. Johnson on the road.', 'super-ninety-four' );
 	$eyebrow = __( 'Members only', 'super-ninety-four' );
 } else {
-	$title = __( 'Expo Marketplace (non-members)', 'super-ninety-four' );
-	$lede  = __( 'Preview open admission, scenic drives, and private gatherings. Membership unlocks live lead rider tracking and walkie-talkie on the road.', 'super-ninety-four' );
+	$lede    = __( 'Preview open admission, scenic drives, and private gatherings. Membership unlocks live lead rider tracking and walkie-talkie on the road.', 'super-ninety-four' );
 	$eyebrow = __( 'Open preview', 'super-ninety-four' );
 }
 

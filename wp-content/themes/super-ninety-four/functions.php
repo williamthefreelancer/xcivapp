@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'SNF_VERSION', '2.12.1' );
+define( 'SNF_VERSION', '2.13.1' );
 
 require_once get_template_directory() . '/inc/account-hub.php';
 require_once get_template_directory() . '/inc/memberships.php';
@@ -79,6 +79,10 @@ function snf_get_site_pages() {
 			'title'    => 'Home',
 			'template' => 'page-templates/home.php',
 		),
+		'about' => array(
+			'title'    => 'About',
+			'template' => 'page-templates/about.php',
+		),
 		'find-other-reciprocal-programs' => array(
 			'title'    => 'Find Other Reciprocal Programs',
 			'template' => 'page-templates/reciprocal-hub.php',
@@ -103,6 +107,34 @@ function snf_get_site_pages() {
 			'title'    => 'Under Consideration',
 			'template' => 'page-templates/under-consideration.php',
 		),
+		'select-events-by-members' => array(
+			'title'    => 'Select Events (Members)',
+			'template' => 'page-templates/select-events.php',
+		),
+		'select-events-by-non-members' => array(
+			'title'    => 'Select Events (Non-Members)',
+			'template' => 'page-templates/select-events.php',
+		),
+		'expo' => array(
+			'title'    => 'Expo',
+			'template' => 'page-templates/expo-marketplace.php',
+		),
+		'grounds-litter-pickup' => array(
+			'title'    => 'Parking Lot & Commercial Grounds Cleaning',
+			'template' => 'page-templates/service-inquiry.php',
+		),
+		'line-sitting-service' => array(
+			'title'    => 'Professional Line Sitting Service',
+			'template' => 'page-templates/service-inquiry.php',
+		),
+		'courier-service' => array(
+			'title'    => 'Courier Service',
+			'template' => 'page-templates/service-inquiry.php',
+		),
+		'commercial-janitor-cleaning' => array(
+			'title'    => 'Commercial Janitorial Cleaning & Consulting',
+			'template' => 'page-templates/service-inquiry.php',
+		),
 	);
 }
 
@@ -113,27 +145,19 @@ function snf_get_obsolete_page_slugs() {
 		'select-events-non-members',
 		'select-events-by-admission-for-non-members',
 		'select-events-members',
-		'select-events-by-members',
-		'select-events-by-non-members',
-		'expo-marketplace-by-members',
-		'expo-marketplace-by-non-members',
 		'member-concierge',
 		'my-profile',
 		'settings',
 		'reciprocal-programs',
+		// Reciprocal landings live as Woo products — do not recreate pages with these slugs.
 		'the-clubs-at-wyoma-square',
 		'the-city-clubs-at-super-ninety-four',
 		'the-clubs-at-back-creek',
 		'the-badlands-bra-club',
 		'service-inquiries',
-		'grounds-litter-pickup',
-		'line-sitting-service',
-		'commercial-janitor-cleaning',
-		'courier-service',
 		'parking-lot-commercial-grounds-cleaning',
 		'professional-line-sitting-service',
 		'commercial-janitorial-cleaning-consulting',
-		'about',
 		'event-by-admission',
 		'account-settings-for-profile',
 		// Legacy page copies of Woo event products (products themselves are kept).
@@ -143,6 +167,8 @@ function snf_get_obsolete_page_slugs() {
 		'the-badlands-bra-party-bus-gathering',
 		'the-eight-hundred-plus-journeys',
 		'the-lifestyle-concierge-club-workshop',
+		'expo-marketplace-by-members',
+		'expo-marketplace-by-non-members',
 	);
 }
 
@@ -247,8 +273,7 @@ function snf_scripts() {
 		|| is_page_template( 'page-templates/expo-marketplace.php' )
 		|| is_page( 'select-events-by-members' )
 		|| is_page( 'select-events-by-non-members' )
-		|| is_page( 'expo-marketplace-by-members' )
-		|| is_page( 'expo-marketplace-by-non-members' )
+		|| is_page( 'expo' )
 		|| ( function_exists( 'is_account_page' ) && is_account_page() )
 		|| ( function_exists( 'snf_is_bp_member_profile' ) && snf_is_bp_member_profile() );
 
@@ -277,7 +302,9 @@ function snf_scripts() {
 			true
 		);
 
-		$expo_audience = is_page( 'expo-marketplace-by-members' ) ? 'members' : 'non-members';
+		$expo_audience = ( function_exists( 'snf_user_can_access_member_areas' ) && snf_user_can_access_member_areas() )
+			? 'members'
+			: 'non-members';
 		wp_enqueue_script(
 			'snf-expo-marketplace',
 			get_template_directory_uri() . '/assets/js/expo-marketplace.js',
@@ -572,29 +599,36 @@ function snf_get_dashboard_reciprocal_cards() {
 
 	if ( ! $cards ) {
 		$img_base = get_template_directory_uri() . '/assets/images/reciprocal/';
+		$url_for  = function_exists( 'snf_get_reciprocal_club_url' )
+			? static function ( $slug ) {
+				return snf_get_reciprocal_club_url( $slug );
+			}
+			: static function ( $slug ) {
+				return snf_get_page_url( $slug );
+			};
 		$cards    = array(
 			array(
 				'title' => __( 'The Clubs at Wyoma Square', 'super-ninety-four' ),
 				'meta'  => __( 'Reciprocal club program', 'super-ninety-four' ),
-				'url'   => snf_get_page_url( 'the-clubs-at-wyoma-square' ),
+				'url'   => $url_for( 'the-clubs-at-wyoma-square' ),
 				'image' => $img_base . 'the-clubs-at-wyoma-square.jpg',
 			),
 			array(
 				'title' => __( 'The City Clubs of SUPER NINETY FOUR', 'super-ninety-four' ),
 				'meta'  => __( 'Reciprocal club program', 'super-ninety-four' ),
-				'url'   => snf_get_page_url( 'the-city-clubs-at-super-ninety-four' ),
+				'url'   => $url_for( 'the-city-clubs-at-super-ninety-four' ),
 				'image' => $img_base . 'the-city-clubs-at-super-ninety-four.jpg',
 			),
 			array(
 				'title' => __( 'The Clubs at Back Creek', 'super-ninety-four' ),
 				'meta'  => __( 'Reciprocal club program', 'super-ninety-four' ),
-				'url'   => snf_get_page_url( 'the-clubs-at-back-creek' ),
+				'url'   => $url_for( 'the-clubs-at-back-creek' ),
 				'image' => $img_base . 'the-clubs-at-back-creek.jpg',
 			),
 			array(
 				'title' => __( 'The Badlands Bra Club', 'super-ninety-four' ),
 				'meta'  => __( 'Reciprocal club program', 'super-ninety-four' ),
-				'url'   => snf_get_page_url( 'the-badlands-bra-club' ),
+				'url'   => $url_for( 'the-badlands-bra-club' ),
 				'image' => $img_base . 'the-badlands-bra-club.jpg',
 			),
 		);
@@ -615,30 +649,29 @@ function snf_get_dashboard_reciprocal_cards() {
  */
 function snf_get_dashboard_service_inquiry_cards() {
 	$img_base = get_template_directory_uri() . '/assets/images/services/';
-	$apply    = snf_get_page_url( 'apply' );
 	$cards    = array(
 		array(
 			'title' => __( 'Parking Lot & Commercial Grounds Cleaning', 'super-ninety-four' ),
 			'meta'  => __( 'Litter pickup service', 'super-ninety-four' ),
-			'url'   => add_query_arg( 'q', 'Parking Lot & Commercial Grounds Cleaning', $apply ),
+			'url'   => snf_get_page_url( 'grounds-litter-pickup' ),
 			'image' => $img_base . 'grounds-litter-pickup.png',
 		),
 		array(
 			'title' => __( 'Professional Line Sitting Service', 'super-ninety-four' ),
 			'meta'  => __( 'Busy lines · Obtaining consumer goods', 'super-ninety-four' ),
-			'url'   => add_query_arg( 'q', 'Professional Line Sitting Service', $apply ),
+			'url'   => snf_get_page_url( 'line-sitting-service' ),
 			'image' => $img_base . 'line-sitting-service.png',
 		),
 		array(
 			'title' => __( 'Courier Service', 'super-ninety-four' ),
 			'meta'  => __( 'Shopping runs · Consumer goods delivery', 'super-ninety-four' ),
-			'url'   => add_query_arg( 'q', 'Courier Service', $apply ),
+			'url'   => snf_get_page_url( 'courier-service' ),
 			'image' => $img_base . 'line-sitting-service.png',
 		),
 		array(
 			'title' => __( 'Commercial Janitorial Cleaning & Consulting', 'super-ninety-four' ),
 			'meta'  => __( 'Suites · Bars · Property consulting', 'super-ninety-four' ),
-			'url'   => add_query_arg( 'q', 'Commercial Janitorial Cleaning & Consulting', $apply ),
+			'url'   => snf_get_page_url( 'commercial-janitor-cleaning' ),
 			'image' => $img_base . 'commercial-janitor-cleaning.jpg',
 		),
 	);
@@ -706,7 +739,7 @@ add_action( 'admin_init', 'snf_delete_legacy_workshop_landing_posts', 30 );
  * WooCommerce products are never deleted.
  */
 function snf_delete_duplicate_event_and_inquiry_pages() {
-	if ( get_option( 'snf_duplicate_event_inquiry_cleaned_v2' ) ) {
+	if ( get_option( 'snf_duplicate_event_inquiry_cleaned_v3' ) ) {
 		return;
 	}
 
@@ -719,12 +752,9 @@ function snf_delete_duplicate_event_and_inquiry_pages() {
 		'the-lifestyle-concierge-club-workshop',
 	);
 
+	// Only remove index/alias inquiry pages — canonical service landings are auto-created.
 	$inquiry_slugs = array(
 		'service-inquiries',
-		'grounds-litter-pickup',
-		'line-sitting-service',
-		'commercial-janitor-cleaning',
-		'courier-service',
 		'parking-lot-commercial-grounds-cleaning',
 		'professional-line-sitting-service',
 		'commercial-janitorial-cleaning-consulting',
@@ -748,7 +778,7 @@ function snf_delete_duplicate_event_and_inquiry_pages() {
 		}
 	}
 
-	update_option( 'snf_duplicate_event_inquiry_cleaned_v2', 1, false );
+	update_option( 'snf_duplicate_event_inquiry_cleaned_v3', 1, false );
 }
 add_action( 'after_switch_theme', 'snf_delete_duplicate_event_and_inquiry_pages' );
 add_action( 'admin_init', 'snf_delete_duplicate_event_and_inquiry_pages', 31 );
@@ -862,6 +892,23 @@ function snf_get_service_inquiry( $slug = '' ) {
 			),
 			'price'            => '$000.00/mo',
 			'card_description' => __( 'Commercial janitorial cleaning and consulting for business-park suites and bar tenants: checklist-driven interior reset plus program guidance on a recurring monthly cadence you can verify.', 'super-ninety-four' ),
+			'workshop_url'     => $workshop,
+			'inquiry_url'      => $inquiry,
+		),
+		'courier-service'               => array(
+			'title'            => __( 'Courier Service', 'super-ninety-four' ),
+			'lede'             => __( 'Discreet shopping runs and consumer-goods handoffs for principals who need a trusted courier between retail, residence, and club stops — same-day windows when the circuit allows.', 'super-ninety-four' ),
+			'image'            => $img_base . 'line-sitting-service.png',
+			'benefits_heading' => __( 'What you get on every courier request', 'super-ninety-four' ),
+			'benefits'         => array(
+				__( 'Pickup and delivery across mapped city club corridors', 'super-ninety-four' ),
+				__( 'Live status before handoff', 'super-ninety-four' ),
+				__( 'Receipt photo log when goods change hands', 'super-ninety-four' ),
+				__( 'Single-request booking for one run or multi-stop loop', 'super-ninety-four' ),
+				__( 'Discretion-first handling for private purchases', 'super-ninety-four' ),
+			),
+			'price'            => '$000.00/mo',
+			'card_description' => __( 'Courier runs for shopping and consumer-goods delivery across the club circuit: booked windows, status pings, and a photographed handoff — one request, one route, one outcome.', 'super-ninety-four' ),
 			'workshop_url'     => $workshop,
 			'inquiry_url'      => $inquiry,
 		),

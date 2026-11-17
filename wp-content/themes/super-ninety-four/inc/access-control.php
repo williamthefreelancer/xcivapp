@@ -67,6 +67,7 @@ function snf_get_protected_page_slugs() {
 		'members',
 		'activity',
 		'groups',
+		'select-events-by-members',
 	);
 
 	if ( function_exists( 'wc_get_page_id' ) ) {
@@ -115,10 +116,17 @@ function snf_get_protected_page_templates() {
 function snf_get_public_page_slugs() {
 	return array(
 		'home',
+		'about',
 		'apply',
 		'under-consideration',
 		'member-login',
 		'find-other-reciprocal-programs',
+		'select-events-by-non-members',
+		'expo',
+		'grounds-litter-pickup',
+		'line-sitting-service',
+		'courier-service',
+		'commercial-janitor-cleaning',
 	);
 }
 

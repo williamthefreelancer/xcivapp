@@ -1,6 +1,6 @@
 <?php
 /**
- * Expo Marketplace catalog rails (members / non-members).
+ * Expo Marketplace catalog rails (single /expo/ page; audience from membership).
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -8,24 +8,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Whether the current request is the members Expo page.
+ * Whether the current visitor should see the members Expo experience.
  *
  * @return bool
  */
-function snf_is_expo_members_page() {
-	return is_page( 'expo-marketplace-by-members' )
-		|| ( is_page_template( 'page-templates/expo-marketplace.php' ) && is_page( 'expo-marketplace-by-members' ) );
+function snf_is_expo_members_audience() {
+	return function_exists( 'snf_user_can_access_member_areas' ) && snf_user_can_access_member_areas();
 }
 
 /**
- * Whether the current request is either Expo marketplace page.
+ * Whether the current request is the Expo marketplace page.
  *
  * @return bool
  */
 function snf_is_expo_marketplace_page() {
-	return is_page_template( 'page-templates/expo-marketplace.php' )
-		|| is_page( 'expo-marketplace-by-members' )
-		|| is_page( 'expo-marketplace-by-non-members' );
+	return is_page( 'expo' )
+		|| is_page_template( 'page-templates/expo-marketplace.php' );
+}
+
+/**
+ * @deprecated 2.13.1 Use snf_is_expo_members_audience().
+ *
+ * @return bool
+ */
+function snf_is_expo_members_page() {
+	return snf_is_expo_marketplace_page() && snf_is_expo_members_audience();
 }
 
 /**
