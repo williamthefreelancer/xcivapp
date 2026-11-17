@@ -1,6 +1,6 @@
 <?php
 /**
- * Dashboard intro search + listing sliders.
+ * Dashboard intro + listing sliders.
  */
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -12,9 +12,6 @@ $listings = snf_get_dashboard_event_listings();
 	<h1 class="snf-dashboard__intro-title">
 		<?php esc_html_e( 'To get started, how can SUPER NINETY FOUR help you?', 'super-ninety-four' ); ?>
 	</h1>
-	<div class="snf-dashboard__search" data-figma-slot="dashboard-search">
-		<?php get_template_part( 'template-parts/search', 'events' ); ?>
-	</div>
 </div>
 
 <div class="snf-dashboard__listings" data-figma-slot="event-listings">
