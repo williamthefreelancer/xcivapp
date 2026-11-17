@@ -186,9 +186,14 @@ function snf_get_product_serp_row( $product = null ) {
 	$thumb_id = $product->get_image_id();
 	$favicon  = $thumb_id ? wp_get_attachment_image_url( $thumb_id, 'thumbnail' ) : '';
 
+	$result_url = get_permalink( $product_id );
+	if ( function_exists( 'snf_is_lifestyle_concierge_workshop' ) && snf_is_lifestyle_concierge_workshop( $product_id ) ) {
+		$result_url = snf_get_workshop_landing_url();
+	}
+
 	return array(
 		'title'    => $title,
-		'url'      => get_permalink( $product_id ),
+		'url'      => $result_url,
 		'snippet'  => $snippet,
 		'meta'     => trim( implode( ' · ', array_filter( array( $location, $timing ) ) ) ),
 		'crumb'    => 'superninetyfour.com › shop › ' . $product->get_slug(),
