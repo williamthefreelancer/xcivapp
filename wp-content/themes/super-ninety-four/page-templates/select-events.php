@@ -83,7 +83,7 @@ get_header();
 				<h2 class="snf-dashboard__row-title" id="snf-select-events-heading">
 					<?php echo esc_html( $title ); ?>
 				</h2>
-				<a class="snf-dashboard__row-all" href="<?php echo esc_url( snf_get_page_url( 'dashboard' ) ); ?>">
+				<a class="snf-dashboard__row-all" href="<?php echo esc_url( snf_get_dashboard_url() ); ?>">
 					<?php esc_html_e( 'Back to dashboard', 'super-ninety-four' ); ?>
 				</a>
 			</div>

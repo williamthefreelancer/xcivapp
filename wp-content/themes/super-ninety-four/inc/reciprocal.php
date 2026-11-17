@@ -282,11 +282,42 @@ function snf_get_reciprocal_club( $slug = '' ) {
  * @return array<string, mixed>
  */
 function snf_get_reciprocal_hub_data() {
-	$clubs = array_values( snf_get_reciprocal_clubs() );
+	$clubs = snf_get_reciprocal_clubs();
+
+	// Merge WooCommerce product brands so new reciprocal programs appear on the hub.
+	if ( function_exists( 'snf_get_product_brand_cards' ) ) {
+		foreach ( snf_get_product_brand_cards( 24 ) as $card ) {
+			$slug = '';
+			if ( ! empty( $card['url'] ) ) {
+				$path = (string) wp_parse_url( $card['url'], PHP_URL_PATH );
+				$slug = sanitize_title( basename( untrailingslashit( $path ) ) );
+			}
+			if ( ! $slug || isset( $clubs[ $slug ] ) ) {
+				continue;
+			}
+			$clubs[ $slug ] = array(
+				'slug'         => $slug,
+				'title'        => $card['title'],
+				'mark'         => strtoupper( mb_substr( $card['title'], 0, 2 ) ),
+				'mark_label'   => $card['title'],
+				'hero'         => $card['image'],
+				'hero_alt'     => $card['title'],
+				'benefits_bg'  => $card['image'],
+				'card_image'   => $card['image'],
+				'hero_heading' => __( 'To Attend This Members Only Experience, You have to select a immerse event?', 'super-ninety-four' ),
+				'cta_label'    => __( 'Schedule Your Experience', 'super-ninety-four' ),
+				'cta_url'      => $card['url'],
+				'lede'         => __( 'A reciprocal program on the SUPER NINETY FOUR circuit.', 'super-ninety-four' ),
+				'features'     => snf_reciprocal_default_features(),
+				'outcomes'     => snf_reciprocal_default_outcomes(),
+			);
+		}
+	}
+
 	return array(
 		'title' => __( 'Reciprocal Programs', 'super-ninety-four' ),
-		'lede'  => __( 'Explore partner clubs across the SUPER NINETY FOUR circuit — Back Creek, Badlands, Wyoma Square, and The City Clubs.', 'super-ninety-four' ),
-		'clubs' => $clubs,
+		'lede'  => __( 'Explore partner clubs across the SUPER NINETY FOUR circuit — Back Creek, Badlands, Wyoma Square, The City Clubs, and more.', 'super-ninety-four' ),
+		'clubs' => array_values( $clubs ),
 	);
 }
 

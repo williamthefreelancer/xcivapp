@@ -83,7 +83,8 @@ function snf_get_expo_gathering_cards() {
 	$cards = array_values(
 		array_filter(
 			array(
-				snf_get_dashboard_event_card_by_slug( 'the-badlands-bra-party-bus-gathering', 'badlands-bra-event.jpg' ),
+				snf_get_dashboard_event_card_by_slug( 'the-badlands-bra-private-gathering', 'badlands-bra-event.jpg' ),
+				snf_get_dashboard_event_card_by_slug( 'the-eight-hundred-plus-journeys-event', 'eight-hundred-journeys-event.jpg' ),
 				snf_get_dashboard_event_card_by_slug( 'the-township-adventures-event', 'township-adventures-event.jpg' ),
 			)
 		)
@@ -216,51 +217,3 @@ function snf_get_expo_catalog_rails( $audience = 'members' ) {
 	return apply_filters( 'snf_expo_catalog_rails', $rails, $audience );
 }
 
-/**
- * Dashboard listing rows for Expo marketplace.
- *
- * @return array<int, array<string, mixed>>
- */
-function snf_get_expo_dashboard_listings() {
-	return array(
-		array(
-			'id'    => 'expo-non-members',
-			'title' => __( 'Expo Marketplace (non-members)', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'expo-marketplace-by-non-members' ),
-			'bp'    => 'events',
-			'cards' => snf_get_expo_non_member_teasers(),
-		),
-		array(
-			'id'    => 'expo-members',
-			'title' => __( 'Expo Marketplace (members)', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'expo-marketplace-by-members' ),
-			'bp'    => 'events',
-			'cards' => array_slice(
-				array_merge(
-					snf_get_dashboard_member_event_cards(),
-					snf_get_expo_scenic_drives()
-				),
-				0,
-				3
-			),
-		),
-	);
-}
-
-/**
- * Insert Expo listings into the community dashboard.
- *
- * @param array $listings Existing listings.
- * @return array
- */
-function snf_inject_expo_dashboard_listings( $listings ) {
-	if ( ! is_array( $listings ) ) {
-		$listings = array();
-	}
-
-	$expo = snf_get_expo_dashboard_listings();
-	array_splice( $listings, 1, 0, $expo );
-
-	return $listings;
-}
-add_filter( 'snf_dashboard_event_listings', 'snf_inject_expo_dashboard_listings' );

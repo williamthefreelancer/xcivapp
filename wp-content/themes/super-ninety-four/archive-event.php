@@ -120,9 +120,8 @@ $display_query = $query ? $query : __( 'events & services', 'super-ninety-four' 
 				</ol>
 			<?php else : ?>
 				<div class="snf-serp__empty">
-					<p><?php esc_html_e( 'No events or services matched that search.', 'super-ninety-four' ); ?></p>
+					<p><?php esc_html_e( 'No events matched that search.', 'super-ninety-four' ); ?></p>
 					<p><a class="snf-archive__admission-link" href="<?php echo esc_url( get_post_type_archive_link( 'event' ) ); ?>"><?php esc_html_e( 'View all events', 'super-ninety-four' ); ?></a></p>
-					<p><a class="snf-archive__admission-link" href="<?php echo esc_url( snf_get_page_url( 'service-inquiries' ) ); ?>"><?php esc_html_e( 'Browse service inquiries', 'super-ninety-four' ); ?></a></p>
 				</div>
 			<?php endif; ?>
 			<?php wp_reset_postdata(); ?>

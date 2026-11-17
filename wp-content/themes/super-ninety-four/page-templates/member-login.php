@@ -6,7 +6,7 @@
 
 get_header();
 
-$redirect = snf_get_page_url( 'dashboard' );
+$redirect = snf_get_dashboard_url();
 ?>
 <main class="snf-page snf-hub snf-hub--auth" data-figma-ready="true">
 	<section class="snf-hub__shell snf-hub__shell--narrow snf-container" aria-label="<?php esc_attr_e( 'Member login', 'super-ninety-four' ); ?>">

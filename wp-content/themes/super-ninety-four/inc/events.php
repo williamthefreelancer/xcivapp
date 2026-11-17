@@ -14,25 +14,33 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function snf_get_member_select_event_slugs() {
 	return array(
+		'the-badlands-bra-private-gathering',
+		'the-eight-hundred-plus-journeys-event',
+		'the-township-adventures-event',
+		// Legacy CPT slugs kept for older deep links.
 		'the-badlands-bra-party-bus-gathering',
 		'the-eight-hundred-plus-journeys',
-		'the-township-adventures-event',
 	);
 }
 
 /**
- * Whether an event belongs to Select Events (members).
+ * Whether an event/product belongs to Select Events (members).
  *
- * @param int|WP_Post|null $post Event post.
+ * @param int|WP_Post|null $post Event or product post.
  * @return bool
  */
 function snf_is_member_select_event( $post = null ) {
 	$post = get_post( $post );
-	if ( ! $post || 'event' !== $post->post_type ) {
+	if ( ! $post || ! in_array( $post->post_type, array( 'event', 'product' ), true ) ) {
 		return false;
 	}
 
-	return in_array( $post->post_name, snf_get_member_select_event_slugs(), true );
+	$slug = function_exists( 'snf_resolve_listing_product_slug' )
+		? snf_resolve_listing_product_slug( $post->post_name )
+		: $post->post_name;
+
+	return in_array( $slug, snf_get_member_select_event_slugs(), true )
+		|| in_array( $post->post_name, snf_get_member_select_event_slugs(), true );
 }
 
 /**
@@ -53,7 +61,9 @@ function snf_get_event_admission_audience( $post = null ) {
  */
 function snf_get_event_default_image_file( $slug ) {
 	$map = array(
+		'the-badlands-bra-private-gathering'     => 'badlands-bra-event.jpg',
 		'the-badlands-bra-party-bus-gathering'   => 'badlands-bra-event.jpg',
+		'the-eight-hundred-plus-journeys-event'  => 'eight-hundred-journeys-event.jpg',
 		'the-eight-hundred-plus-journeys'        => 'eight-hundred-journeys-event.jpg',
 		'the-township-adventures-event'          => 'township-adventures-event.jpg',
 		'the-lifestyle-concierge-club-workshop'  => 'lifestyle-concierge-club-workshop.jpg',
@@ -69,7 +79,9 @@ function snf_get_event_default_image_file( $slug ) {
  */
 function snf_get_event_default_price( $slug ) {
 	$map = array(
+		'the-eight-hundred-plus-journeys-event' => '$497.00',
 		'the-eight-hundred-plus-journeys'       => '$497.00',
+		'the-badlands-bra-private-gathering'    => '$397.00',
 		'the-badlands-bra-party-bus-gathering'  => '$497.00',
 		'the-township-adventures-event'         => '$497.00',
 		'the-lifestyle-concierge-club-workshop' => '$97.00',

@@ -1,17 +1,17 @@
 <?php
 /**
  * Search events & services engine.
- * Submits to the events archive (Google-style results).
+ * Submits to the WooCommerce shop (Google-style SERP).
  */
-$events_url = get_post_type_archive_link( 'event' );
-if ( ! $events_url ) {
-	$events_url = home_url( '/events/' );
+$shop_url = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'shop' ) : '';
+if ( ! $shop_url ) {
+	$shop_url = home_url( '/shop/' );
 }
 $query = isset( $_GET['q'] ) ? sanitize_text_field( wp_unslash( $_GET['q'] ) ) : '';
 $where = isset( $_GET['where'] ) ? sanitize_text_field( wp_unslash( $_GET['where'] ) ) : '';
 $when  = isset( $_GET['when'] ) ? sanitize_text_field( wp_unslash( $_GET['when'] ) ) : '';
 ?>
-<form class="snf-search" role="search" method="get" action="<?php echo esc_url( $events_url ); ?>" aria-label="<?php esc_attr_e( 'Search events and services', 'super-ninety-four' ); ?>">
+<form class="snf-search" role="search" method="get" action="<?php echo esc_url( $shop_url ); ?>" aria-label="<?php esc_attr_e( 'Search events and services', 'super-ninety-four' ); ?>">
 	<label class="snf-search__field snf-search__field--query">
 		<span class="screen-reader-text"><?php esc_html_e( 'Search events and services', 'super-ninety-four' ); ?></span>
 		<input class="snf-search__input" type="search" name="q" value="<?php echo esc_attr( $query ); ?>" placeholder="<?php esc_attr_e( 'Search events & services', 'super-ninety-four' ); ?>" autocomplete="off">

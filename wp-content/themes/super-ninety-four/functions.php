@@ -7,16 +7,22 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'SNF_VERSION', '2.5.3' );
+define( 'SNF_VERSION', '2.9.2' );
 
 require_once get_template_directory() . '/inc/account-hub.php';
+require_once get_template_directory() . '/inc/dashboard-shell.php';
+require_once get_template_directory() . '/inc/dashboard-panels.php';
+require_once get_template_directory() . '/inc/buddypress-profile.php';
 require_once get_template_directory() . '/inc/access-control.php';
+require_once get_template_directory() . '/inc/plugin-integrations.php';
 require_once get_template_directory() . '/inc/messages.php';
 require_once get_template_directory() . '/inc/reciprocal.php';
 require_once get_template_directory() . '/inc/home.php';
 require_once get_template_directory() . '/inc/events.php';
 require_once get_template_directory() . '/inc/expo-marketplace.php';
 require_once get_template_directory() . '/inc/lead-rider.php';
+require_once get_template_directory() . '/inc/woocommerce-serp.php';
+require_once get_template_directory() . '/inc/woocommerce-endpoints.php';
 
 function snf_setup() {
 	add_theme_support( 'title-tag' );
@@ -65,6 +71,10 @@ add_action( 'init', 'snf_register_event_cpt' );
  */
 function snf_get_site_pages() {
 	return array(
+		'home' => array(
+			'title'    => 'Home',
+			'template' => 'page-templates/home.php',
+		),
 		'find-other-reciprocal-programs' => array(
 			'title'    => 'Find Other Reciprocal Programs',
 			'template' => 'page-templates/reciprocal-hub.php',
@@ -94,6 +104,7 @@ function snf_get_site_pages() {
 
 function snf_get_obsolete_page_slugs() {
 	return array(
+		'dashboard',
 		'select-events-members-non-members',
 		'select-events-non-members',
 		'select-events-by-admission-for-non-members',
@@ -102,7 +113,6 @@ function snf_get_obsolete_page_slugs() {
 		'select-events-by-non-members',
 		'expo-marketplace-by-members',
 		'expo-marketplace-by-non-members',
-		'dashboard',
 		'member-concierge',
 		'my-profile',
 		'settings',
@@ -172,6 +182,26 @@ function snf_ensure_site_pages() {
 			update_post_meta( $page_id, '_wp_page_template', $config['template'] );
 		}
 	}
+
+	snf_ensure_home_is_front_page();
+}
+
+/**
+ * Keep the Home page assigned as the static front page.
+ */
+function snf_ensure_home_is_front_page() {
+	$home = get_page_by_path( 'home' );
+	if ( ! $home ) {
+		return;
+	}
+
+	if ( get_option( 'show_on_front' ) !== 'page' ) {
+		update_option( 'show_on_front', 'page' );
+	}
+
+	if ( (int) get_option( 'page_on_front' ) !== (int) $home->ID ) {
+		update_option( 'page_on_front', (int) $home->ID );
+	}
 }
 add_action( 'after_switch_theme', 'snf_ensure_site_pages' );
 add_action( 'init', 'snf_ensure_site_pages', 20 );
@@ -197,14 +227,15 @@ function snf_scripts() {
 		true
 	);
 
-	$uses_dashboard_script = is_page_template( 'page-templates/dashboard.php' )
+	$uses_dashboard_script = is_page_template( 'page-templates/woocommerce-account.php' )
 		|| is_page_template( 'page-templates/select-events.php' )
 		|| is_page_template( 'page-templates/expo-marketplace.php' )
-		|| is_page( 'dashboard' )
 		|| is_page( 'select-events-by-members' )
 		|| is_page( 'select-events-by-non-members' )
 		|| is_page( 'expo-marketplace-by-members' )
-		|| is_page( 'expo-marketplace-by-non-members' );
+		|| is_page( 'expo-marketplace-by-non-members' )
+		|| ( function_exists( 'is_account_page' ) && is_account_page() )
+		|| ( function_exists( 'snf_is_bp_member_profile' ) && snf_is_bp_member_profile() );
 
 	if ( $uses_dashboard_script ) {
 		wp_enqueue_script(
@@ -334,16 +365,73 @@ function snf_scripts() {
 add_action( 'wp_enqueue_scripts', 'snf_scripts' );
 
 /**
- * Build a dashboard card from an event slug and optional theme image.
+ * Map legacy event CPT slugs to current WooCommerce product slugs.
  *
- * @param string $slug       Event post slug.
- * @param string $image_file Optional filename under assets/images/events/.
- * @param string $fallback_url Fallback URL if the event is missing.
+ * @param string $slug Requested slug.
+ * @return string
+ */
+function snf_resolve_listing_product_slug( $slug ) {
+	$slug    = sanitize_title( (string) $slug );
+	$aliases = array(
+		'the-badlands-bra-party-bus-gathering' => 'the-badlands-bra-private-gathering',
+		'the-eight-hundred-plus-journeys'      => 'the-eight-hundred-plus-journeys-event',
+	);
+
+	return isset( $aliases[ $slug ] ) ? $aliases[ $slug ] : $slug;
+}
+
+/**
+ * Build a dashboard card from a Woo product or event slug.
+ *
+ * @param string $slug         Product or legacy event slug.
+ * @param string $image_file   Optional filename under assets/images/events/.
+ * @param string $fallback_url Fallback URL if the listing is missing.
  * @return array<string, string>|null
  */
 function snf_get_dashboard_event_card_by_slug( $slug, $image_file = '', $fallback_url = '' ) {
+	$slug = snf_resolve_listing_product_slug( $slug );
+
+	$product_post = get_page_by_path( $slug, OBJECT, 'product' );
+	if ( $product_post && class_exists( 'WooCommerce' ) ) {
+		$product = wc_get_product( $product_post->ID );
+		if ( $product ) {
+			$location = (string) get_post_meta( $product_post->ID, '_snf_location', true );
+			$timing   = (string) get_post_meta( $product_post->ID, '_snf_when', true );
+			$image    = '';
+
+			if ( $image_file ) {
+				$image = get_template_directory_uri() . '/assets/images/events/' . ltrim( $image_file, '/' );
+			} else {
+				$image_id = $product->get_image_id();
+				if ( $image_id ) {
+					$thumb = wp_get_attachment_image_url( $image_id, 'medium_large' );
+					if ( $thumb ) {
+						$image = $thumb;
+					}
+				}
+			}
+
+			return array(
+				'title' => $product->get_name(),
+				'meta'  => trim( implode( ' · ', array_filter( array( $location, $timing ) ) ) ),
+				'url'   => get_permalink( $product_post->ID ),
+				'image' => $image,
+			);
+		}
+	}
+
 	$event = get_page_by_path( $slug, OBJECT, 'event' );
 	if ( ! $event ) {
+		if ( $fallback_url ) {
+			return array(
+				'title' => $slug,
+				'meta'  => '',
+				'url'   => $fallback_url,
+				'image' => $image_file
+					? get_template_directory_uri() . '/assets/images/events/' . ltrim( $image_file, '/' )
+					: '',
+			);
+		}
 		return null;
 	}
 
@@ -377,8 +465,8 @@ function snf_get_dashboard_member_event_cards() {
 	$cards = array_values(
 		array_filter(
 			array(
-				snf_get_dashboard_event_card_by_slug( 'the-badlands-bra-party-bus-gathering', 'badlands-bra-event.jpg' ),
-				snf_get_dashboard_event_card_by_slug( 'the-eight-hundred-plus-journeys', 'eight-hundred-journeys-event.jpg' ),
+				snf_get_dashboard_event_card_by_slug( 'the-badlands-bra-private-gathering', 'badlands-bra-event.jpg' ),
+				snf_get_dashboard_event_card_by_slug( 'the-eight-hundred-plus-journeys-event', 'eight-hundred-journeys-event.jpg' ),
 				snf_get_dashboard_event_card_by_slug( 'the-township-adventures-event', 'township-adventures-event.jpg' ),
 			)
 		)
@@ -415,33 +503,39 @@ function snf_get_dashboard_non_member_event_cards() {
  * @return array<int, array<string, string>>
  */
 function snf_get_dashboard_reciprocal_cards() {
-	$img_base = get_template_directory_uri() . '/assets/images/reciprocal/';
-	$cards    = array(
-		array(
-			'title' => __( 'The Clubs at Wyoma Square', 'super-ninety-four' ),
-			'meta'  => __( 'Reciprocal club program', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'the-clubs-at-wyoma-square' ),
-			'image' => $img_base . 'the-clubs-at-wyoma-square.jpg',
-		),
-		array(
-			'title' => __( 'The City Clubs of SUPER NINETY FOUR', 'super-ninety-four' ),
-			'meta'  => __( 'Reciprocal club program', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'the-city-clubs-at-super-ninety-four' ),
-			'image' => $img_base . 'the-city-clubs-at-super-ninety-four.jpg',
-		),
-		array(
-			'title' => __( 'The Clubs at Back Creek', 'super-ninety-four' ),
-			'meta'  => __( 'Reciprocal club program', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'the-clubs-at-back-creek' ),
-			'image' => $img_base . 'the-clubs-at-back-creek.jpg',
-		),
-		array(
-			'title' => __( 'The Badlands Bra Club', 'super-ninety-four' ),
-			'meta'  => __( 'Reciprocal club program', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'the-badlands-bra-club' ),
-			'image' => $img_base . 'the-badlands-bra-club.jpg',
-		),
-	);
+	$cards = function_exists( 'snf_get_product_brand_cards' )
+		? snf_get_product_brand_cards()
+		: array();
+
+	if ( ! $cards ) {
+		$img_base = get_template_directory_uri() . '/assets/images/reciprocal/';
+		$cards    = array(
+			array(
+				'title' => __( 'The Clubs at Wyoma Square', 'super-ninety-four' ),
+				'meta'  => __( 'Reciprocal club program', 'super-ninety-four' ),
+				'url'   => snf_get_page_url( 'the-clubs-at-wyoma-square' ),
+				'image' => $img_base . 'the-clubs-at-wyoma-square.jpg',
+			),
+			array(
+				'title' => __( 'The City Clubs of SUPER NINETY FOUR', 'super-ninety-four' ),
+				'meta'  => __( 'Reciprocal club program', 'super-ninety-four' ),
+				'url'   => snf_get_page_url( 'the-city-clubs-at-super-ninety-four' ),
+				'image' => $img_base . 'the-city-clubs-at-super-ninety-four.jpg',
+			),
+			array(
+				'title' => __( 'The Clubs at Back Creek', 'super-ninety-four' ),
+				'meta'  => __( 'Reciprocal club program', 'super-ninety-four' ),
+				'url'   => snf_get_page_url( 'the-clubs-at-back-creek' ),
+				'image' => $img_base . 'the-clubs-at-back-creek.jpg',
+			),
+			array(
+				'title' => __( 'The Badlands Bra Club', 'super-ninety-four' ),
+				'meta'  => __( 'Reciprocal club program', 'super-ninety-four' ),
+				'url'   => snf_get_page_url( 'the-badlands-bra-club' ),
+				'image' => $img_base . 'the-badlands-bra-club.jpg',
+			),
+		);
+	}
 
 	/**
 	 * Filter reciprocal program cards on the dashboard.
@@ -458,23 +552,30 @@ function snf_get_dashboard_reciprocal_cards() {
  */
 function snf_get_dashboard_service_inquiry_cards() {
 	$img_base = get_template_directory_uri() . '/assets/images/services/';
+	$apply    = snf_get_page_url( 'apply' );
 	$cards    = array(
 		array(
-			'title' => __( 'Grounds Litter Pickup', 'super-ninety-four' ),
-			'meta'  => __( 'For property managers · Business parks & tenants (bars)', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'grounds-litter-pickup' ),
+			'title' => __( 'Parking Lot & Commercial Grounds Cleaning', 'super-ninety-four' ),
+			'meta'  => __( 'Litter pickup service', 'super-ninety-four' ),
+			'url'   => add_query_arg( 'q', 'Parking Lot & Commercial Grounds Cleaning', $apply ),
 			'image' => $img_base . 'grounds-litter-pickup.png',
 		),
 		array(
-			'title' => __( 'Line Sitting Service', 'super-ninety-four' ),
-			'meta'  => __( 'Consumer goods · Waiting in busy lines', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'line-sitting-service' ),
+			'title' => __( 'Professional Line Sitting Service', 'super-ninety-four' ),
+			'meta'  => __( 'Busy lines · Obtaining consumer goods', 'super-ninety-four' ),
+			'url'   => add_query_arg( 'q', 'Professional Line Sitting Service', $apply ),
 			'image' => $img_base . 'line-sitting-service.png',
 		),
 		array(
-			'title' => __( 'Commercial Janitor Cleaning', 'super-ninety-four' ),
-			'meta'  => __( 'Business parks & tenants (bars)', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'commercial-janitor-cleaning' ),
+			'title' => __( 'Courier Service', 'super-ninety-four' ),
+			'meta'  => __( 'Shopping runs · Consumer goods delivery', 'super-ninety-four' ),
+			'url'   => add_query_arg( 'q', 'Courier Service', $apply ),
+			'image' => $img_base . 'line-sitting-service.png',
+		),
+		array(
+			'title' => __( 'Commercial Janitorial Cleaning & Consulting', 'super-ninety-four' ),
+			'meta'  => __( 'Suites · Bars · Property consulting', 'super-ninety-four' ),
+			'url'   => add_query_arg( 'q', 'Commercial Janitorial Cleaning & Consulting', $apply ),
 			'image' => $img_base . 'commercial-janitor-cleaning.jpg',
 		),
 	);
@@ -493,6 +594,11 @@ function snf_get_dashboard_service_inquiry_cards() {
  * @return string
  */
 function snf_get_workshop_landing_url() {
+	$workshop = get_page_by_path( 'the-lifestyle-concierge-club-workshop', OBJECT, 'product' );
+	if ( $workshop instanceof WP_Post ) {
+		return get_permalink( $workshop );
+	}
+
 	$workshop = get_page_by_path( 'the-lifestyle-concierge-club-workshop', OBJECT, 'event' );
 	if ( $workshop instanceof WP_Post ) {
 		return get_permalink( $workshop );
@@ -549,8 +655,8 @@ function snf_get_service_inquiry( $slug = '' ) {
 			'inquiry_url'      => $inquiry,
 		),
 		'commercial-janitor-cleaning'   => array(
-			'title'            => __( 'Commercial Janitor Cleaning', 'super-ninety-four' ),
-			'lede'             => __( 'Interior janitorial coverage for business-park suites and bar tenants — restrooms, floors, and back-of-house reset on a calendar you can audit.', 'super-ninety-four' ),
+			'title'            => __( 'Commercial Janitorial Cleaning & Consulting', 'super-ninety-four' ),
+			'lede'             => __( 'Interior janitorial coverage plus cleaning-program consulting for business-park suites and bar tenants — restrooms, floors, and back-of-house reset on a calendar you can audit.', 'super-ninety-four' ),
 			'image'            => $img_base . 'commercial-janitor-cleaning.jpg',
 			'benefits_heading' => __( 'What your suites and bars get each visit', 'super-ninety-four' ),
 			'benefits'         => array(
@@ -558,10 +664,11 @@ function snf_get_service_inquiry( $slug = '' ) {
 				__( 'Bar back-of-house wipe-down after service hours', 'super-ninety-four' ),
 				__( 'Suite common areas kept tenant-ready', 'super-ninety-four' ),
 				__( 'Supply restock notes for managers', 'super-ninety-four' ),
+				__( 'Consulting on cadence, scopes, and multi-site standards', 'super-ninety-four' ),
 				__( 'Recurring calendar with visit confirmation', 'super-ninety-four' ),
 			),
 			'price'            => '$000.00/mo',
-			'card_description' => __( 'Commercial janitorial for business-park suites and bar tenants: checklist-driven interior reset (restrooms, floors, back-of-house) on a recurring monthly cadence you can verify.', 'super-ninety-four' ),
+			'card_description' => __( 'Commercial janitorial cleaning and consulting for business-park suites and bar tenants: checklist-driven interior reset plus program guidance on a recurring monthly cadence you can verify.', 'super-ninety-four' ),
 			'workshop_url'     => $workshop,
 			'inquiry_url'      => $inquiry,
 		),
@@ -582,56 +689,6 @@ function snf_get_service_inquiry( $slug = '' ) {
 }
 
 /**
- * Figma Event Listings rows for the community dashboard.
- *
- * @return array<int, array<string, mixed>>
- */
-function snf_get_dashboard_event_listings() {
-	$members_url     = snf_get_page_url( 'select-events-by-members' );
-	$non_members_url = snf_get_page_url( 'select-events-by-non-members' );
-	$reciprocal_url  = snf_get_page_url( 'reciprocal-programs' );
-	$services_url    = snf_get_page_url( 'service-inquiries' );
-
-	$listings = array(
-		array(
-			'id'    => 'events-non-members',
-			'title' => __( 'Events (non-members)', 'super-ninety-four' ),
-			'url'   => $non_members_url,
-			'bp'    => 'events',
-			'cards' => snf_get_dashboard_non_member_event_cards(),
-		),
-		array(
-			'id'    => 'reciprocal-programs',
-			'title' => __( 'Reciprocal Programs', 'super-ninety-four' ),
-			'url'   => $reciprocal_url,
-			'bp'    => 'groups',
-			'cards' => snf_get_dashboard_reciprocal_cards(),
-		),
-		array(
-			'id'    => 'select-events-members',
-			'title' => __( 'Select events (members)', 'super-ninety-four' ),
-			'url'   => $members_url,
-			'bp'    => 'events',
-			'cards' => snf_get_dashboard_member_event_cards(),
-		),
-		array(
-			'id'    => 'service-inquiries',
-			'title' => __( 'Service Inquiries (only)', 'super-ninety-four' ),
-			'url'   => $services_url,
-			'bp'    => 'activity',
-			'cards' => snf_get_dashboard_service_inquiry_cards(),
-		),
-	);
-
-	/**
-	 * Filter dashboard event listing sections.
-	 *
-	 * @param array $listings Listing row definitions.
-	 */
-	return apply_filters( 'snf_dashboard_event_listings', $listings );
-}
-
-/**
  * Center header navigation items.
  *
  * @return array<int, array{label:string,url:string}>
@@ -643,10 +700,6 @@ function snf_primary_menu_items() {
 	}
 
 	return array(
-		array(
-			'label' => __( 'Apply', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'apply' ),
-		),
 		array(
 			'label' => __( 'Events', 'super-ninety-four' ),
 			'url'   => $events_url,
@@ -660,10 +713,7 @@ function snf_primary_menu_items() {
  * @return array<int, array<string, mixed>>
  */
 function snf_account_menu_items() {
-	$events_url = get_post_type_archive_link( 'event' );
-	if ( ! $events_url ) {
-		$events_url = home_url( '/events/' );
-	}
+	$shop_url = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'shop' ) : home_url( '/shop/' );
 
 	return array(
 		array(
@@ -674,29 +724,44 @@ function snf_account_menu_items() {
 		),
 		array(
 			'type'  => 'link',
-			'label' => __( 'Search events', 'super-ninety-four' ),
-			'url'   => $events_url,
+			'label' => __( 'Dashboard', 'super-ninety-four' ),
+			'url'   => snf_get_dashboard_url(),
+		),
+		array(
+			'type'  => 'link',
+			'label' => __( 'Search listings', 'super-ninety-four' ),
+			'url'   => $shop_url ? $shop_url : home_url( '/shop/' ),
 		),
 		array(
 			'type'  => 'link',
 			'label' => __( 'Messages', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'messages' ),
+			'url'   => snf_get_bp_messages_url(),
 			'icon'  => 'messages',
 		),
 		array(
 			'type'  => 'link',
-			'label' => __( 'Billing Details', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'billing-details' ),
+			'label' => __( 'Orders', 'super-ninety-four' ),
+			'url'   => snf_get_woo_account_url( 'orders' ),
 		),
 		array(
 			'type'  => 'link',
-			'label' => __( 'Member login', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'member-login' ),
+			'label' => __( 'Tickets', 'super-ninety-four' ),
+			'url'   => snf_get_woo_account_url( 'tickets' ),
 		),
 		array(
 			'type'  => 'link',
-			'label' => __( 'Apply', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'apply' ),
+			'label' => __( 'Membership', 'super-ninety-four' ),
+			'url'   => snf_get_woo_account_url( 'membership' ),
+		),
+		array(
+			'type'  => 'link',
+			'label' => __( 'Billing', 'super-ninety-four' ),
+			'url'   => snf_get_woo_account_url( 'edit-address' ),
+		),
+		array(
+			'type'  => 'link',
+			'label' => __( 'Profile', 'super-ninety-four' ),
+			'url'   => snf_get_bp_profile_url(),
 		),
 	);
 }
@@ -709,7 +774,16 @@ function snf_account_menu_items() {
  */
 function snf_is_lifestyle_concierge_workshop( $post_id = null ) {
 	$post_id = $post_id ? (int) $post_id : get_the_ID();
-	return 'lifestyle-concierge-workshop' === get_post_meta( $post_id, 'snf_event_template', true );
+	if ( ! $post_id ) {
+		return false;
+	}
+
+	if ( 'lifestyle-concierge-workshop' === get_post_meta( $post_id, 'snf_event_template', true ) ) {
+		return true;
+	}
+
+	$post = get_post( $post_id );
+	return $post && 'the-lifestyle-concierge-club-workshop' === $post->post_name;
 }
 
 /**
@@ -750,59 +824,20 @@ function snf_search_text_matches( $haystack, $needle ) {
 
 /**
  * Service inquiry results for the home search engine.
+ * Returns no rows until real service listings are published.
  *
  * @param string $query Search query.
  * @return array<int, array<string, string>>
  */
 function snf_get_service_inquiry_search_results( $query = '' ) {
-	$results = array();
-
-	$hub_title   = __( 'Service Inquiries (only)', 'super-ninety-four' );
-	$hub_snippet = __( 'Grounds litter pickup, line sitting, and commercial janitor cleaning for property managers, business parks, and tenants.', 'super-ninety-four' );
-	$hub_haystack = $hub_title . ' service inquiries services client portal ' . $hub_snippet;
-
-	if ( snf_search_text_matches( $hub_haystack, $query ) ) {
-		$results[] = array(
-			'title'   => $hub_title,
-			'url'     => snf_get_page_url( 'service-inquiries' ),
-			'snippet' => $hub_snippet,
-			'meta'    => __( 'Service inquiries', 'super-ninety-four' ),
-			'crumb'   => 'superninetyfour.com › service-inquiries',
-			'action'  => __( 'Open service inquiries', 'super-ninety-four' ),
-			'icon'    => '',
-		);
-	}
-
-	foreach ( snf_get_dashboard_service_inquiry_cards() as $card ) {
-		$haystack = $card['title'] . ' ' . ( $card['meta'] ?? '' ) . ' service inquiry services';
-		if ( ! snf_search_text_matches( $haystack, $query ) ) {
-			continue;
-		}
-
-		$slug = '';
-		if ( ! empty( $card['url'] ) ) {
-			$path = wp_parse_url( $card['url'], PHP_URL_PATH );
-			$slug = $path ? trim( $path, '/' ) : '';
-		}
-
-		$results[] = array(
-			'title'   => $card['title'],
-			'url'     => $card['url'],
-			'snippet' => $card['meta'],
-			'meta'    => __( 'Service inquiry', 'super-ninety-four' ),
-			'crumb'   => $slug ? 'superninetyfour.com › ' . $slug : 'superninetyfour.com › service-inquiries',
-			'action'  => __( 'Open service inquiry', 'super-ninety-four' ),
-			'icon'    => '',
-		);
-	}
-
 	/**
 	 * Filter service inquiry search results.
+	 * Empty by default until listings are added.
 	 *
 	 * @param array  $results Result rows.
 	 * @param string $query   Search query.
 	 */
-	return apply_filters( 'snf_service_inquiry_search_results', $results, $query );
+	return apply_filters( 'snf_service_inquiry_search_results', array(), $query );
 }
 
 /**
@@ -813,6 +848,12 @@ function snf_get_service_inquiry_search_results( $query = '' ) {
  */
 function snf_get_event_action_url( $post_id = null ) {
 	$post_id = $post_id ? (int) $post_id : get_the_ID();
+	$post    = get_post( $post_id );
+
+	// WooCommerce products always deep-link to their product page / checkout path.
+	if ( $post && 'product' === $post->post_type ) {
+		return get_permalink( $post_id );
+	}
 
 	if ( snf_is_lifestyle_concierge_workshop( $post_id ) ) {
 		return get_permalink( $post_id );

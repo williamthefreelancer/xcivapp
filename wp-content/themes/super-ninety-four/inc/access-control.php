@@ -61,13 +61,50 @@ function snf_get_member_access_roles() {
  * @return string[]
  */
 function snf_get_protected_page_slugs() {
-	return array(
+	$slugs = array(
 		'billing-details',
 		'messages',
 		'members',
 		'activity',
 		'groups',
 	);
+
+	if ( function_exists( 'wc_get_page_id' ) ) {
+		$myaccount_id = (int) wc_get_page_id( 'myaccount' );
+		if ( $myaccount_id > 0 ) {
+			$page = get_post( $myaccount_id );
+			if ( $page && ! empty( $page->post_name ) ) {
+				$slugs[] = $page->post_name;
+			}
+		}
+	}
+
+	/**
+	 * Filter protected page slugs synced into Content Control.
+	 *
+	 * @param string[] $slugs Slugs.
+	 */
+	return array_values( array_unique( apply_filters( 'snf_protected_page_slugs', $slugs ) ) );
+}
+
+/**
+ * Page templates that Content Control should treat as member-only.
+ *
+ * @return string[]
+ */
+function snf_get_protected_page_templates() {
+	$templates = array(
+		'page-templates/messages.php',
+		'page-templates/billing-details.php',
+		'page-templates/woocommerce-account.php',
+	);
+
+	/**
+	 * Filter protected page templates for Content Control.
+	 *
+	 * @param string[] $templates Template paths relative to theme.
+	 */
+	return array_values( array_unique( apply_filters( 'snf_protected_page_templates', $templates ) ) );
 }
 
 /**
@@ -101,10 +138,11 @@ add_action( 'init', 'snf_register_club_roles', 5 );
 /**
  * Resolve page IDs for a list of slugs.
  *
- * @param string[] $slugs Page slugs.
+ * @param string[] $slugs            Page slugs.
+ * @param bool     $include_bp_pages Whether to merge BuddyPress directory page IDs.
  * @return int[]
  */
-function snf_resolve_page_ids( $slugs ) {
+function snf_resolve_page_ids( $slugs, $include_bp_pages = false ) {
 	$ids = array();
 	foreach ( $slugs as $slug ) {
 		$page = get_page_by_path( $slug );
@@ -113,7 +151,7 @@ function snf_resolve_page_ids( $slugs ) {
 		}
 	}
 
-	if ( function_exists( 'bp_get_option' ) ) {
+	if ( $include_bp_pages && function_exists( 'bp_get_option' ) ) {
 		$bp_pages = bp_get_option( 'bp-pages', array() );
 		foreach ( array( 'members', 'activity', 'groups' ) as $comp ) {
 			if ( ! empty( $bp_pages[ $comp ] ) ) {
@@ -147,17 +185,64 @@ function snf_user_can_access_member_areas() {
 }
 
 /**
- * Sync Content Control restriction for protected pages + club roles.
+ * Upsert a Content Control restriction post.
+ *
+ * @param string               $slug     Restriction post_name.
+ * @param string               $title    Title.
+ * @param array<string, mixed> $settings Restriction settings.
+ * @param int                  $order    Menu order.
+ * @return int
+ */
+function snf_upsert_content_control_restriction( $slug, $title, $settings, $order = 1 ) {
+	$existing = get_posts(
+		array(
+			'post_type'      => 'cc_restriction',
+			'name'           => $slug,
+			'post_status'    => array( 'publish', 'draft' ),
+			'posts_per_page' => 1,
+			'fields'         => 'ids',
+		)
+	);
+
+	$message = isset( $settings['customMessage'] ) ? (string) $settings['customMessage'] : '';
+	$postarr = array(
+		'post_title'   => $title,
+		'post_name'    => $slug,
+		'post_status'  => 'publish',
+		'post_type'    => 'cc_restriction',
+		'post_content' => $message,
+		'menu_order'   => (int) $order,
+	);
+
+	if ( ! empty( $existing ) ) {
+		$postarr['ID']  = (int) $existing[0];
+		$restriction_id = wp_update_post( $postarr, true );
+	} else {
+		$restriction_id = wp_insert_post( $postarr, true );
+	}
+
+	if ( is_wp_error( $restriction_id ) || ! $restriction_id ) {
+		return 0;
+	}
+
+	update_post_meta( (int) $restriction_id, 'restriction_settings', $settings );
+	update_post_meta( (int) $restriction_id, 'data_version', 3 );
+
+	return (int) $restriction_id;
+}
+
+/**
+ * Sync Content Control restrictions for theme member surfaces + public funnel.
  */
 function snf_sync_content_control_access() {
 	if ( ! post_type_exists( 'cc_restriction' ) ) {
 		return;
 	}
 
-	$protected_ids = snf_resolve_page_ids( snf_get_protected_page_slugs() );
-	if ( empty( $protected_ids ) ) {
-		return;
-	}
+	$protected_ids = snf_resolve_page_ids( snf_get_protected_page_slugs(), true );
+	$public_ids    = snf_resolve_page_ids( snf_get_public_page_slugs(), false );
+	// Never lock the public funnel.
+	$protected_ids = array_values( array_diff( $protected_ids, $public_ids ) );
 
 	$login_page = get_page_by_path( 'member-login' );
 	$login_url  = $login_page ? get_permalink( $login_page ) : wp_login_url();
@@ -170,7 +255,37 @@ function snf_sync_content_control_access() {
 	$settings['excludeAdmins']        = true;
 	update_option( 'content_control_settings', $settings );
 
-	$restriction_settings = array(
+	$condition_items = array();
+	if ( $protected_ids ) {
+		$condition_items[] = array(
+			'id'         => 'snf_member_pages',
+			'type'       => 'rule',
+			'name'       => 'content_is_selected_page',
+			'notOperand' => false,
+			'options'    => array(
+				'selected' => $protected_ids,
+			),
+		);
+	}
+
+	$templates = snf_get_protected_page_templates();
+	if ( $templates ) {
+		$condition_items[] = array(
+			'id'         => 'snf_member_templates',
+			'type'       => 'rule',
+			'name'       => 'content_is_page_with_template',
+			'notOperand' => false,
+			'options'    => array(
+				'selected' => $templates,
+			),
+		);
+	}
+
+	if ( ! $condition_items ) {
+		return;
+	}
+
+	$member_restriction = array(
 		'userStatus'              => 'logged_in',
 		'roleMatch'               => 'match',
 		'userRoles'               => snf_get_member_access_roles(),
@@ -190,52 +305,16 @@ function snf_sync_content_control_access() {
 		'showInSearch'            => false,
 		'conditions'              => array(
 			'logicalOperator' => 'or',
-			'items'           => array(
-				array(
-					'id'         => 'snf_member_pages',
-					'type'       => 'rule',
-					'name'       => 'content_is_selected_page',
-					'notOperand' => false,
-					'options'    => array(
-						'selected' => $protected_ids,
-					),
-				),
-			),
+			'items'           => $condition_items,
 		),
 	);
 
-	$existing = get_posts(
-		array(
-			'post_type'      => 'cc_restriction',
-			'name'           => 'member-only-club-areas',
-			'post_status'    => array( 'publish', 'draft' ),
-			'posts_per_page' => 1,
-			'fields'         => 'ids',
-		)
+	snf_upsert_content_control_restriction(
+		'member-only-club-areas',
+		'Member-only club areas',
+		$member_restriction,
+		1
 	);
-
-	$postarr = array(
-		'post_title'   => 'Member-only club areas',
-		'post_name'    => 'member-only-club-areas',
-		'post_status'  => 'publish',
-		'post_type'    => 'cc_restriction',
-		'post_content' => $restriction_settings['customMessage'],
-		'menu_order'   => 1,
-	);
-
-	if ( ! empty( $existing ) ) {
-		$postarr['ID']  = (int) $existing[0];
-		$restriction_id = wp_update_post( $postarr, true );
-	} else {
-		$restriction_id = wp_insert_post( $postarr, true );
-	}
-
-	if ( is_wp_error( $restriction_id ) || ! $restriction_id ) {
-		return;
-	}
-
-	update_post_meta( (int) $restriction_id, 'restriction_settings', $restriction_settings );
-	update_post_meta( (int) $restriction_id, 'data_version', 3 );
 }
 add_action( 'init', 'snf_sync_content_control_access', 40 );
 

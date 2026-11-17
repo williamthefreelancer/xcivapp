@@ -59,36 +59,6 @@ function snf_get_hub_member_context() {
 }
 
 /**
- * Side navigation for account hub pages.
- *
- * @return array<int, array{label:string,url:string,slug:string}>
- */
-function snf_get_account_hub_nav() {
-	return array(
-		array(
-			'slug'  => 'billing-details',
-			'label' => __( 'Billing', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'billing-details' ),
-		),
-		array(
-			'slug'  => 'messages',
-			'label' => __( 'Messages', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'messages' ),
-		),
-		array(
-			'slug'  => 'member-login',
-			'label' => __( 'Member Login', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'member-login' ),
-		),
-		array(
-			'slug'  => 'apply',
-			'label' => __( 'Apply', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'apply' ),
-		),
-	);
-}
-
-/**
  * Membership plan catalog for billing.
  *
  * @return array<string, mixed>

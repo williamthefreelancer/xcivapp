@@ -1,0 +1,82 @@
+# Deploy only the existing theme folder to DreamHost.
+# Source: wp-content/themes/super-ninety-four/  (no copy/duplicate in the repo)
+# Dest:   secrets.DREAMHOST_THEME_PATH         (existing remote theme dir)
+#
+# Trailing slash on the local path is required so rsync syncs *contents*
+# into the remote theme folder — not a nested super-ninety-four/super-ninety-four/.
+#
+# Repo secrets (Settings → Secrets and variables → Actions):
+#   DREAMHOST_HOST        e.g. yourdomain.com or iad1-shared-XX.dreamhost.com
+#   DREAMHOST_USERNAME    DreamHost shell/FTP username
+#   DREAMHOST_SSH_KEY     Private SSH key (full PEM). Public key in ~/.ssh/authorized_keys on DreamHost
+#   DREAMHOST_THEME_PATH  Absolute path, e.g. /home/USER/yourdomain.com/wp-content/themes/super-ninety-four
+
+name: Deploy Theme
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "wp-content/themes/super-ninety-four/**"
+      - ".github/workflows/deploy-theme.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate secrets
+        env:
+          DREAMHOST_HOST: ${{ secrets.DREAMHOST_HOST }}
+          DREAMHOST_USERNAME: ${{ secrets.DREAMHOST_USERNAME }}
+          DREAMHOST_SSH_KEY: ${{ secrets.DREAMHOST_SSH_KEY }}
+          DREAMHOST_THEME_PATH: ${{ secrets.DREAMHOST_THEME_PATH }}
+        run: |
+          set -euo pipefail
+          for name in DREAMHOST_HOST DREAMHOST_USERNAME DREAMHOST_SSH_KEY DREAMHOST_THEME_PATH; do
+            if [ -z "${!name}" ]; then
+              echo "Missing secret: ${name}"
+              exit 1
+            fi
+          done
+          if [[ "${DREAMHOST_THEME_PATH}" != /* ]]; then
+            echo "DREAMHOST_THEME_PATH must be absolute (e.g. /home/USER/domain.com/wp-content/themes/super-ninety-four)"
+            exit 1
+          fi
+          if [[ "${DREAMHOST_THEME_PATH}" == */super-ninety-four/super-ninety-four ]]; then
+            echo "DREAMHOST_THEME_PATH looks nested. Use .../themes/super-ninety-four once."
+            exit 1
+          fi
+
+      - name: Configure SSH
+        env:
+          DREAMHOST_HOST: ${{ secrets.DREAMHOST_HOST }}
+          DREAMHOST_SSH_KEY: ${{ secrets.DREAMHOST_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          printf '%s\n' "${DREAMHOST_SSH_KEY}" > ~/.ssh/dreamhost_deploy
+          chmod 600 ~/.ssh/dreamhost_deploy
+          ssh-keyscan -H "${DREAMHOST_HOST}" >> ~/.ssh/known_hosts
+
+      - name: Sync theme to DreamHost
+        env:
+          DREAMHOST_HOST: ${{ secrets.DREAMHOST_HOST }}
+          DREAMHOST_USERNAME: ${{ secrets.DREAMHOST_USERNAME }}
+          DREAMHOST_THEME_PATH: ${{ secrets.DREAMHOST_THEME_PATH }}
+        run: |
+          set -euo pipefail
+          remote_theme="${DREAMHOST_THEME_PATH%/}"
+          echo "Local:  wp-content/themes/super-ninety-four/"
+          echo "Remote: ${DREAMHOST_USERNAME}@${DREAMHOST_HOST}:${remote_theme}/"
+
+          # Trailing slash on source = contents only (prevents duplicate folder nesting).
+          rsync -avz --delete \
+            -e "ssh -i ${HOME}/.ssh/dreamhost_deploy -o IdentitiesOnly=yes -o BatchMode=yes" \
+            --exclude '.git/' \
+            --exclude 'node_modules/' \
+            "./wp-content/themes/super-ninety-four/" \
+            "${DREAMHOST_USERNAME}@${DREAMHOST_HOST}:${remote_theme}/"
