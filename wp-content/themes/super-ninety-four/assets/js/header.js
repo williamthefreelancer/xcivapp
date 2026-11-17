@@ -39,6 +39,7 @@
   const dropdownItems = Array.from(
     nav.querySelectorAll(".snf-primary-nav__item--dropdown")
   );
+  const desktopQuery = window.matchMedia("(min-width: 1281px)");
 
   const setNavOpen = (open) => {
     if (!menuToggle || !panel) return;
@@ -57,6 +58,11 @@
       dropdown.hidden = true;
       item.classList.remove("is-open");
     });
+  };
+
+  const resetMobileNav = () => {
+    closeDropdowns();
+    setNavOpen(false);
   };
 
   if (menuToggle && panel) {
@@ -94,4 +100,18 @@
     setNavOpen(false);
     if (menuToggle) menuToggle.focus();
   });
+
+  const onViewportChange = () => {
+    if (desktopQuery.matches) {
+      resetMobileNav();
+    }
+  };
+
+  if (typeof desktopQuery.addEventListener === "function") {
+    desktopQuery.addEventListener("change", onViewportChange);
+  } else if (typeof desktopQuery.addListener === "function") {
+    desktopQuery.addListener(onViewportChange);
+  }
+
+  window.addEventListener("orientationchange", resetMobileNav);
 })();
