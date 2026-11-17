@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'SNF_VERSION', '2.19.0' );
+define( 'SNF_VERSION', '2.19.1' );
 
 require_once get_template_directory() . '/inc/account-hub.php';
 require_once get_template_directory() . '/inc/memberships.php';
@@ -242,86 +242,18 @@ function snf_get_footer_legal_links() {
 }
 
 /**
- * Seed starter copy for legal pages and assign WP privacy page.
+ * Keep legal pages blank for manual writing; assign privacy + refund template.
  */
 function snf_ensure_legal_page_content() {
-	$defaults = array(
-		'privacy-policy'   => snf_get_default_privacy_policy_content(),
-		'terms-of-service' => snf_get_default_terms_of_service_content(),
-		'cookie-policy'    => snf_get_default_cookie_policy_content(),
-	);
-
-	foreach ( $defaults as $slug => $content ) {
-		$page = get_page_by_path( $slug );
-		if ( ! $page ) {
-			continue;
-		}
-
-		$existing = trim( (string) $page->post_content );
-		if ( '' === $existing ) {
-			wp_update_post(
-				array(
-					'ID'           => (int) $page->ID,
-					'post_content' => $content,
-				)
-			);
-		}
-
-		if ( 'privacy-policy' === $slug ) {
-			update_option( 'wp_page_for_privacy_policy', (int) $page->ID );
-		}
+	$privacy = get_page_by_path( 'privacy-policy' );
+	if ( $privacy ) {
+		update_option( 'wp_page_for_privacy_policy', (int) $privacy->ID );
 	}
 
 	$refund = get_page_by_path( 'refund_returns' );
 	if ( $refund ) {
 		update_post_meta( (int) $refund->ID, '_wp_page_template', 'page-templates/legal.php' );
 	}
-}
-
-/**
- * @return string
- */
-function snf_get_default_privacy_policy_content() {
-	return '<!-- wp:paragraph --><p>SUPER NINETY FOUR (“we”, “us”) respects your privacy. This policy explains what information we collect, how we use it, and the choices you have.</p><!-- /wp:paragraph -->
-<!-- wp:heading {"level":2} --><h2>Information we collect</h2><!-- /wp:heading -->
-<!-- wp:paragraph --><p>We may collect account details (name, email, membership status), billing information processed by our payment providers, inquiry and messaging content you submit, and technical data such as IP address, browser type, and pages visited.</p><!-- /wp:paragraph -->
-<!-- wp:heading {"level":2} --><h2>How we use information</h2><!-- /wp:heading -->
-<!-- wp:paragraph --><p>We use personal information to operate membership and reciprocal programs, process payments, respond to service inquiries, improve the site, and meet legal obligations.</p><!-- /wp:paragraph -->
-<!-- wp:heading {"level":2} --><h2>Sharing</h2><!-- /wp:heading -->
-<!-- wp:paragraph --><p>We share data with trusted processors (for example payment, hosting, and email providers) only as needed to run the club. We do not sell personal information.</p><!-- /wp:paragraph -->
-<!-- wp:heading {"level":2} --><h2>Retention &amp; rights</h2><!-- /wp:heading -->
-<!-- wp:paragraph --><p>We retain information while your account is active and as required by law. Depending on your location, you may request access, correction, or deletion of your data by contacting us through the Contact page.</p><!-- /wp:paragraph -->
-<!-- wp:paragraph --><p><em>This is a starter policy for SUPER NINETY FOUR. Have counsel review it before relying on it in production.</em></p><!-- /wp:paragraph -->';
-}
-
-/**
- * @return string
- */
-function snf_get_default_terms_of_service_content() {
-	return '<!-- wp:paragraph --><p>These Terms of Service govern access to SUPER NINETY FOUR websites, memberships, events, reciprocal programs, and related services.</p><!-- /wp:paragraph -->
-<!-- wp:heading {"level":2} --><h2>Eligibility &amp; accounts</h2><!-- /wp:heading -->
-<!-- wp:paragraph --><p>Membership and certain experiences are by application or invitation. You agree to provide accurate information and keep your credentials secure. We may suspend or terminate access for misuse, non-payment, or conduct inconsistent with club standards.</p><!-- /wp:paragraph -->
-<!-- wp:heading {"level":2} --><h2>Purchases &amp; subscriptions</h2><!-- /wp:heading -->
-<!-- wp:paragraph --><p>Fees for memberships, tickets, and services are stated at checkout. Refunds, if any, follow our Refund &amp; Returns Policy. Reciprocal and partner offerings may include additional partner terms.</p><!-- /wp:paragraph -->
-<!-- wp:heading {"level":2} --><h2>Acceptable use</h2><!-- /wp:heading -->
-<!-- wp:paragraph --><p>You may not interfere with the platform, scrape content without permission, harass members or staff, or use the club for unlawful activity.</p><!-- /wp:paragraph -->
-<!-- wp:heading {"level":2} --><h2>Liability</h2><!-- /wp:heading -->
-<!-- wp:paragraph --><p>Services are provided “as available.” To the fullest extent permitted by law, SUPER NINETY FOUR is not liable for indirect or consequential damages arising from use of the site or participation in events.</p><!-- /wp:paragraph -->
-<!-- wp:paragraph --><p><em>This is a starter agreement. Have counsel adapt it to your jurisdiction and operations.</em></p><!-- /wp:paragraph -->';
-}
-
-/**
- * @return string
- */
-function snf_get_default_cookie_policy_content() {
-	return '<!-- wp:paragraph --><p>This Cookie Policy explains how SUPER NINETY FOUR uses cookies and similar technologies on our websites.</p><!-- /wp:paragraph -->
-<!-- wp:heading {"level":2} --><h2>What cookies are</h2><!-- /wp:heading -->
-<!-- wp:paragraph --><p>Cookies are small text files stored on your device. They help the site remember preferences, keep you signed in, and understand how pages are used.</p><!-- /wp:paragraph -->
-<!-- wp:heading {"level":2} --><h2>How we use cookies</h2><!-- /wp:heading -->
-<!-- wp:paragraph --><p>We use essential cookies for login, security, and checkout; preference cookies for display choices; and analytics cookies to improve performance. Some features may not work if essential cookies are blocked.</p><!-- /wp:paragraph -->
-<!-- wp:heading {"level":2} --><h2>Your choices</h2><!-- /wp:heading -->
-<!-- wp:paragraph --><p>You can control cookies through your browser settings. Disabling certain cookies may limit membership, cart, or messaging features.</p><!-- /wp:paragraph -->
-<!-- wp:paragraph --><p><em>Update this page if you add advertising or third-party tracking scripts.</em></p><!-- /wp:paragraph -->';
 }
 
 function snf_ensure_site_pages() {
