@@ -1,24 +1,24 @@
-# Deploy only the existing theme folder to DreamHost.
-# Source: wp-content/themes/super-ninety-four/  (no copy/duplicate in the repo)
-# Dest:   secrets.DREAMHOST_THEME_PATH         (existing remote theme dir)
+# Deploy the Super Ninety Four theme to DreamHost (superninetyfour.com).
+# Source: wp-content/themes/super-ninety-four/
+# Dest:   secrets.DREAMHOST_THEME_PATH
 #
-# Trailing slash on the local path is required so rsync syncs *contents*
-# into the remote theme folder — not a nested super-ninety-four/super-ninety-four/.
+# Trailing slash on the local path syncs *contents* into the remote theme
+# folder (avoids nested super-ninety-four/super-ninety-four/).
 #
 # Repo secrets (Settings → Secrets and variables → Actions):
-#   DREAMHOST_HOST        e.g. yourdomain.com or iad1-shared-XX.dreamhost.com
-#   DREAMHOST_USERNAME    DreamHost shell/FTP username
-#   DREAMHOST_SSH_KEY     Private SSH key (full PEM). Public key in ~/.ssh/authorized_keys on DreamHost
-#   DREAMHOST_THEME_PATH  Absolute path, e.g. /home/USER/yourdomain.com/wp-content/themes/super-ninety-four
+#   DREAMHOST_HOST        vps72256.dreamhostps.com
+#   DREAMHOST_USERNAME    superxcivapp
+#   DREAMHOST_SSH_KEY     Private key (public key in ~/.ssh/authorized_keys)
+#   DREAMHOST_THEME_PATH  /home/superxcivapp/superninetyfour.com/wp-content/themes/super-ninety-four
 
-name: Deploy Theme
+name: Deploy
 
 on:
   push:
     branches: [main]
     paths:
       - "wp-content/themes/super-ninety-four/**"
-      - ".github/workflows/deploy-theme.yml"
+      - ".github/workflows/deploy.yml"
   workflow_dispatch:
 
 jobs:
@@ -42,8 +42,12 @@ jobs:
               exit 1
             fi
           done
+          if [[ "${DREAMHOST_USERNAME}" != "superxcivapp" ]]; then
+            echo "DREAMHOST_USERNAME should be superxcivapp (got: ${DREAMHOST_USERNAME})"
+            exit 1
+          fi
           if [[ "${DREAMHOST_THEME_PATH}" != /* ]]; then
-            echo "DREAMHOST_THEME_PATH must be absolute (e.g. /home/USER/domain.com/wp-content/themes/super-ninety-four)"
+            echo "DREAMHOST_THEME_PATH must be absolute (e.g. /home/superxcivapp/superninetyfour.com/wp-content/themes/super-ninety-four)"
             exit 1
           fi
           if [[ "${DREAMHOST_THEME_PATH}" == */super-ninety-four/super-ninety-four ]]; then
@@ -70,6 +74,7 @@ jobs:
         run: |
           set -euo pipefail
           remote_theme="${DREAMHOST_THEME_PATH%/}"
+          echo "User:   superxcivapp"
           echo "Local:  wp-content/themes/super-ninety-four/"
           echo "Remote: ${DREAMHOST_USERNAME}@${DREAMHOST_HOST}:${remote_theme}/"
 
