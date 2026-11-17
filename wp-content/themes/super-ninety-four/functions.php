@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'SNF_VERSION', '2.15.5' );
+define( 'SNF_VERSION', '2.16.0' );
 
 require_once get_template_directory() . '/inc/account-hub.php';
 require_once get_template_directory() . '/inc/memberships.php';
@@ -83,6 +83,22 @@ function snf_get_site_pages() {
 		'about' => array(
 			'title'    => 'About',
 			'template' => 'page-templates/about.php',
+		),
+		'inquiries' => array(
+			'title'    => 'Service Inquiries',
+			'template' => 'page-templates/public-content.php',
+		),
+		'videos-audio' => array(
+			'title'    => 'Videos & Audio',
+			'template' => 'page-templates/public-content.php',
+		),
+		'contact' => array(
+			'title'    => 'Contact',
+			'template' => 'page-templates/public-content.php',
+		),
+		'newsletter' => array(
+			'title'    => 'Newsletter',
+			'template' => 'page-templates/public-content.php',
 		),
 		'find-other-reciprocal-programs' => array(
 			'title'    => 'Find Other Reciprocal Programs',
@@ -313,6 +329,7 @@ function snf_scripts() {
 		'page-templates/apply.php',
 		'page-templates/messages.php',
 		'page-templates/about.php',
+		'page-templates/public-content.php',
 		'page-templates/under-consideration.php',
 	);
 	$hub_slugs = array(
@@ -321,6 +338,10 @@ function snf_scripts() {
 		'apply',
 		'messages',
 		'about',
+		'inquiries',
+		'videos-audio',
+		'contact',
+		'newsletter',
 		'under-consideration',
 	);
 	$is_hub = false;
@@ -841,20 +862,60 @@ function snf_get_service_inquiry( $slug = '' ) {
 }
 
 /**
- * Center header navigation items.
+ * Center header navigation for logged-out visitors.
  *
- * @return array<int, array{label:string,url:string}>
+ * @return array<int, array<string, mixed>>
  */
 function snf_primary_menu_items() {
-	$events_url = get_post_type_archive_link( 'event' );
-	if ( ! $events_url ) {
-		$events_url = home_url( '/events/' );
+	$inquiry_children = array(
+		array(
+			'type'  => 'heading',
+			'label' => __( 'Service inquiries', 'super-ninety-four' ),
+			'url'   => snf_get_page_url( 'inquiries' ),
+		),
+	);
+
+	if ( function_exists( 'snf_get_dashboard_service_inquiry_cards' ) ) {
+		foreach ( snf_get_dashboard_service_inquiry_cards() as $card ) {
+			$inquiry_children[] = array(
+				'type'  => 'link',
+				'label' => $card['title'],
+				'url'   => $card['url'],
+			);
+		}
 	}
 
 	return array(
 		array(
+			'type'     => 'dropdown',
+			'label'    => __( 'Inquiries', 'super-ninety-four' ),
+			'url'      => snf_get_page_url( 'inquiries' ),
+			'children' => $inquiry_children,
+		),
+		array(
+			'type'  => 'link',
 			'label' => __( 'Events', 'super-ninety-four' ),
-			'url'   => $events_url,
+			'url'   => snf_get_workshop_landing_url(),
+		),
+		array(
+			'type'  => 'link',
+			'label' => __( 'About', 'super-ninety-four' ),
+			'url'   => snf_get_page_url( 'about' ),
+		),
+		array(
+			'type'  => 'link',
+			'label' => __( 'Videos & Audio', 'super-ninety-four' ),
+			'url'   => snf_get_page_url( 'videos-audio' ),
+		),
+		array(
+			'type'  => 'link',
+			'label' => __( 'Contact', 'super-ninety-four' ),
+			'url'   => snf_get_page_url( 'contact' ),
+		),
+		array(
+			'type'  => 'link',
+			'label' => __( 'Newsletter', 'super-ninety-four' ),
+			'url'   => snf_get_page_url( 'newsletter' ),
 		),
 	);
 }

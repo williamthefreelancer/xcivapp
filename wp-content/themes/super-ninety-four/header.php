@@ -7,7 +7,11 @@
 </head>
 <body <?php body_class(); ?>>
 <?php wp_body_open(); ?>
-<header class="snf-header">
+<?php
+$snf_show_guest_nav = ! is_user_logged_in();
+$snf_guest_items    = $snf_show_guest_nav ? snf_primary_menu_items() : array();
+?>
+<header class="snf-header<?php echo $snf_show_guest_nav ? ' snf-header--guest' : ''; ?>">
 	<div class="snf-container snf-header__container">
 		<a class="snf-header__logo" href="<?php echo esc_url( home_url( '/' ) ); ?>">
 			<img
@@ -18,6 +22,78 @@
 				decoding="async"
 			>
 		</a>
+
+		<?php if ( $snf_show_guest_nav ) : ?>
+			<nav class="snf-primary-nav" aria-label="<?php esc_attr_e( 'Primary', 'super-ninety-four' ); ?>">
+				<button
+					class="snf-primary-nav__toggle"
+					type="button"
+					aria-expanded="false"
+					aria-controls="snf-primary-nav-panel"
+				>
+					<span class="snf-primary-nav__toggle-label"><?php esc_html_e( 'Menu', 'super-ninety-four' ); ?></span>
+					<span class="snf-primary-nav__toggle-bars" aria-hidden="true"></span>
+				</button>
+
+				<div id="snf-primary-nav-panel" class="snf-primary-nav__panel">
+					<ul class="snf-primary-nav__list">
+						<?php foreach ( $snf_guest_items as $item ) : ?>
+							<?php
+							$type     = isset( $item['type'] ) ? $item['type'] : 'link';
+							$label    = isset( $item['label'] ) ? $item['label'] : '';
+							$url      = isset( $item['url'] ) ? $item['url'] : '#';
+							$children = ! empty( $item['children'] ) && is_array( $item['children'] ) ? $item['children'] : array();
+							?>
+							<?php if ( 'dropdown' === $type ) : ?>
+								<li class="snf-primary-nav__item snf-primary-nav__item--dropdown">
+									<button
+										class="snf-primary-nav__trigger"
+										type="button"
+										aria-expanded="false"
+										aria-haspopup="true"
+									>
+										<span><?php echo esc_html( $label ); ?></span>
+										<svg class="snf-primary-nav__chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+											<path d="M2.5 4.25 6 7.75l3.5-3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+										</svg>
+									</button>
+									<div class="snf-primary-nav__dropdown" hidden>
+										<ul class="snf-primary-nav__sublist" role="list">
+											<?php foreach ( $children as $child ) : ?>
+												<?php
+												$child_type  = isset( $child['type'] ) ? $child['type'] : 'link';
+												$child_label = isset( $child['label'] ) ? $child['label'] : '';
+												$child_url   = isset( $child['url'] ) ? $child['url'] : '#';
+												?>
+												<?php if ( 'heading' === $child_type ) : ?>
+													<li class="snf-primary-nav__subitem snf-primary-nav__subitem--heading">
+														<a class="snf-primary-nav__heading" href="<?php echo esc_url( $child_url ); ?>">
+															<?php echo esc_html( $child_label ); ?>
+														</a>
+													</li>
+												<?php else : ?>
+													<li class="snf-primary-nav__subitem">
+														<a class="snf-primary-nav__sublink" href="<?php echo esc_url( $child_url ); ?>">
+															<?php echo esc_html( $child_label ); ?>
+														</a>
+													</li>
+												<?php endif; ?>
+											<?php endforeach; ?>
+										</ul>
+									</div>
+								</li>
+							<?php else : ?>
+								<li class="snf-primary-nav__item">
+									<a class="snf-primary-nav__link" href="<?php echo esc_url( $url ); ?>">
+										<?php echo esc_html( $label ); ?>
+									</a>
+								</li>
+							<?php endif; ?>
+						<?php endforeach; ?>
+					</ul>
+				</div>
+			</nav>
+		<?php endif; ?>
 
 		<div class="snf-header__actions">
 			<div class="snf-header__meta">

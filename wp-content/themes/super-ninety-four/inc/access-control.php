@@ -117,6 +117,10 @@ function snf_get_public_page_slugs() {
 	return array(
 		'home',
 		'about',
+		'inquiries',
+		'videos-audio',
+		'contact',
+		'newsletter',
 		'apply',
 		'under-consideration',
 		'member-login',
