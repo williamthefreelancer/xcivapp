@@ -127,6 +127,10 @@ function snf_get_public_page_slugs() {
 		'find-other-reciprocal-programs',
 		'select-events-by-non-members',
 		'expo',
+		'privacy-policy',
+		'terms-of-service',
+		'cookie-policy',
+		'refund_returns',
 	);
 }
 

@@ -20,8 +20,9 @@
 	--snf-surface: rgba(27, 19, 19, 0.42);
 	--snf-surface-strong: rgba(27, 19, 19, 0.72);
 	--snf-surface-border: rgba(243, 235, 232, 0.18);
-	--snf-font-display: "Fraunces", "Iowan Old Style", "Palatino Linotype", Palatino, serif;
-	--snf-font-body: "Manrope", "Avenir Next", "Segoe UI", sans-serif;
+	--snf-font-display: "League Gothic", "Arial Narrow", Impact, sans-serif;
+	--snf-font-body: "Open Sans", "Avenir Next", "Segoe UI", sans-serif;
+	--snf-font-nav: "Lato", "Avenir Next", "Segoe UI", sans-serif;
 	--snf-pad-x: clamp(1rem, 4vw, 3rem);
 	--snf-pad-y: clamp(0.95rem, 2.6vw, 2rem);
 	--snf-header-offset: clamp(5.75rem, 11vw, 7.5rem);
@@ -68,12 +69,44 @@ body {
 }
 
 body {
+	display: flex;
+	flex-direction: column;
 	font-family: var(--snf-font-body);
+	font-weight: 400;
 	color: var(--snf-ink);
 	background-image: linear-gradient(180deg, var(--snf-grad-top) 0%, var(--snf-grad-bottom) 100%);
 	background-attachment: fixed;
 	min-height: 100vh;
 	min-height: 100dvh;
+}
+
+body > main,
+body > .snf-page {
+	flex: 1 0 auto;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-family: var(--snf-font-display);
+	font-weight: 400;
+	font-style: normal;
+	letter-spacing: 0.02em;
+}
+
+p {
+	font-family: var(--snf-font-body);
+	font-weight: 400;
+}
+
+strong,
+b,
+p strong,
+p b {
+	font-weight: 600;
 }
 
 a {
@@ -162,6 +195,7 @@ button {
 	border-radius: 999px;
 	background: rgba(27, 19, 19, 0.35);
 	color: var(--snf-ink);
+	font-family: var(--snf-font-nav);
 	font-size: 0.8rem;
 	font-weight: 600;
 	letter-spacing: 0.04em;
@@ -222,7 +256,7 @@ button {
 	border: 0;
 	border-radius: 999px;
 	background: transparent;
-	font-family: inherit;
+	font-family: var(--snf-font-nav);
 	font-size: 0.8rem;
 	font-weight: 600;
 	letter-spacing: 0.02em;
@@ -280,11 +314,11 @@ button {
 .snf-primary-nav__heading {
 	display: block;
 	padding: 0.55rem 0.85rem 0.35rem;
-	font-family: var(--snf-font-display);
-	font-style: italic;
+	font-family: var(--snf-font-nav);
+	font-style: normal;
 	font-size: 0.95rem;
-	font-weight: 500;
-	letter-spacing: -0.01em;
+	font-weight: 600;
+	letter-spacing: 0.02em;
 	color: #fff;
 }
 
@@ -298,8 +332,9 @@ button {
 	display: block;
 	padding: 0.7rem 0.85rem;
 	border-radius: 12px;
+	font-family: var(--snf-font-nav);
 	font-size: 0.88rem;
-	font-weight: 500;
+	font-weight: 600;
 	line-height: 1.35;
 	color: var(--snf-ink-muted);
 	transition: background-color 160ms ease, color 160ms ease;
@@ -431,8 +466,9 @@ body.snf-nav-open {
 }
 
 .snf-header__phone {
+	font-family: var(--snf-font-nav);
 	font-size: 0.78rem;
-	font-weight: 500;
+	font-weight: 600;
 	letter-spacing: 0.04em;
 	line-height: 1.2;
 	color: var(--snf-ink-soft);
@@ -449,6 +485,7 @@ body.snf-nav-open {
 }
 
 .snf-header__login {
+	font-family: var(--snf-font-nav);
 	font-size: 0.84rem;
 	font-weight: 600;
 	letter-spacing: 0.01em;
@@ -480,6 +517,7 @@ body.snf-nav-open {
 	border: 1px solid rgba(243, 235, 232, 0.38);
 	border-radius: 999px;
 	background: rgba(243, 235, 232, 0.2);
+	font-family: var(--snf-font-nav);
 	font-size: 0.875rem;
 	font-weight: 600;
 	letter-spacing: 0.02em;
@@ -579,8 +617,9 @@ body.snf-nav-open {
 	border: 1px solid rgba(243, 235, 232, 0.14);
 	background: rgba(243, 235, 232, 0.06);
 	color: var(--snf-ink-muted);
+	font-family: var(--snf-font-nav);
 	font-size: 0.88rem;
-	font-weight: 500;
+	font-weight: 600;
 	line-height: 1.35;
 	transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease;
 }
@@ -602,6 +641,7 @@ body.snf-nav-open {
 .snf-account__club {
 	display: block;
 	padding: 0.7rem 0.9rem 0.35rem;
+	font-family: var(--snf-font-nav);
 	font-size: 0.78rem;
 	font-weight: 600;
 	letter-spacing: 0.04em;
@@ -620,8 +660,9 @@ body.snf-nav-open {
 	display: block;
 	padding: 0.75rem 0.9rem;
 	border-radius: 12px;
+	font-family: var(--snf-font-nav);
 	font-size: 0.92rem;
-	font-weight: 500;
+	font-weight: 600;
 	line-height: 1.35;
 	color: var(--snf-ink-muted);
 	transition: background-color 160ms ease, color 160ms ease;
@@ -1976,10 +2017,10 @@ body.snf-no-header.admin-bar {
 	margin: 0;
 	max-width: 22ch;
 	font-family: var(--snf-font-display);
-	font-style: italic;
-	font-weight: 500;
+	font-style: normal;
+	font-weight: 400;
 	font-size: clamp(1.55rem, 3.2vw, 2.15rem);
-	letter-spacing: -0.02em;
+	letter-spacing: 0.02em;
 	line-height: 1.2;
 	color: #fff;
 }
@@ -2029,10 +2070,10 @@ body.snf-no-header.admin-bar {
 .snf-account-surface__title {
 	margin: 0;
 	font-family: var(--snf-font-display);
-	font-style: italic;
-	font-weight: 500;
+	font-style: normal;
+	font-weight: 400;
 	font-size: clamp(1.45rem, 3vw, 2rem);
-	letter-spacing: -0.02em;
+	letter-spacing: 0.02em;
 	color: #fff;
 }
 
@@ -2802,8 +2843,9 @@ a.snf-panel-card:focus-visible {
 	min-height: var(--snf-touch-min);
 	padding: 0.7rem 0.85rem;
 	border-radius: 12px;
+	font-family: var(--snf-font-nav);
 	font-size: 0.88rem;
-	font-weight: 500;
+	font-weight: 600;
 	color: var(--snf-ink-muted);
 	transition: background-color 160ms ease, color 160ms ease;
 }
@@ -4221,9 +4263,9 @@ body:has(.snf-hub--apply) .snf-header__apply {
 
 .snf-quote__title {
 	margin: 0;
-	font-family: "Lato", var(--snf-font-body), sans-serif;
+	font-family: var(--snf-font-display);
 	font-size: clamp(1.75rem, 3.8vw, 2.1875rem);
-	font-weight: 700;
+	font-weight: 400;
 	line-height: 1.15;
 	color: #fff;
 	text-wrap: balance;
@@ -4232,9 +4274,9 @@ body:has(.snf-hub--apply) .snf-header__apply {
 .snf-quote__lede {
 	margin: 0 auto;
 	max-width: 29.25rem;
-	font-family: "Open Sans", var(--snf-font-body), sans-serif;
+	font-family: var(--snf-font-body);
 	font-size: 0.875rem;
-	font-weight: 700;
+	font-weight: 600;
 	line-height: 1.35;
 	color: #fff;
 }
@@ -4246,9 +4288,9 @@ body:has(.snf-hub--apply) .snf-header__apply {
 .snf-quote__heading {
 	margin: 0 auto clamp(1.25rem, 3vw, 1.75rem);
 	max-width: 38.5rem;
-	font-family: "Lato", var(--snf-font-body), sans-serif;
+	font-family: var(--snf-font-display);
 	font-size: clamp(1.55rem, 3.4vw, 2.1875rem);
-	font-weight: 700;
+	font-weight: 400;
 	line-height: 1.2;
 	color: #fff;
 	text-wrap: balance;
@@ -4265,7 +4307,7 @@ body:has(.snf-hub--apply) .snf-header__apply {
 }
 
 .snf-quote__item {
-	font-family: "Open Sans", var(--snf-font-body), sans-serif;
+	font-family: var(--snf-font-body);
 	font-size: 0.875rem;
 	font-weight: 600;
 	line-height: 1.4;
@@ -4298,9 +4340,9 @@ body:has(.snf-hub--apply) .snf-header__apply {
 .snf-quote__plan {
 	margin: 0;
 	max-width: 17.5rem;
-	font-family: "Lato", var(--snf-font-body), sans-serif;
+	font-family: var(--snf-font-display);
 	font-size: clamp(1.15rem, 2.5vw, 1.5rem);
-	font-weight: 700;
+	font-weight: 400;
 	line-height: 1.25;
 	color: #fff;
 	text-wrap: balance;
@@ -4308,9 +4350,9 @@ body:has(.snf-hub--apply) .snf-header__apply {
 
 .snf-quote__price {
 	margin: 0;
-	font-family: "Lato", var(--snf-font-body), sans-serif;
+	font-family: var(--snf-font-display);
 	font-size: clamp(1.75rem, 4vw, 2.25rem);
-	font-weight: 700;
+	font-weight: 400;
 	line-height: 1.1;
 	color: #fff;
 }
@@ -4318,7 +4360,7 @@ body:has(.snf-hub--apply) .snf-header__apply {
 .snf-quote__card-desc {
 	margin: 0 0 0.35rem;
 	max-width: 15.8rem;
-	font-family: "Open Sans", var(--snf-font-body), sans-serif;
+	font-family: var(--snf-font-body);
 	font-size: 0.875rem;
 	font-weight: 600;
 	line-height: 1.4;
@@ -4335,9 +4377,9 @@ body:has(.snf-hub--apply) .snf-header__apply {
 	border-radius: 10px;
 	background: var(--snf-quote-cta);
 	color: #fff;
-	font-family: "Lato", var(--snf-font-body), sans-serif;
+	font-family: var(--snf-font-nav);
 	font-size: 1rem;
-	font-weight: 700;
+	font-weight: 600;
 	line-height: 1.2;
 	transition: background-color 160ms ease, transform 160ms ease;
 }
@@ -5903,5 +5945,167 @@ table {
 		opacity: 1;
 		transform: none;
 		transition: none;
+	}
+}
+
+/* Site footer — legal / policy links on brand gradient */
+.snf-footer {
+	flex-shrink: 0;
+	margin-top: auto;
+	padding: clamp(2rem, 4vw, 2.75rem) 0 calc(1.5rem + env(safe-area-inset-bottom, 0px));
+	border-top: 1px solid rgba(243, 235, 232, 0.14);
+	background-image: linear-gradient(180deg, var(--snf-grad-top) 0%, var(--snf-grad-bottom) 100%);
+	color: var(--snf-ink);
+}
+
+.snf-footer__inner {
+	display: grid;
+	gap: clamp(1.25rem, 3vw, 1.85rem);
+	justify-items: start;
+}
+
+.snf-footer__brand {
+	display: grid;
+	gap: 0.65rem;
+	max-width: 28rem;
+}
+
+.snf-footer__logo {
+	display: inline-flex;
+	line-height: 0;
+}
+
+.snf-footer__logo img {
+	display: block;
+	width: min(180px, 55vw);
+	height: auto;
+}
+
+.snf-footer__tagline {
+	margin: 0;
+	font-family: var(--snf-font-body);
+	font-size: 0.9rem;
+	font-weight: 400;
+	line-height: 1.45;
+	color: var(--snf-ink-muted);
+}
+
+.snf-footer__nav {
+	display: grid;
+	gap: 0.65rem;
+	width: 100%;
+}
+
+.snf-footer__nav-label {
+	margin: 0;
+	font-family: var(--snf-font-display);
+	font-size: 1.15rem;
+	font-weight: 400;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: #fff;
+}
+
+.snf-footer__list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.55rem 1.25rem;
+}
+
+.snf-footer__link {
+	font-family: var(--snf-font-nav);
+	font-size: 0.88rem;
+	font-weight: 600;
+	line-height: 1.35;
+	color: var(--snf-ink-muted);
+	text-decoration: underline;
+	text-underline-offset: 0.22em;
+	text-decoration-thickness: 1px;
+	transition: color 160ms ease;
+}
+
+.snf-footer__link:hover,
+.snf-footer__link:focus-visible {
+	color: #fff;
+	outline: none;
+}
+
+.snf-footer__copy {
+	margin: 0;
+	font-family: var(--snf-font-body);
+	font-size: 0.8rem;
+	font-weight: 400;
+	line-height: 1.4;
+	color: var(--snf-ink-soft);
+}
+
+/* Legal policy body copy */
+.snf-legal__content {
+	display: grid;
+	gap: 0.85rem;
+	font-family: var(--snf-font-body);
+	font-weight: 400;
+	font-size: 0.98rem;
+	line-height: 1.65;
+	color: var(--snf-ink-muted);
+}
+
+.snf-legal__content h2,
+.snf-legal__content h3 {
+	margin: 1.1rem 0 0.35rem;
+	font-family: var(--snf-font-display);
+	font-weight: 400;
+	font-style: normal;
+	letter-spacing: 0.03em;
+	color: #fff;
+}
+
+.snf-legal__content p {
+	margin: 0;
+	font-family: var(--snf-font-body);
+	font-weight: 400;
+}
+
+.snf-legal__content a {
+	text-decoration: underline;
+	text-underline-offset: 0.18em;
+}
+
+/* Typography lock: headings League Gothic regular; menus Lato semibold */
+[class*="__title"],
+[class*="__heading"],
+.snf-home-section__title,
+.snf-home-card__title,
+.snf-hub__title,
+.snf-panel__title,
+.snf-workshop__heading,
+.snf-event__title,
+.snf-expo__title,
+.snf-reciprocal__title {
+	font-family: var(--snf-font-display);
+	font-weight: 400;
+	font-style: normal;
+}
+
+.woocommerce-MyAccount-navigation a,
+.snf-dashboard--account .woocommerce-MyAccount-navigation a,
+.snf-hub__action {
+	font-family: var(--snf-font-nav);
+	font-weight: 600;
+}
+
+@media (max-width: 640px) {
+	.snf-footer__list {
+		flex-direction: column;
+		gap: 0.7rem;
+	}
+
+	.snf-footer__link {
+		min-height: var(--snf-touch-min);
+		display: inline-flex;
+		align-items: center;
 	}
 }
