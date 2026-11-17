@@ -41,9 +41,16 @@ $initiation   = isset( $plans['initiation_fee'] ) && is_array( $plans['initiatio
 	<section class="snf-event__shell snf-container" aria-label="<?php echo esc_attr( $event['title'] ); ?>">
 		<article class="snf-event__frame">
 			<header class="snf-event__topbar">
-				<p class="snf-event__brand" aria-label="<?php esc_attr_e( 'SUPER NINETY FOUR', 'super-ninety-four' ); ?>">
-					~ SUPER NINETY FOUR ~
-				</p>
+				<a class="snf-event__brand" href="<?php echo esc_url( home_url( '/' ) ); ?>">
+					<img
+						class="snf-event__logo"
+						src="<?php echo esc_url( get_template_directory_uri() . '/assets/icons/female-body-icon-white.svg' ); ?>"
+						alt="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>"
+						width="28"
+						height="42"
+						decoding="async"
+					>
+				</a>
 				<a class="snf-event__avatar" href="<?php echo esc_url( home_url( '/' ) ); ?>">
 					<img src="<?php echo esc_url( $avatar ); ?>" alt="" width="40" height="40" decoding="async">
 				</a>
