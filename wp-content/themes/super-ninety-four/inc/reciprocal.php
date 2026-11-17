@@ -133,12 +133,14 @@ function snf_reciprocal_default_inquiry_images() {
  * @return array<string, array<string, mixed>>
  */
 function snf_get_reciprocal_clubs() {
-	$card_img = get_template_directory_uri() . '/assets/images/reciprocal/';
-	$cta      = snf_get_page_url( 'apply' );
-	$heading  = snf_get_reciprocal_hero_heading();
-	$media    = snf_reciprocal_default_inquiry_images();
-	$why      = snf_reciprocal_why_consider_items();
-	$why_lede = snf_reciprocal_why_consider_lede();
+	$card_img   = get_template_directory_uri() . '/assets/images/reciprocal/';
+	$uploads    = wp_get_upload_dir();
+	$upload_uri = trailingslashit( $uploads['baseurl'] ) . '2026/11/';
+	$cta        = snf_get_page_url( 'apply' );
+	$heading    = snf_get_reciprocal_hero_heading();
+	$media      = snf_reciprocal_default_inquiry_images();
+	$why        = snf_reciprocal_why_consider_items();
+	$why_lede   = snf_reciprocal_why_consider_lede();
 
 	$clubs = array(
 		'the-clubs-at-back-creek'             => array(
@@ -188,8 +190,8 @@ function snf_get_reciprocal_clubs() {
 			'title'        => __( 'The Clubs at Wyoma Square', 'super-ninety-four' ),
 			'mark'         => 'WS',
 			'mark_label'   => __( 'WYOMA SQUARE', 'super-ninety-four' ),
-			'hero'         => $media['hero'],
-			'hero_alt'     => __( 'The Clubs at Wyoma Square', 'super-ninety-four' ),
+			'hero'         => $upload_uri . 'wyoma-square-in-lynn-ma.png',
+			'hero_alt'     => __( 'Wyoma Square in Lynn, MA', 'super-ninety-four' ),
 			'mid_image'    => $media['mid_image'],
 			'gallery'      => $media['gallery'],
 			'card_image'   => $card_img . 'the-clubs-at-wyoma-square.jpg',
@@ -209,8 +211,8 @@ function snf_get_reciprocal_clubs() {
 			'title'        => __( 'The City Clubs of SUPER NINETY FOUR', 'super-ninety-four' ),
 			'mark'         => 'CC',
 			'mark_label'   => __( 'THE CITY CLUBS', 'super-ninety-four' ),
-			'hero'         => $media['hero'],
-			'hero_alt'     => __( 'The City Clubs of SUPER NINETY FOUR coach', 'super-ninety-four' ),
+			'hero'         => $upload_uri . 'private-club-image-background.jpg',
+			'hero_alt'     => __( 'The City Clubs of SUPER NINETY FOUR', 'super-ninety-four' ),
 			'mid_image'    => $media['mid_image'],
 			'gallery'      => $media['gallery'],
 			'card_image'   => $card_img . 'the-city-clubs-at-super-ninety-four.jpg',
