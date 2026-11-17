@@ -27,12 +27,13 @@ html,
 body {
 	margin: 0;
 	min-height: 100%;
+	background-color: var(--snf-grad-top);
 }
 
 body {
 	font-family: var(--snf-font-body);
 	color: var(--snf-ink);
-	background: linear-gradient(180deg, var(--snf-grad-top) 0%, var(--snf-grad-bottom) 100%);
+	background-image: linear-gradient(180deg, var(--snf-grad-top) 0%, var(--snf-grad-bottom) 100%);
 	background-attachment: fixed;
 	min-height: 100vh;
 }
@@ -983,8 +984,10 @@ body.snf-no-header.admin-bar {
 	width: 100%;
 	margin: 0 0 2.25rem;
 	padding: 0.95rem 1.25rem;
-	border-block: 1px solid rgba(255, 255, 255, 0.55);
-	background: linear-gradient(90deg, rgba(132, 100, 100, 0.55), rgba(28, 28, 28, 0.72) 85%);
+	border: 0;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.55);
+	background-color: #4d3333;
+	background-image: linear-gradient(90deg, #846464 0%, #1c1c1c 85%);
 	text-align: center;
 }
 
