@@ -681,14 +681,170 @@ function snf_membership_schedule_cron() {
 		if ( ! as_has_scheduled_action( 'snf_membership_daily_sweep', array(), 'snf-memberships' ) ) {
 			as_schedule_recurring_action( time() + HOUR_IN_SECONDS, DAY_IN_SECONDS, 'snf_membership_daily_sweep', array(), 'snf-memberships' );
 		}
-		return;
 	}
 
+	// WP-Cron safety net even when Action Scheduler is present.
 	if ( ! wp_next_scheduled( 'snf_membership_daily_sweep' ) ) {
 		wp_schedule_event( time() + HOUR_IN_SECONDS, 'daily', 'snf_membership_daily_sweep' );
 	}
 }
 add_action( 'init', 'snf_membership_schedule_cron', 30 );
+
+/**
+ * Resolve product ID for a membership plan slug or the initiation SKU.
+ *
+ * @param string $key Plan slug, or 'initiation'.
+ * @return int
+ */
+function snf_get_membership_product_id( $key ) {
+	$key  = sanitize_title( (string) $key );
+	$defs = snf_get_membership_plan_definitions();
+
+	if ( 'initiation' === $key ) {
+		$slug = $defs['initiation_fee']['product_slug'];
+	} else {
+		$plan = snf_get_membership_plan_by_slug( $key );
+		if ( ! $plan ) {
+			return 0;
+		}
+		$slug = $plan['product_slug'];
+	}
+
+	$product = get_page_by_path( $slug, OBJECT, 'product' );
+	return $product ? (int) $product->ID : 0;
+}
+
+/**
+ * Put initiation + selected dues plan into the cart and return checkout URL.
+ *
+ * @param string $plan_slug Plan slug.
+ * @return string|\WP_Error Checkout URL or error.
+ */
+function snf_membership_prepare_checkout_for_plan( $plan_slug ) {
+	if ( ! function_exists( 'WC' ) ) {
+		return new WP_Error( 'snf_no_cart', __( 'Cart is unavailable.', 'super-ninety-four' ) );
+	}
+
+	if ( function_exists( 'wc_load_cart' ) ) {
+		wc_load_cart();
+	}
+
+	if ( ! WC()->cart ) {
+		return new WP_Error( 'snf_no_cart', __( 'Cart is unavailable.', 'super-ninety-four' ) );
+	}
+
+	$plan_slug = sanitize_title( (string) $plan_slug );
+	$plan_id   = snf_get_membership_product_id( $plan_slug );
+	$init_id   = snf_get_membership_product_id( 'initiation' );
+
+	if ( ! $plan_id ) {
+		return new WP_Error( 'snf_no_plan_product', __( 'Membership plan product is missing.', 'super-ninety-four' ) );
+	}
+
+	WC()->cart->empty_cart();
+
+	$user_id = get_current_user_id();
+	if ( $user_id && ! get_user_meta( $user_id, SNF_META_INITIATION, true ) && $init_id ) {
+		WC()->cart->add_to_cart( $init_id, 1 );
+	}
+
+	$added = WC()->cart->add_to_cart(
+		$plan_id,
+		1,
+		0,
+		array(),
+		array( 'snf_membership_plan' => $plan_slug )
+	);
+
+	if ( ! $added ) {
+		return new WP_Error( 'snf_add_failed', __( 'Could not add the membership plan to the cart.', 'super-ninety-four' ) );
+	}
+
+	if ( $user_id ) {
+		update_user_meta( $user_id, 'snf_pending_membership_plan', $plan_slug );
+	}
+
+	return wc_get_checkout_url();
+}
+
+/**
+ * Apply Intent → cart checkout for club dues (+ initiation when unpaid).
+ */
+function snf_handle_apply_membership_checkout() {
+	if ( ! isset( $_POST['snf_apply_plan'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		wp_safe_redirect( snf_get_page_url( 'apply' ) );
+		exit;
+	}
+
+	check_admin_referer( 'snf_apply_membership', 'snf_apply_nonce' );
+
+	$plan_slug = sanitize_title( wp_unslash( $_POST['snf_apply_plan'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+	$name      = isset( $_POST['snf_apply_name'] ) ? sanitize_text_field( wp_unslash( $_POST['snf_apply_name'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing
+	$email     = isset( $_POST['snf_apply_email'] ) ? sanitize_email( wp_unslash( $_POST['snf_apply_email'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing
+
+	if ( ! is_user_logged_in() && $email && is_email( $email ) ) {
+		$existing = email_exists( $email );
+		if ( $existing ) {
+			// Soft path: send them to login before checkout.
+			$redirect = add_query_arg(
+				array(
+					'redirect_to' => rawurlencode( snf_get_page_url( 'apply' ) ),
+					'email'       => rawurlencode( $email ),
+				),
+				snf_get_page_url( 'member-login' )
+			);
+			wp_safe_redirect( $redirect );
+			exit;
+		}
+
+		$user_login = sanitize_user( current( explode( '@', $email ) ), true );
+		if ( ! $user_login ) {
+			$user_login = 'member' . wp_generate_password( 6, false, false );
+		}
+		$base = $user_login;
+		$i    = 1;
+		while ( username_exists( $user_login ) ) {
+			$user_login = $base . $i;
+			$i++;
+		}
+
+		$user_id = wp_create_user( $user_login, wp_generate_password( 24, true, true ), $email );
+		if ( ! is_wp_error( $user_id ) ) {
+			if ( $name ) {
+				wp_update_user(
+					array(
+						'ID'           => (int) $user_id,
+						'display_name' => $name,
+						'first_name'   => $name,
+					)
+				);
+			}
+			wp_set_current_user( (int) $user_id );
+			wp_set_auth_cookie( (int) $user_id );
+		}
+	}
+
+	if ( is_user_logged_in() && function_exists( 'snf_assign_club_role' ) ) {
+		$user = wp_get_current_user();
+		$skip = array( 'administrator', 'snf_staff', 'snf_reciprocal', 'snf_member' );
+		if ( ! array_intersect( $skip, (array) $user->roles ) ) {
+			snf_assign_club_role( (int) $user->ID, 'snf_applicant' );
+		}
+		update_user_meta( (int) $user->ID, 'snf_pending_membership_plan', $plan_slug );
+	}
+
+	$result = snf_membership_prepare_checkout_for_plan( $plan_slug );
+	if ( is_wp_error( $result ) ) {
+		wc_add_notice( $result->get_error_message(), 'error' );
+		wp_safe_redirect( snf_get_page_url( 'under-consideration' ) );
+		exit;
+	}
+
+	wp_safe_redirect( $result );
+	exit;
+}
+add_action( 'admin_post_nopriv_snf_apply_membership', 'snf_handle_apply_membership_checkout' );
+add_action( 'admin_post_snf_apply_membership', 'snf_handle_apply_membership_checkout' );
 
 /**
  * Ensure membership product category + catalog products exist (draft-friendly publish).
@@ -927,7 +1083,7 @@ function snf_get_live_billing_hub_data( $user_id = 0 ) {
 			),
 			array(
 				'label' => __( 'Current dues', 'super-ninety-four' ),
-				'value' => $plan['price'],
+				'value' => ! empty( $state['plan_row']['price'] ) ? $state['plan_row']['price'] : '—',
 				'hint'  => __( 'Monthly · 12-month term', 'super-ninety-four' ),
 			),
 			array(

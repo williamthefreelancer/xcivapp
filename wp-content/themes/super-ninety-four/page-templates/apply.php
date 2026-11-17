@@ -65,7 +65,9 @@ $initiation = isset( $plans['initiation_fee'] ) && is_array( $plans['initiation_
 			</ol>
 		</nav>
 
-		<form class="snf-apply__form snf-hub__form snf-apply-steps" data-snf-apply-steps action="#" method="post" novalidate data-figma-slot="apply-form">
+		<form class="snf-apply__form snf-hub__form snf-apply-steps" data-snf-apply-steps action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post" novalidate data-figma-slot="apply-form">
+			<input type="hidden" name="action" value="snf_apply_membership">
+			<?php wp_nonce_field( 'snf_apply_membership', 'snf_apply_nonce' ); ?>
 			<?php if ( $event_id ) : ?>
 				<input type="hidden" name="snf_apply_event" value="<?php echo esc_attr( (string) $event_id ); ?>">
 			<?php endif; ?>
@@ -162,7 +164,7 @@ $initiation = isset( $plans['initiation_fee'] ) && is_array( $plans['initiation_
 						<?php esc_html_e( 'Back', 'super-ninety-four' ); ?>
 					</button>
 					<button class="snf-hub__action snf-hub__action--primary" type="submit">
-						<?php esc_html_e( 'Submit admissions request', 'super-ninety-four' ); ?>
+						<?php esc_html_e( 'Continue to dues checkout', 'super-ninety-four' ); ?>
 					</button>
 				</div>
 			</div>

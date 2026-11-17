@@ -122,23 +122,18 @@
     });
 
     applyForm.addEventListener("submit", (event) => {
-      event.preventDefault();
       for (let s = 1; s <= maxStep; s += 1) {
         if (!validateStep(s)) {
+          event.preventDefault();
           showStep(s);
           return;
         }
       }
-      showStatus("Admissions request received. Taking you to under consideration…");
+      showStatus("Preparing club dues checkout…");
       const submit = applyForm.querySelector('button[type="submit"]');
       if (submit) submit.disabled = true;
-      const nextUrl =
-        window.snfHub && snfHub.considerationUrl
-          ? snfHub.considerationUrl
-          : "/under-consideration/";
-      window.setTimeout(() => {
-        window.location.assign(nextUrl);
-      }, 600);
+      // Native POST → admin-post.php?action=snf_apply_membership
+      // (initiation + selected plan products → WooCommerce checkout).
     });
 
     showStep(1);

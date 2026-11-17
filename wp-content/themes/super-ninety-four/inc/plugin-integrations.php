@@ -79,16 +79,18 @@ function snf_upsert_code_snippet( $args ) {
 function snf_get_theme_code_snippets() {
 	$snippets = array();
 
+	// Keep legacy name so Code Snippets deactivates the old blanket order→role snippet.
 	$snippets[] = array(
-		'name'     => 'SNF — Memberships owned by theme',
-		'desc'     => 'Membership activation now lives in theme inc/memberships.php (roles/meta + order hooks + Action Scheduler). This snippet stays inactive so Code Snippets does not double-assign roles.',
+		'name'     => 'SNF — Assign Club Member after Woo purchase',
+		'desc'     => 'DEPRECATED. Club dues + reciprocal subscriptions are handled in theme (inc/memberships.php + inc/membership-subscriptions.php). Left inactive so event/workshop orders do not grant membership.',
 		'scope'    => 'global',
 		'active'   => false,
 		'priority' => 20,
-		'tags'     => array( 'snf', 'woocommerce', 'membership' ),
+		'tags'     => array( 'snf', 'woocommerce', 'membership', 'deprecated' ),
 		'code'     => <<<'PHP'
-// Intentionally inactive — snf_process_membership_order() in the theme handles
-// membership products, initiation fees, role assignment, and renewal schedules.
+// Intentionally inactive — snf_process_membership_order() and
+// snf_process_order_for_reciprocal_subscriptions() in the theme handle
+// plan products, initiation fees, reciprocal programs, roles, and schedules.
 PHP
 	,
 	);
@@ -211,7 +213,7 @@ function snf_sync_code_snippets() {
 		return;
 	}
 
-	$version = '2.11.0-snippets-memberships';
+	$version = '2.11.1-snippets-memberships';
 	if ( get_option( 'snf_code_snippets_version' ) === $version ) {
 		return;
 	}
