@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'SNF_VERSION', '2.17.2' );
+define( 'SNF_VERSION', '2.17.3' );
 
 require_once get_template_directory() . '/inc/account-hub.php';
 require_once get_template_directory() . '/inc/memberships.php';
@@ -974,20 +974,15 @@ function snf_url_matches_request( $url ) {
 /**
  * Account dropdown items for the profile icon menu.
  *
- * Guests only see Member Login. Members see the WP "Account dropdown"
- * location when assigned, otherwise the members-area hub links.
+ * Guests use the profile icon as a direct Member Login link (no dropdown).
+ * Members see the WP "Account dropdown" location when assigned, otherwise
+ * the members-area hub links.
  *
  * @return array<int, array<string, mixed>>
  */
 function snf_account_menu_items() {
 	if ( ! is_user_logged_in() ) {
-		return array(
-			array(
-				'type'  => 'link',
-				'label' => __( 'Member Login', 'super-ninety-four' ),
-				'url'   => snf_get_page_url( 'member-login' ),
-			),
-		);
+		return array();
 	}
 
 	$assigned = snf_account_menu_items_from_location( 'account' );
