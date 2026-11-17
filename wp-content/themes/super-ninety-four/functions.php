@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'SNF_VERSION', '2.10.2' );
+define( 'SNF_VERSION', '2.10.3' );
 
 require_once get_template_directory() . '/inc/account-hub.php';
 require_once get_template_directory() . '/inc/dashboard-shell.php';
@@ -125,9 +125,20 @@ function snf_get_obsolete_page_slugs() {
 		'grounds-litter-pickup',
 		'line-sitting-service',
 		'commercial-janitor-cleaning',
+		'courier-service',
+		'parking-lot-commercial-grounds-cleaning',
+		'professional-line-sitting-service',
+		'commercial-janitorial-cleaning-consulting',
 		'about',
 		'event-by-admission',
 		'account-settings-for-profile',
+		// Legacy page copies of Woo event products (products themselves are kept).
+		'the-township-adventures-event',
+		'the-badlands-bra-private-gathering',
+		'the-eight-hundred-plus-journeys-event',
+		'the-badlands-bra-party-bus-gathering',
+		'the-eight-hundred-plus-journeys',
+		'the-lifestyle-concierge-club-workshop',
 	);
 }
 
@@ -366,6 +377,18 @@ function snf_scripts() {
 		wp_enqueue_script(
 			'snf-workshop',
 			get_template_directory_uri() . '/assets/js/workshop.js',
+			array(),
+			SNF_VERSION,
+			true
+		);
+	}
+
+	$is_event_landing = ( function_exists( 'is_product' ) && is_product() && function_exists( 'snf_is_figma_event_landing' ) && snf_is_figma_event_landing( get_the_ID() ) )
+		|| ( is_singular( 'event' ) && function_exists( 'snf_is_figma_event_landing' ) && snf_is_figma_event_landing( get_the_ID() ) );
+	if ( $is_event_landing ) {
+		wp_enqueue_script(
+			'snf-event-single',
+			get_template_directory_uri() . '/assets/js/event-single.js',
 			array(),
 			SNF_VERSION,
 			true
@@ -675,6 +698,58 @@ add_action( 'after_switch_theme', 'snf_delete_legacy_workshop_landing_posts' );
 add_action( 'admin_init', 'snf_delete_legacy_workshop_landing_posts', 30 );
 
 /**
+ * Delete duplicate page/event CPT copies of select-event products, plus inquiry pages.
+ * WooCommerce products are never deleted.
+ */
+function snf_delete_duplicate_event_and_inquiry_pages() {
+	if ( get_option( 'snf_duplicate_event_inquiry_cleaned_v2' ) ) {
+		return;
+	}
+
+	$event_slugs = array(
+		'the-township-adventures-event',
+		'the-badlands-bra-private-gathering',
+		'the-eight-hundred-plus-journeys-event',
+		'the-badlands-bra-party-bus-gathering',
+		'the-eight-hundred-plus-journeys',
+		'the-lifestyle-concierge-club-workshop',
+	);
+
+	$inquiry_slugs = array(
+		'service-inquiries',
+		'grounds-litter-pickup',
+		'line-sitting-service',
+		'commercial-janitor-cleaning',
+		'courier-service',
+		'parking-lot-commercial-grounds-cleaning',
+		'professional-line-sitting-service',
+		'commercial-janitorial-cleaning-consulting',
+	);
+
+	foreach ( $event_slugs as $slug ) {
+		foreach ( array( 'page', 'event' ) as $post_type ) {
+			$legacy = get_page_by_path( $slug, OBJECT, $post_type );
+			if ( $legacy instanceof WP_Post && 'product' !== $legacy->post_type ) {
+				wp_delete_post( $legacy->ID, true );
+			}
+		}
+	}
+
+	foreach ( $inquiry_slugs as $slug ) {
+		foreach ( array( 'page', 'event', 'post' ) as $post_type ) {
+			$legacy = get_page_by_path( $slug, OBJECT, $post_type );
+			if ( $legacy instanceof WP_Post && 'product' !== $legacy->post_type ) {
+				wp_delete_post( $legacy->ID, true );
+			}
+		}
+	}
+
+	update_option( 'snf_duplicate_event_inquiry_cleaned_v2', 1, false );
+}
+add_action( 'after_switch_theme', 'snf_delete_duplicate_event_and_inquiry_pages' );
+add_action( 'admin_init', 'snf_delete_duplicate_event_and_inquiry_pages', 31 );
+
+/**
  * Redirect legacy workshop URLs to the product landing.
  */
 function snf_redirect_legacy_workshop_landing() {
@@ -887,17 +962,18 @@ function snf_account_menu_items() {
  * @return bool
  */
 function snf_is_lifestyle_concierge_workshop( $post_id = null ) {
-	$post_id = $post_id ? (int) $post_id : get_the_ID();
-	if ( ! $post_id ) {
+	$post = get_post( $post_id ? $post_id : get_the_ID() );
+	if ( ! $post ) {
 		return false;
 	}
+
+	$post_id = (int) $post->ID;
 
 	if ( 'lifestyle-concierge-workshop' === get_post_meta( $post_id, 'snf_event_template', true ) ) {
 		return true;
 	}
 
-	$post = get_post( $post_id );
-	return $post && 'the-lifestyle-concierge-club-workshop' === $post->post_name;
+	return 'the-lifestyle-concierge-club-workshop' === $post->post_name;
 }
 
 /**

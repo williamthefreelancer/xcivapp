@@ -4238,8 +4238,13 @@ body:has(.snf-hub--apply) .snf-header__apply {
 }
 
 /* Event single — Figma Event #1 (node 174:2) */
+body.snf-no-header .snf-event {
+	min-height: 100vh;
+}
+
 .snf-event {
 	--snf-event-border: #7b5cff;
+	padding-top: clamp(1.25rem, 3vw, 2rem);
 	padding-bottom: clamp(2rem, 5vw, 3.5rem);
 }
 
