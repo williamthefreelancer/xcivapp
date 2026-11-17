@@ -42,15 +42,24 @@ $snf_guest_items    = $snf_show_guest_nav ? snf_primary_menu_items() : array();
 							$type     = isset( $item['type'] ) ? $item['type'] : 'link';
 							$label    = isset( $item['label'] ) ? $item['label'] : '';
 							$url      = isset( $item['url'] ) ? $item['url'] : '#';
+							$current  = ! empty( $item['current'] );
 							$children = ! empty( $item['children'] ) && is_array( $item['children'] ) ? $item['children'] : array();
+							$item_class = 'snf-primary-nav__item';
+							if ( 'dropdown' === $type ) {
+								$item_class .= ' snf-primary-nav__item--dropdown';
+							}
+							if ( $current ) {
+								$item_class .= ' is-current';
+							}
 							?>
 							<?php if ( 'dropdown' === $type ) : ?>
-								<li class="snf-primary-nav__item snf-primary-nav__item--dropdown">
+								<li class="<?php echo esc_attr( $item_class ); ?>">
 									<button
 										class="snf-primary-nav__trigger"
 										type="button"
 										aria-expanded="false"
 										aria-haspopup="true"
+										<?php echo $current ? ' aria-current="true"' : ''; ?>
 									>
 										<span><?php echo esc_html( $label ); ?></span>
 										<svg class="snf-primary-nav__chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
@@ -61,19 +70,20 @@ $snf_guest_items    = $snf_show_guest_nav ? snf_primary_menu_items() : array();
 										<ul class="snf-primary-nav__sublist" role="list">
 											<?php foreach ( $children as $child ) : ?>
 												<?php
-												$child_type  = isset( $child['type'] ) ? $child['type'] : 'link';
-												$child_label = isset( $child['label'] ) ? $child['label'] : '';
-												$child_url   = isset( $child['url'] ) ? $child['url'] : '#';
+												$child_type    = isset( $child['type'] ) ? $child['type'] : 'link';
+												$child_label   = isset( $child['label'] ) ? $child['label'] : '';
+												$child_url     = isset( $child['url'] ) ? $child['url'] : '#';
+												$child_current = ! empty( $child['current'] );
 												?>
 												<?php if ( 'heading' === $child_type ) : ?>
-													<li class="snf-primary-nav__subitem snf-primary-nav__subitem--heading">
-														<a class="snf-primary-nav__heading" href="<?php echo esc_url( $child_url ); ?>">
+													<li class="snf-primary-nav__subitem snf-primary-nav__subitem--heading<?php echo $child_current ? ' is-current' : ''; ?>">
+														<a class="snf-primary-nav__heading" href="<?php echo esc_url( $child_url ); ?>"<?php echo $child_current ? ' aria-current="page"' : ''; ?>>
 															<?php echo esc_html( $child_label ); ?>
 														</a>
 													</li>
 												<?php else : ?>
-													<li class="snf-primary-nav__subitem">
-														<a class="snf-primary-nav__sublink" href="<?php echo esc_url( $child_url ); ?>">
+													<li class="snf-primary-nav__subitem<?php echo $child_current ? ' is-current' : ''; ?>">
+														<a class="snf-primary-nav__sublink" href="<?php echo esc_url( $child_url ); ?>"<?php echo $child_current ? ' aria-current="page"' : ''; ?>>
 															<?php echo esc_html( $child_label ); ?>
 														</a>
 													</li>
@@ -83,8 +93,8 @@ $snf_guest_items    = $snf_show_guest_nav ? snf_primary_menu_items() : array();
 									</div>
 								</li>
 							<?php else : ?>
-								<li class="snf-primary-nav__item">
-									<a class="snf-primary-nav__link" href="<?php echo esc_url( $url ); ?>">
+								<li class="<?php echo esc_attr( $item_class ); ?>">
+									<a class="snf-primary-nav__link" href="<?php echo esc_url( $url ); ?>"<?php echo $current ? ' aria-current="page"' : ''; ?>>
 										<?php echo esc_html( $label ); ?>
 									</a>
 								</li>

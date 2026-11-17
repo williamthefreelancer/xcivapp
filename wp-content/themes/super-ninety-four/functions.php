@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'SNF_VERSION', '2.16.0' );
+define( 'SNF_VERSION', '2.16.1' );
 
 require_once get_template_directory() . '/inc/account-hub.php';
 require_once get_template_directory() . '/inc/memberships.php';
@@ -90,7 +90,7 @@ function snf_get_site_pages() {
 		),
 		'videos-audio' => array(
 			'title'    => 'Videos & Audio',
-			'template' => 'page-templates/public-content.php',
+			'template' => 'page-templates/blank-canvas.php',
 		),
 		'contact' => array(
 			'title'    => 'Contact',
@@ -98,7 +98,7 @@ function snf_get_site_pages() {
 		),
 		'newsletter' => array(
 			'title'    => 'Newsletter',
-			'template' => 'page-templates/public-content.php',
+			'template' => 'page-templates/blank-canvas.php',
 		),
 		'find-other-reciprocal-programs' => array(
 			'title'    => 'Find Other Reciprocal Programs',
@@ -328,7 +328,6 @@ function snf_scripts() {
 		'page-templates/member-login.php',
 		'page-templates/apply.php',
 		'page-templates/messages.php',
-		'page-templates/about.php',
 		'page-templates/public-content.php',
 		'page-templates/under-consideration.php',
 	);
@@ -337,11 +336,8 @@ function snf_scripts() {
 		'member-login',
 		'apply',
 		'messages',
-		'about',
 		'inquiries',
-		'videos-audio',
 		'contact',
-		'newsletter',
 		'under-consideration',
 	);
 	$is_hub = false;
@@ -869,55 +865,111 @@ function snf_get_service_inquiry( $slug = '' ) {
 function snf_primary_menu_items() {
 	$inquiry_children = array(
 		array(
-			'type'  => 'heading',
-			'label' => __( 'Service inquiries', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'inquiries' ),
+			'type'    => 'heading',
+			'label'   => __( 'Service inquiries', 'super-ninety-four' ),
+			'url'     => snf_get_page_url( 'inquiries' ),
+			'current' => is_page( 'inquiries' ),
 		),
 	);
 
 	if ( function_exists( 'snf_get_dashboard_service_inquiry_cards' ) ) {
 		foreach ( snf_get_dashboard_service_inquiry_cards() as $card ) {
+			$card_url = isset( $card['url'] ) ? (string) $card['url'] : '';
 			$inquiry_children[] = array(
-				'type'  => 'link',
-				'label' => $card['title'],
-				'url'   => $card['url'],
+				'type'    => 'link',
+				'label'   => $card['title'],
+				'url'     => $card_url,
+				'current' => $card_url && function_exists( 'snf_url_matches_request' )
+					? snf_url_matches_request( $card_url )
+					: false,
 			);
 		}
 	}
+
+	$workshop_url = snf_get_workshop_landing_url();
 
 	return array(
 		array(
 			'type'     => 'dropdown',
 			'label'    => __( 'Inquiries', 'super-ninety-four' ),
 			'url'      => snf_get_page_url( 'inquiries' ),
+			'current'  => is_page( 'inquiries' ) || snf_primary_menu_has_current_child( $inquiry_children ),
 			'children' => $inquiry_children,
 		),
 		array(
-			'type'  => 'link',
-			'label' => __( 'Events', 'super-ninety-four' ),
-			'url'   => snf_get_workshop_landing_url(),
+			'type'    => 'link',
+			'label'   => __( 'Events', 'super-ninety-four' ),
+			'url'     => $workshop_url,
+			'current' => function_exists( 'snf_url_matches_request' )
+				? snf_url_matches_request( $workshop_url )
+				: false,
 		),
 		array(
-			'type'  => 'link',
-			'label' => __( 'About', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'about' ),
+			'type'    => 'link',
+			'label'   => __( 'About', 'super-ninety-four' ),
+			'url'     => snf_get_page_url( 'about' ),
+			'current' => is_page( 'about' ),
 		),
 		array(
-			'type'  => 'link',
-			'label' => __( 'Videos & Audio', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'videos-audio' ),
+			'type'    => 'link',
+			'label'   => __( 'Videos & Audio', 'super-ninety-four' ),
+			'url'     => snf_get_page_url( 'videos-audio' ),
+			'current' => is_page( 'videos-audio' ),
 		),
 		array(
-			'type'  => 'link',
-			'label' => __( 'Contact', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'contact' ),
+			'type'    => 'link',
+			'label'   => __( 'Contact', 'super-ninety-four' ),
+			'url'     => snf_get_page_url( 'contact' ),
+			'current' => is_page( 'contact' ),
 		),
 		array(
-			'type'  => 'link',
-			'label' => __( 'Newsletter', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'newsletter' ),
+			'type'    => 'link',
+			'label'   => __( 'Newsletter', 'super-ninety-four' ),
+			'url'     => snf_get_page_url( 'newsletter' ),
+			'current' => is_page( 'newsletter' ),
 		),
 	);
+}
+
+/**
+ * Whether any child menu item is marked current.
+ *
+ * @param array<int, array<string, mixed>> $children Menu children.
+ * @return bool
+ */
+function snf_primary_menu_has_current_child( $children ) {
+	foreach ( $children as $child ) {
+		if ( ! empty( $child['current'] ) ) {
+			return true;
+		}
+	}
+	return false;
+}
+
+/**
+ * Compare a menu URL against the current request path.
+ *
+ * @param string $url Absolute or relative URL.
+ * @return bool
+ */
+function snf_url_matches_request( $url ) {
+	$url = (string) $url;
+	if ( '' === $url || '#' === $url ) {
+		return false;
+	}
+
+	$path = wp_parse_url( $url, PHP_URL_PATH );
+	if ( ! is_string( $path ) || '' === $path ) {
+		return false;
+	}
+
+	$request = isset( $_SERVER['REQUEST_URI'] ) ? (string) wp_unslash( $_SERVER['REQUEST_URI'] ) : '';
+	$request_path = wp_parse_url( $request, PHP_URL_PATH );
+	if ( ! is_string( $request_path ) ) {
+		return false;
+	}
+
+	return untrailingslashit( $path ) === untrailingslashit( $request_path );
 }
 
 /**
