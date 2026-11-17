@@ -833,6 +833,14 @@ function snf_stripe_handle_settings_save() {
 		delete_transient( 'snf_supabase_stripe_catalog_v1' );
 	}
 
+	if ( isset( $_POST['snf_mapbox_token'] ) && ! ( defined( 'SNF_MAPBOX_TOKEN' ) && SNF_MAPBOX_TOKEN ) ) {
+		$mapbox = sanitize_text_field( wp_unslash( (string) $_POST['snf_mapbox_token'] ) );
+		// Password-style UX: blank keeps the previously saved token.
+		if ( '' !== $mapbox ) {
+			update_option( 'snf_mapbox_token', $mapbox, false );
+		}
+	}
+
 	// Optional connectivity probe.
 	$probe_message = '';
 	if ( 'yes' === $next['enabled'] && snf_stripe_get_secret_key() ) {
@@ -1030,6 +1038,31 @@ function snf_stripe_render_settings_page() {
 				<tr>
 					<th scope="row"><?php esc_html_e( 'Live webhook secret', 'super-ninety-four' ); ?></th>
 					<td><input type="password" class="regular-text" name="snf_stripe[webhook_secret]" value="" placeholder="<?php echo $s['webhook_secret'] ? esc_attr__( '•••• saved — leave blank to keep', 'super-ninety-four' ) : ''; ?>" autocomplete="new-password"></td>
+				</tr>
+			</table>
+
+			<h2><?php esc_html_e( 'Mapbox (Expo lead rider)', 'super-ninety-four' ); ?></h2>
+			<p class="description">
+				<?php esc_html_e( 'Public Mapbox access token for the Expo Marketplace lead-rider map. You can also define SNF_MAPBOX_TOKEN in wp-config.php.', 'super-ninety-four' ); ?>
+			</p>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Mapbox token', 'super-ninety-four' ); ?></th>
+					<td>
+						<?php
+						$mapbox_saved = (string) get_option( 'snf_mapbox_token', '' );
+						$mapbox_from_const = defined( 'SNF_MAPBOX_TOKEN' ) && SNF_MAPBOX_TOKEN;
+						?>
+						<input
+							type="password"
+							class="large-text"
+							name="snf_mapbox_token"
+							value=""
+							placeholder="<?php echo $mapbox_from_const ? esc_attr__( 'Set via SNF_MAPBOX_TOKEN in wp-config.php', 'super-ninety-four' ) : ( $mapbox_saved ? esc_attr__( '•••• saved — enter a new token to replace', 'super-ninety-four' ) : '' ); ?>"
+							autocomplete="new-password"
+							<?php disabled( (bool) $mapbox_from_const ); ?>
+						>
+					</td>
 				</tr>
 			</table>
 

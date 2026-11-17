@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'SNF_VERSION', '2.15.1' );
+define( 'SNF_VERSION', '2.15.2' );
 
 require_once get_template_directory() . '/inc/account-hub.php';
 require_once get_template_directory() . '/inc/memberships.php';
@@ -635,6 +635,12 @@ function snf_get_dashboard_service_inquiry_cards() {
 			'image' => $img_base . 'litter-pickup-service-image-2.png',
 		),
 		array(
+			'title' => __( 'Professional Line Sitting & Courier Service', 'super-ninety-four' ),
+			'meta'  => __( 'Busy lines · Shopping runs · Handoffs', 'super-ninety-four' ),
+			'url'   => call_user_func( $url_for, 'professional-line-sitting-courier-service' ),
+			'image' => $img_base . 'lifestyle-service-image-1.png',
+		),
+		array(
 			'title' => __( 'Janitorial Cleaning Service', 'super-ninety-four' ),
 			'meta'  => __( 'Suites · Bars · Overnight reset', 'super-ninety-four' ),
 			'url'   => call_user_func( $url_for, 'janitorial-cleaning-service' ),
@@ -809,8 +815,11 @@ function snf_get_service_inquiry( $slug = '' ) {
 	}
 
 	$map = array(
-		'grounds-litter-pickup'       => 'litter-pickup-service',
-		'commercial-janitor-cleaning' => 'janitorial-cleaning-service',
+		'grounds-litter-pickup'             => 'litter-pickup-service',
+		'line-sitting-service'              => 'professional-line-sitting-courier-service',
+		'courier-service'                   => 'professional-line-sitting-courier-service',
+		'professional-line-sitting-service' => 'professional-line-sitting-courier-service',
+		'commercial-janitor-cleaning'       => 'janitorial-cleaning-service',
 	);
 	$product_slug = isset( $map[ $slug ] ) ? $map[ $slug ] : $slug;
 	$quote        = snf_get_service_quote( $product_slug );

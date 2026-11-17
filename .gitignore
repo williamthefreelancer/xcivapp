@@ -23,3 +23,6 @@ wp-content/debug.log
 *.log
 .DS_Store
 Thumbs.db
+
+# Local SSH authorized keys (do not commit)
+.ssh/

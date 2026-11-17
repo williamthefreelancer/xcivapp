@@ -95,24 +95,37 @@ $current_slug = isset( $data['plan']['slug'] ) ? $data['plan']['slug'] : '';
 						<h2 class="snf-hub__panel-title"><?php esc_html_e( 'Invoice history', 'super-ninety-four' ); ?></h2>
 						<span class="snf-hub__panel-note"><?php esc_html_e( 'Club ledger', 'super-ninety-four' ); ?></span>
 					</div>
-					<ul class="snf-hub__rows snf-hub__rows--dense">
-						<?php foreach ( $data['invoices'] as $invoice ) : ?>
-							<li class="snf-hub__row">
-								<div>
-									<p class="snf-hub__row-title"><?php echo esc_html( $invoice['label'] ); ?></p>
-									<p class="snf-hub__row-meta">
-										<?php echo esc_html( $invoice['id'] ); ?>
-										<span aria-hidden="true">·</span>
-										<?php echo esc_html( $invoice['date'] ); ?>
-									</p>
-								</div>
-								<div class="snf-hub__row-end">
-									<span class="snf-hub__amount"><?php echo esc_html( $invoice['amount'] ); ?></span>
-									<span class="snf-hub__pill snf-hub__pill--ok"><?php echo esc_html( $invoice['status'] ); ?></span>
-								</div>
-							</li>
-						<?php endforeach; ?>
-					</ul>
+					<?php if ( empty( $data['invoices'] ) ) : ?>
+						<p class="snf-hub__lede">
+							<?php esc_html_e( 'No paid invoices yet. Completed WooCommerce orders will appear here.', 'super-ninety-four' ); ?>
+						</p>
+						<?php if ( function_exists( 'wc_get_page_permalink' ) ) : ?>
+							<div class="snf-hub__actions">
+								<a class="snf-hub__action" href="<?php echo esc_url( wc_get_account_endpoint_url( 'orders' ) ); ?>">
+									<?php esc_html_e( 'View orders', 'super-ninety-four' ); ?>
+								</a>
+							</div>
+						<?php endif; ?>
+					<?php else : ?>
+						<ul class="snf-hub__rows snf-hub__rows--dense">
+							<?php foreach ( $data['invoices'] as $invoice ) : ?>
+								<li class="snf-hub__row">
+									<div>
+										<p class="snf-hub__row-title"><?php echo esc_html( $invoice['label'] ); ?></p>
+										<p class="snf-hub__row-meta">
+											<?php echo esc_html( $invoice['id'] ); ?>
+											<span aria-hidden="true">·</span>
+											<?php echo esc_html( $invoice['date'] ); ?>
+										</p>
+									</div>
+									<div class="snf-hub__row-end">
+										<span class="snf-hub__amount"><?php echo esc_html( $invoice['amount'] ); ?></span>
+										<span class="snf-hub__pill snf-hub__pill--ok"><?php echo esc_html( $invoice['status'] ); ?></span>
+									</div>
+								</li>
+							<?php endforeach; ?>
+						</ul>
+					<?php endif; ?>
 				</section>
 			</div>
 		</div>

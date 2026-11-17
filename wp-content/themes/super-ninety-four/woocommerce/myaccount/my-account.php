@@ -43,15 +43,15 @@ if ( $is_dashboard_home ) :
 	</div>
 	<?php
 else :
-	$lede = __( 'Billing, schedules, and tickets — ready for your Figma layouts.', 'super-ninety-four' );
+	$lede = __( 'Manage membership, tickets, orders, and account details.', 'super-ninety-four' );
 	if ( is_wc_endpoint_url( 'membership' ) ) {
-		$lede = __( 'Club status and plans — ready for Figma.', 'super-ninety-four' );
+		$lede = __( 'Club status, plan, and renewal details for your seat.', 'super-ninety-four' );
 	} elseif ( is_wc_endpoint_url( 'tickets' ) ) {
-		$lede = __( 'Event tickets and admissions — ready for Figma.', 'super-ninety-four' );
+		$lede = __( 'Event tickets and admissions attached to your account.', 'super-ninety-four' );
 	} elseif ( is_wc_endpoint_url( 'orders' ) || is_wc_endpoint_url( 'view-order' ) ) {
-		$lede = __( 'Your events, tickets, and order history — ready for Figma.', 'super-ninety-four' );
+		$lede = __( 'Orders for events, tickets, and club purchases.', 'super-ninety-four' );
 	} elseif ( is_wc_endpoint_url( 'edit-address' ) || is_wc_endpoint_url( 'payment-methods' ) ) {
-		$lede = __( 'Membership billing and addresses — ready for Figma.', 'super-ninety-four' );
+		$lede = __( 'Billing addresses and payment methods on file.', 'super-ninety-four' );
 	}
 	?>
 	<div class="snf-account-surface" data-figma-slot="account-surface">

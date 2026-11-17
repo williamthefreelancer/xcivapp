@@ -256,22 +256,44 @@ function snf_get_profile_activity_panel() {
 		$friends_url = trailingslashit( bp_displayed_user_domain() ) . trailingslashit( bp_get_friends_slug() );
 	}
 
+	$activity_meta = bp_is_active( 'activity' )
+		? __( 'Member updates and club activity from BuddyPress.', 'super-ninety-four' )
+		: __( 'Activity component is not enabled.', 'super-ninety-four' );
+
 	$cards[] = array(
 		'eyebrow' => __( 'Activity', 'super-ninety-four' ),
 		'title'   => __( 'Recent updates', 'super-ninety-four' ),
-		'meta'    => __( 'Ready for your Figma activity stream layout.', 'super-ninety-four' ),
+		'meta'    => $activity_meta,
 		'status'  => bp_is_active( 'activity' ) ? __( 'Live', 'super-ninety-four' ) : __( 'Off', 'super-ninety-four' ),
 		'tone'    => bp_is_active( 'activity' ) ? 'info' : 'neutral',
 		'url'     => $activity_url,
 		'action'  => __( 'Open activity', 'super-ninety-four' ),
 	);
 
+	$friend_count = 0;
+	if ( bp_is_active( 'friends' ) && function_exists( 'friends_get_friend_count_for_user' ) && function_exists( 'bp_displayed_user_id' ) ) {
+		$friend_count = (int) friends_get_friend_count_for_user( bp_displayed_user_id() );
+	}
+	$friends_meta = bp_is_active( 'friends' )
+		? sprintf(
+			/* translators: %d: friend count */
+			_n( '%d connection on the circuit.', '%d connections on the circuit.', $friend_count, 'super-ninety-four' ),
+			$friend_count
+		)
+		: __( 'Friends component is not enabled.', 'super-ninety-four' );
+
 	$cards[] = array(
 		'eyebrow' => __( 'Network', 'super-ninety-four' ),
 		'title'   => __( 'Connections', 'super-ninety-four' ),
-		'meta'    => __( 'Friends and reciprocal contacts — Figma slot ready.', 'super-ninety-four' ),
-		'status'  => bp_is_active( 'friends' ) ? __( 'Friends', 'super-ninety-four' ) : __( 'Soon', 'super-ninety-four' ),
-		'tone'    => 'neutral',
+		'meta'    => $friends_meta,
+		'status'  => bp_is_active( 'friends' )
+			? sprintf(
+				/* translators: %d: friend count */
+				_n( '%d friend', '%d friends', $friend_count, 'super-ninety-four' ),
+				$friend_count
+			)
+			: __( 'Off', 'super-ninety-four' ),
+		'tone'    => bp_is_active( 'friends' ) ? 'info' : 'neutral',
 		'url'     => $friends_url,
 		'action'  => __( 'View network', 'super-ninety-four' ),
 	);

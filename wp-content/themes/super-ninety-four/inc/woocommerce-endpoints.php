@@ -81,7 +81,7 @@ add_filter( 'woocommerce_account_menu_items', 'snf_woo_custom_endpoint_menu_item
  * Flush rewrites when endpoint pack version changes.
  */
 function snf_maybe_flush_woo_endpoint_rewrites() {
-	$version = '2.9.1-endpoints';
+	$version = '2.13.0-endpoints';
 	if ( get_option( 'snf_woo_endpoints_version' ) === $version ) {
 		return;
 	}
