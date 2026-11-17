@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'SNF_VERSION', '2.17.1' );
+define( 'SNF_VERSION', '2.17.2' );
 
 require_once get_template_directory() . '/inc/account-hub.php';
 require_once get_template_directory() . '/inc/memberships.php';
@@ -974,60 +974,195 @@ function snf_url_matches_request( $url ) {
 /**
  * Account dropdown items for the profile icon menu.
  *
+ * Guests only see Member Login. Members see the WP "Account dropdown"
+ * location when assigned, otherwise the members-area hub links.
+ *
  * @return array<int, array<string, mixed>>
  */
 function snf_account_menu_items() {
-	$shop_url = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'shop' ) : home_url( '/shop/' );
+	if ( ! is_user_logged_in() ) {
+		return array(
+			array(
+				'type'  => 'link',
+				'label' => __( 'Member Login', 'super-ninety-four' ),
+				'url'   => snf_get_page_url( 'member-login' ),
+			),
+		);
+	}
 
-	return array(
+	$assigned = snf_account_menu_items_from_location( 'account' );
+	if ( ! empty( $assigned ) ) {
+		return $assigned;
+	}
+
+	return snf_account_menu_items_members_area();
+}
+
+/**
+ * Build account dropdown items from a registered nav menu location.
+ *
+ * @param string $location Theme menu location slug.
+ * @return array<int, array<string, mixed>>
+ */
+function snf_account_menu_items_from_location( $location ) {
+	$location = (string) $location;
+	if ( '' === $location || ! has_nav_menu( $location ) ) {
+		return array();
+	}
+
+	$locations = get_nav_menu_locations();
+	$menu_id   = isset( $locations[ $location ] ) ? (int) $locations[ $location ] : 0;
+	if ( $menu_id < 1 ) {
+		return array();
+	}
+
+	$raw = wp_get_nav_menu_items( $menu_id );
+	if ( empty( $raw ) || ! is_array( $raw ) ) {
+		return array();
+	}
+
+	$by_parent = array();
+	foreach ( $raw as $item ) {
+		$parent = (int) $item->menu_item_parent;
+		if ( ! isset( $by_parent[ $parent ] ) ) {
+			$by_parent[ $parent ] = array();
+		}
+		$by_parent[ $parent ][] = $item;
+	}
+
+	if ( empty( $by_parent[0] ) ) {
+		return array();
+	}
+
+	$items = array();
+	foreach ( $by_parent[0] as $item ) {
+		$label = (string) $item->title;
+		$url   = (string) $item->url;
+		$id    = (int) $item->ID;
+		$kids  = isset( $by_parent[ $id ] ) ? $by_parent[ $id ] : array();
+
+		if ( ! empty( $kids ) ) {
+			$children = array();
+			foreach ( $kids as $child ) {
+				$children[] = array(
+					'type'  => 'link',
+					'label' => (string) $child->title,
+					'url'   => (string) $child->url,
+				);
+			}
+			$items[] = array(
+				'type'     => 'club',
+				'label'    => $label,
+				'url'      => $url ? $url : '#',
+				'children' => $children,
+			);
+			continue;
+		}
+
+		$entry = array(
+			'type'  => 'link',
+			'label' => $label,
+			'url'   => $url ? $url : '#',
+		);
+
+		if ( false !== stripos( $label, 'message' ) ) {
+			$entry['icon'] = 'messages';
+		}
+
+		$items[] = $entry;
+	}
+
+	return $items;
+}
+
+/**
+ * Default members-area links for the account dropdown.
+ *
+ * @return array<int, array<string, mixed>>
+ */
+function snf_account_menu_items_members_area() {
+	$shop_url = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'shop' ) : home_url( '/shop/' );
+	$items    = array(
 		array(
 			'type'        => 'search',
 			'label'       => __( 'Find other reciprocal programs', 'super-ninety-four' ),
 			'url'         => snf_get_page_url( 'find-other-reciprocal-programs' ),
 			'placeholder' => __( 'Find other reciprocal programs', 'super-ninety-four' ),
 		),
-		array(
-			'type'  => 'link',
-			'label' => __( 'Dashboard', 'super-ninety-four' ),
-			'url'   => snf_get_dashboard_url(),
-		),
-		array(
-			'type'  => 'link',
-			'label' => __( 'Search listings', 'super-ninety-four' ),
-			'url'   => $shop_url ? $shop_url : home_url( '/shop/' ),
-		),
-		array(
-			'type'  => 'link',
-			'label' => __( 'Messages', 'super-ninety-four' ),
-			'url'   => snf_get_bp_messages_url(),
-			'icon'  => 'messages',
-		),
-		array(
-			'type'  => 'link',
-			'label' => __( 'Orders', 'super-ninety-four' ),
-			'url'   => snf_get_woo_account_url( 'orders' ),
-		),
-		array(
-			'type'  => 'link',
-			'label' => __( 'Tickets', 'super-ninety-four' ),
-			'url'   => snf_get_woo_account_url( 'tickets' ),
-		),
-		array(
-			'type'  => 'link',
-			'label' => __( 'Membership', 'super-ninety-four' ),
-			'url'   => snf_get_woo_account_url( 'membership' ),
-		),
-		array(
-			'type'  => 'link',
-			'label' => __( 'Billing', 'super-ninety-four' ),
-			'url'   => snf_get_woo_account_url( 'edit-address' ),
-		),
-		array(
-			'type'  => 'link',
-			'label' => __( 'Profile', 'super-ninety-four' ),
-			'url'   => snf_get_bp_profile_url(),
-		),
 	);
+
+	if ( function_exists( 'snf_get_account_hub_nav' ) ) {
+		foreach ( snf_get_account_hub_nav() as $nav ) {
+			$slug  = isset( $nav['slug'] ) ? (string) $nav['slug'] : '';
+			$label = isset( $nav['label'] ) ? (string) $nav['label'] : '';
+			$url   = isset( $nav['url'] ) ? (string) $nav['url'] : '';
+			if ( '' === $label || '' === $url || 'apply' === $slug ) {
+				continue;
+			}
+
+			$entry = array(
+				'type'  => 'link',
+				'label' => $label,
+				'url'   => $url,
+			);
+
+			if ( 'messages' === $slug ) {
+				$entry['icon'] = 'messages';
+			}
+
+			if ( 'listings' === $slug ) {
+				$entry['label'] = __( 'Search listings', 'super-ninety-four' );
+			}
+
+			$items[] = $entry;
+		}
+
+		return $items;
+	}
+
+	$items[] = array(
+		'type'  => 'link',
+		'label' => __( 'Dashboard', 'super-ninety-four' ),
+		'url'   => snf_get_dashboard_url(),
+	);
+	$items[] = array(
+		'type'  => 'link',
+		'label' => __( 'Search listings', 'super-ninety-four' ),
+		'url'   => $shop_url ? $shop_url : home_url( '/shop/' ),
+	);
+	$items[] = array(
+		'type'  => 'link',
+		'label' => __( 'Messages', 'super-ninety-four' ),
+		'url'   => snf_get_bp_messages_url(),
+		'icon'  => 'messages',
+	);
+	$items[] = array(
+		'type'  => 'link',
+		'label' => __( 'Orders', 'super-ninety-four' ),
+		'url'   => snf_get_woo_account_url( 'orders' ),
+	);
+	$items[] = array(
+		'type'  => 'link',
+		'label' => __( 'Tickets', 'super-ninety-four' ),
+		'url'   => snf_get_woo_account_url( 'tickets' ),
+	);
+	$items[] = array(
+		'type'  => 'link',
+		'label' => __( 'Membership', 'super-ninety-four' ),
+		'url'   => snf_get_woo_account_url( 'membership' ),
+	);
+	$items[] = array(
+		'type'  => 'link',
+		'label' => __( 'Billing', 'super-ninety-four' ),
+		'url'   => snf_get_woo_account_url( 'edit-address' ),
+	);
+	$items[] = array(
+		'type'  => 'link',
+		'label' => __( 'Profile', 'super-ninety-four' ),
+		'url'   => snf_get_bp_profile_url(),
+	);
+
+	return $items;
 }
 
 /**
