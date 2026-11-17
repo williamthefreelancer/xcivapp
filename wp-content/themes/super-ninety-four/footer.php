@@ -8,7 +8,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 $snf_legal_links = function_exists( 'snf_get_footer_legal_links' ) ? snf_get_footer_legal_links() : array();
-$snf_year        = (int) gmdate( 'Y' );
 ?>
 <footer class="snf-footer" role="contentinfo">
 	<div class="snf-container snf-footer__inner">
@@ -47,11 +46,6 @@ $snf_year        = (int) gmdate( 'Y' );
 			</nav>
 		<?php endif; ?>
 
-		<p class="snf-footer__copy">
-			&copy; <?php echo esc_html( (string) $snf_year ); ?>
-			<?php esc_html_e( 'SUPR XCIV PLATFORM HOLDINGS LLC', 'super-ninety-four' ); ?>.
-			<?php esc_html_e( 'All rights reserved.', 'super-ninety-four' ); ?>
-		</p>
 	</div>
 </footer>
 <?php wp_footer(); ?>

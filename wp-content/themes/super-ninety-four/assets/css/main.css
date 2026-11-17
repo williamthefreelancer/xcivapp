@@ -6035,15 +6035,6 @@ table {
 	outline: none;
 }
 
-.snf-footer__copy {
-	margin: 0;
-	font-family: var(--snf-font-body);
-	font-size: 0.8rem;
-	font-weight: 400;
-	line-height: 1.4;
-	color: var(--snf-ink-soft);
-}
-
 /* Legal policy body copy */
 .snf-legal__content {
 	display: grid;
