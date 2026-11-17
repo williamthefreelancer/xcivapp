@@ -30,6 +30,7 @@ function snf_stripe_default_settings() {
 		'test_publishable'  => '',
 		'test_secret'       => '',
 		'test_webhook'      => '',
+		'prefer_supabase'   => 'yes',
 	);
 }
 
@@ -264,6 +265,12 @@ function snf_stripe_register_rest_routes() {
 					'required'          => false,
 					'sanitize_callback' => 'sanitize_title',
 				),
+				'sku'       => array(
+					'type'              => 'string',
+					'required'          => false,
+					'sanitize_callback' => 'sanitize_title',
+					'description'       => 'Stripe Sync Engine SKU (e.g. application, add-on).',
+				),
 				'initiation'=> array(
 					'type'    => 'boolean',
 					'default' => false,
@@ -292,7 +299,10 @@ add_action( 'rest_api_init', 'snf_stripe_register_rest_routes' );
  * @return WP_REST_Response
  */
 function snf_stripe_rest_status() {
-	$s = snf_get_stripe_settings();
+	$s          = snf_get_stripe_settings();
+	$catalog    = function_exists( 'snf_supabase_get_stripe_catalog' ) ? snf_supabase_get_stripe_catalog() : array();
+	$catalog_ok = is_array( $catalog ) && ! is_wp_error( $catalog );
+
 	return rest_ensure_response(
 		array(
 			'enabled'          => ( 'yes' === $s['enabled'] ),
@@ -302,6 +312,13 @@ function snf_stripe_rest_status() {
 			'has_publishable'  => (bool) snf_stripe_get_publishable_key(),
 			'has_webhook'      => (bool) snf_stripe_get_webhook_secret(),
 			'webhook_url'      => snf_stripe_webhook_url(),
+			'supabase'         => array(
+				'ready'            => function_exists( 'snf_supabase_payments_is_ready' ) && snf_supabase_payments_is_ready(),
+				'has_service_role' => function_exists( 'snf_supabase_payments_has_service_role' ) && snf_supabase_payments_has_service_role(),
+				'catalog_count'    => $catalog_ok ? count( $catalog ) : 0,
+				'catalog_error'    => is_wp_error( $catalog ) ? $catalog->get_error_message() : '',
+				'prefer'           => ! empty( $s['prefer_supabase'] ) && 'yes' === $s['prefer_supabase'],
+			),
 		)
 	);
 }
@@ -419,12 +436,32 @@ function snf_stripe_handle_checkout_session_completed( array $session ) {
 		return $out;
 	}
 
+	$sku = isset( $meta['sku'] ) ? sanitize_title( (string) $meta['sku'] ) : '';
+	$out['sku'] = $sku;
+
+	if ( 'application' === $sku ) {
+		update_user_meta( $user_id, 'snf_application_paid', 1 );
+		update_user_meta( $user_id, 'snf_application_paid_at', time() );
+		update_user_meta( $user_id, 'snf_application_checkout_session', sanitize_text_field( (string) ( $session['id'] ?? '' ) ) );
+		if ( $plan ) {
+			update_user_meta( $user_id, 'snf_pending_membership_plan', $plan );
+		}
+		if ( function_exists( 'snf_assign_club_role' ) ) {
+			$user = get_userdata( $user_id );
+			$skip = array( 'administrator', 'snf_staff', 'snf_reciprocal', 'snf_member' );
+			if ( $user && ! array_intersect( $skip, (array) $user->roles ) ) {
+				snf_assign_club_role( $user_id, 'snf_applicant' );
+			}
+		}
+		$out['actions'][] = 'application_paid';
+	}
+
 	if ( $init && defined( 'SNF_META_INITIATION' ) ) {
 		update_user_meta( $user_id, SNF_META_INITIATION, 1 );
 		$out['actions'][] = 'initiation_paid';
 	}
 
-	if ( $plan && function_exists( 'snf_activate_membership' ) ) {
+	if ( $plan && function_exists( 'snf_activate_membership' ) && 'application' !== $sku ) {
 		snf_activate_membership(
 			$user_id,
 			$plan,
@@ -504,6 +541,68 @@ function snf_stripe_handle_charge_refunded( array $charge ) {
 }
 
 /**
+ * Create a Checkout Session for the synced "application" SKU ($97 4-week experience).
+ *
+ * @param int    $user_id   WP user ID.
+ * @param string $plan_slug Preferred membership plan slug (metadata only).
+ * @return string|WP_Error Checkout URL.
+ */
+function snf_stripe_create_application_checkout( $user_id, $plan_slug = '' ) {
+	$user_id = (int) $user_id;
+	if ( $user_id <= 0 ) {
+		return new WP_Error( 'snf_stripe_no_user', __( 'Sign in before paying the application fee.', 'super-ninety-four' ) );
+	}
+	if ( ! snf_stripe_is_ready() ) {
+		return new WP_Error( 'snf_stripe_not_ready', __( 'Stripe is not connected yet.', 'super-ninety-four' ) );
+	}
+	if ( ! function_exists( 'snf_supabase_resolve_price_id' ) ) {
+		return new WP_Error( 'snf_stripe_no_sync', __( 'Supabase Stripe catalog is unavailable.', 'super-ninety-four' ) );
+	}
+
+	$price_id = snf_supabase_resolve_price_id( 'application' );
+	if ( ! $price_id ) {
+		return new WP_Error( 'snf_stripe_no_app_price', __( 'Application price is not synced from Supabase yet.', 'super-ninety-four' ) );
+	}
+
+	$user    = get_userdata( $user_id );
+	$success = add_query_arg(
+		'snf_stripe',
+		'success',
+		function_exists( 'snf_get_page_url' ) ? snf_get_page_url( 'under-consideration' ) : home_url( '/' )
+	);
+	$cancel = add_query_arg(
+		'snf_stripe',
+		'cancel',
+		function_exists( 'snf_get_page_url' ) ? snf_get_page_url( 'apply' ) : home_url( '/' )
+	);
+
+	$body = array(
+		'mode'                 => 'payment',
+		'success_url'          => $success,
+		'cancel_url'           => $cancel,
+		'client_reference_id'  => (string) $user_id,
+		'customer_email'       => $user ? (string) $user->user_email : '',
+		'line_items[0][price]' => $price_id,
+		'line_items[0][quantity]' => 1,
+		'metadata[user_id]'    => (string) $user_id,
+		'metadata[plan]'       => sanitize_title( (string) $plan_slug ),
+		'metadata[sku]'        => 'application',
+		'metadata[source]'     => 'snf_apply',
+	);
+
+	$session = snf_stripe_request( 'POST', 'checkout/sessions', $body );
+	if ( is_wp_error( $session ) ) {
+		return $session;
+	}
+	if ( empty( $session['url'] ) ) {
+		return new WP_Error( 'snf_stripe_no_url', __( 'Stripe did not return a Checkout URL.', 'super-ninety-four' ) );
+	}
+
+	update_user_meta( $user_id, 'snf_pending_application_session', sanitize_text_field( (string) $session['id'] ) );
+	return (string) $session['url'];
+}
+
+/**
  * Create a Stripe Checkout Session for a club plan and/or reciprocal program.
  *
  * @param WP_REST_Request $request Request.
@@ -517,44 +616,79 @@ function snf_stripe_rest_create_checkout( WP_REST_Request $request ) {
 	$user_id    = get_current_user_id();
 	$plan       = (string) $request->get_param( 'plan' );
 	$program    = (string) $request->get_param( 'program' );
+	$sku        = sanitize_title( (string) $request->get_param( 'sku' ) );
 	$initiation = (bool) $request->get_param( 'initiation' );
+	$settings   = snf_get_stripe_settings();
+	$use_sync   = ! empty( $settings['prefer_supabase'] ) && 'yes' === $settings['prefer_supabase'] && function_exists( 'snf_supabase_resolve_price_id' );
 
-	if ( ! $plan && ! $program ) {
-		return new WP_Error( 'snf_stripe_no_target', __( 'Provide a plan or reciprocal program slug.', 'super-ninety-four' ), array( 'status' => 400 ) );
+	if ( ! $plan && ! $program && ! $sku ) {
+		return new WP_Error( 'snf_stripe_no_target', __( 'Provide a plan, reciprocal program, or Stripe SKU slug.', 'super-ninety-four' ), array( 'status' => 400 ) );
 	}
 
 	$line_items = array();
 	$currency   = function_exists( 'get_woocommerce_currency' ) ? strtolower( get_woocommerce_currency() ) : 'usd';
+
+	/**
+	 * Prefer a synced Stripe Price ID; fall back to ad-hoc price_data.
+	 *
+	 * @param string               $slug Resolve key.
+	 * @param array<string, mixed> $fallback price_data payload when unresolved.
+	 */
+	$push_line = function ( $slug, $fallback ) use ( &$line_items, $use_sync ) {
+		$price_id = $use_sync ? snf_supabase_resolve_price_id( $slug ) : '';
+		if ( $price_id ) {
+			$line_items[] = array(
+				'quantity' => 1,
+				'price'    => $price_id,
+			);
+			return;
+		}
+		$line_items[] = array(
+			'quantity'   => 1,
+			'price_data' => $fallback,
+		);
+	};
+
+	if ( $sku ) {
+		$price_id = $use_sync ? snf_supabase_resolve_price_id( $sku ) : '';
+		if ( ! $price_id ) {
+			return new WP_Error( 'snf_stripe_bad_sku', __( 'Unknown Stripe SKU in Supabase catalog.', 'super-ninety-four' ), array( 'status' => 400 ) );
+		}
+		$line_items[] = array(
+			'quantity' => 1,
+			'price'    => $price_id,
+		);
+	}
 
 	if ( $plan && function_exists( 'snf_get_membership_plan_by_slug' ) ) {
 		$plan_row = snf_get_membership_plan_by_slug( $plan );
 		if ( ! $plan_row ) {
 			return new WP_Error( 'snf_stripe_bad_plan', __( 'Unknown membership plan.', 'super-ninety-four' ), array( 'status' => 400 ) );
 		}
-		$line_items[] = array(
-			'quantity'   => 1,
-			'price_data' => array(
+		$push_line(
+			$plan,
+			array(
 				'currency'     => $currency,
 				'unit_amount'  => (int) round( ( (float) $plan_row['amount_raw'] ) * 100 ),
 				'product_data' => array(
 					'name' => $plan_row['name'],
 				),
-			),
+			)
 		);
 
 		if ( $initiation && function_exists( 'snf_get_membership_plan_definitions' ) ) {
 			$already = (bool) get_user_meta( $user_id, defined( 'SNF_META_INITIATION' ) ? SNF_META_INITIATION : 'snf_initiation_paid', true );
 			if ( ! $already ) {
 				$init = snf_get_membership_plan_definitions()['initiation_fee'];
-				$line_items[] = array(
-					'quantity'   => 1,
-					'price_data' => array(
+				$push_line(
+					'initiation',
+					array(
 						'currency'     => $currency,
 						'unit_amount'  => (int) round( ( (float) $init['amount_raw'] ) * 100 ),
 						'product_data' => array(
 							'name' => $init['label'],
 						),
-					),
+					)
 				);
 			}
 		}
@@ -567,19 +701,18 @@ function snf_stripe_rest_create_checkout( WP_REST_Request $request ) {
 		}
 		$product = get_page_by_path( $program, OBJECT, 'product' );
 		$amount  = $product ? (float) get_post_meta( $product->ID, '_price', true ) : 0;
-		if ( $amount <= 0 ) {
-			$amount = 0; // $0 sessions are invalid — require a priced product.
+		if ( $amount <= 0 && ! ( $use_sync && snf_supabase_resolve_price_id( $program ) ) ) {
 			return new WP_Error( 'snf_stripe_program_price', __( 'Set a price on the reciprocal program product before Checkout.', 'super-ninety-four' ), array( 'status' => 400 ) );
 		}
-		$line_items[] = array(
-			'quantity'   => 1,
-			'price_data' => array(
+		$push_line(
+			$program,
+			array(
 				'currency'     => $currency,
 				'unit_amount'  => (int) round( $amount * 100 ),
 				'product_data' => array(
 					'name' => $catalog[ $program ]['title'],
 				),
-			),
+			)
 		);
 	}
 
@@ -599,12 +732,17 @@ function snf_stripe_rest_create_checkout( WP_REST_Request $request ) {
 		'metadata[user_id]'   => (string) $user_id,
 		'metadata[plan]'      => $plan,
 		'metadata[program]'   => $program,
+		'metadata[sku]'       => $sku,
 		'metadata[initiation]'=> $initiation ? '1' : '0',
 		'metadata[source]'    => 'snf_theme',
 	);
 
 	foreach ( $line_items as $i => $item ) {
 		$body[ "line_items[{$i}][quantity]" ] = $item['quantity'];
+		if ( ! empty( $item['price'] ) ) {
+			$body[ "line_items[{$i}][price]" ] = $item['price'];
+			continue;
+		}
 		$body[ "line_items[{$i}][price_data][currency]" ] = $item['price_data']['currency'];
 		$body[ "line_items[{$i}][price_data][unit_amount]" ] = $item['price_data']['unit_amount'];
 		$body[ "line_items[{$i}][price_data][product_data][name]" ] = $item['price_data']['product_data']['name'];
@@ -662,6 +800,7 @@ function snf_stripe_handle_settings_save() {
 		'test_publishable' => isset( $posted['test_publishable'] ) ? sanitize_text_field( $posted['test_publishable'] ) : $current['test_publishable'],
 		'test_secret'      => isset( $posted['test_secret'] ) ? sanitize_text_field( $posted['test_secret'] ) : $current['test_secret'],
 		'test_webhook'     => isset( $posted['test_webhook'] ) ? sanitize_text_field( $posted['test_webhook'] ) : $current['test_webhook'],
+		'prefer_supabase'  => ! empty( $posted['prefer_supabase'] ) ? 'yes' : 'no',
 	);
 
 	// Keep previous secret if the field was left blank (password-style UX).
@@ -672,6 +811,27 @@ function snf_stripe_handle_settings_save() {
 	}
 
 	update_option( SNF_STRIPE_OPTION, $next, false );
+
+	// Supabase Stripe Sync Engine bridge.
+	if ( isset( $_POST['snf_supabase'] ) && is_array( $_POST['snf_supabase'] ) && function_exists( 'snf_get_supabase_payments_settings' ) ) {
+		$sb_current = snf_get_supabase_payments_settings();
+		$sb_posted  = wp_unslash( $_POST['snf_supabase'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		$sb_next    = array(
+			'enabled'          => ! empty( $sb_posted['enabled'] ) ? 'yes' : 'no',
+			'url'              => isset( $sb_posted['url'] ) ? esc_url_raw( (string) $sb_posted['url'] ) : $sb_current['url'],
+			'anon_key'         => isset( $sb_posted['anon_key'] ) ? sanitize_text_field( (string) $sb_posted['anon_key'] ) : $sb_current['anon_key'],
+			'service_role_key' => isset( $sb_posted['service_role_key'] ) ? sanitize_text_field( (string) $sb_posted['service_role_key'] ) : $sb_current['service_role_key'],
+			'price_map'        => isset( $sb_posted['price_map'] ) ? sanitize_textarea_field( (string) $sb_posted['price_map'] ) : $sb_current['price_map'],
+		);
+		if ( '' === $sb_next['service_role_key'] && ! empty( $sb_current['service_role_key'] ) ) {
+			$sb_next['service_role_key'] = $sb_current['service_role_key'];
+		}
+		if ( '' === $sb_next['anon_key'] && ! empty( $sb_current['anon_key'] ) ) {
+			$sb_next['anon_key'] = $sb_current['anon_key'];
+		}
+		update_option( SNF_SUPABASE_PAYMENTS_OPTION, $sb_next, false );
+		delete_transient( 'snf_supabase_stripe_catalog_v1' );
+	}
 
 	// Optional connectivity probe.
 	$probe_message = '';
@@ -708,8 +868,10 @@ function snf_stripe_render_settings_page() {
 	}
 
 	$s       = snf_get_stripe_settings();
+	$sb      = function_exists( 'snf_get_supabase_payments_settings' ) ? snf_get_supabase_payments_settings() : array();
 	$account = get_option( 'snf_stripe_account_cache', array() );
 	$webhook = snf_stripe_webhook_url();
+	$catalog = function_exists( 'snf_supabase_get_stripe_catalog' ) ? snf_supabase_get_stripe_catalog( true ) : array();
 	?>
 	<div class="wrap">
 		<h1><?php esc_html_e( 'SUPER NINETY FOUR — Stripe', 'super-ninety-four' ); ?></h1>
@@ -746,6 +908,86 @@ function snf_stripe_render_settings_page() {
 			<input type="hidden" name="action" value="snf_stripe_save_settings">
 			<?php wp_nonce_field( 'snf_stripe_settings', 'snf_stripe_settings_nonce' ); ?>
 
+			<h2><?php esc_html_e( 'Supabase Stripe Sync (Data Management)', 'super-ninety-four' ); ?></h2>
+			<p class="description">
+				<?php esc_html_e( 'Reads products/prices from your SUPER NINETY FOUR PAYMENTS Supabase project (stripe_sdp_data). Checkout still needs a Stripe secret key to create sessions; the sync supplies the catalog + status mirror.', 'super-ninety-four' ); ?>
+			</p>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Use synced prices', 'super-ninety-four' ); ?></th>
+					<td>
+						<label>
+							<input type="checkbox" name="snf_stripe[prefer_supabase]" value="1" <?php checked( ! empty( $s['prefer_supabase'] ) ? $s['prefer_supabase'] : 'yes', 'yes' ); ?>>
+							<?php esc_html_e( 'Prefer Stripe Price IDs from Supabase Sync Engine when creating Checkout', 'super-ninety-four' ); ?>
+						</label>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Enable bridge', 'super-ninety-four' ); ?></th>
+					<td>
+						<label>
+							<input type="checkbox" name="snf_supabase[enabled]" value="1" <?php checked( isset( $sb['enabled'] ) ? $sb['enabled'] : 'yes', 'yes' ); ?>>
+							<?php esc_html_e( 'Query Supabase for catalog / session lookups', 'super-ninety-four' ); ?>
+						</label>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Project URL', 'super-ninety-four' ); ?></th>
+					<td><input type="url" class="regular-text" name="snf_supabase[url]" value="<?php echo esc_attr( isset( $sb['url'] ) ? $sb['url'] : '' ); ?>" placeholder="https://evzjkydniknyfjftfutv.supabase.co"></td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Anon / publishable key', 'super-ninety-four' ); ?></th>
+					<td><input type="password" class="large-text" name="snf_supabase[anon_key]" value="" placeholder="<?php echo ! empty( $sb['anon_key'] ) ? esc_attr__( '•••• saved — leave blank to keep', 'super-ninety-four' ) : ''; ?>" autocomplete="new-password"></td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Service role key (optional)', 'super-ninety-four' ); ?></th>
+					<td>
+						<input type="password" class="large-text" name="snf_supabase[service_role_key]" value="" placeholder="<?php echo ! empty( $sb['service_role_key'] ) ? esc_attr__( '•••• saved — leave blank to keep', 'super-ninety-four' ) : ''; ?>" autocomplete="new-password">
+						<p class="description"><?php esc_html_e( 'Needed only for per-user checkout/subscription lookups. Keep server-side (or define SNF_SUPABASE_SERVICE_ROLE_KEY in wp-config.php).', 'super-ninety-four' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Price map JSON', 'super-ninety-four' ); ?></th>
+					<td>
+						<textarea class="large-text code" rows="4" name="snf_supabase[price_map]" placeholder='{"application":"price_…","add-on":"price_…"}'><?php echo esc_textarea( isset( $sb['price_map'] ) ? $sb['price_map'] : '' ); ?></textarea>
+						<p class="description"><?php esc_html_e( 'Optional explicit slug → price_… map. Without it, names like “4-Week Experience” / “Add-On” auto-match.', 'super-ninety-four' ); ?></p>
+					</td>
+				</tr>
+			</table>
+
+			<?php if ( is_wp_error( $catalog ) ) : ?>
+				<div class="notice notice-warning inline"><p><?php echo esc_html( $catalog->get_error_message() ); ?></p></div>
+			<?php elseif ( is_array( $catalog ) && $catalog ) : ?>
+				<h3><?php esc_html_e( 'Synced catalog', 'super-ninety-four' ); ?></h3>
+				<table class="widefat striped" style="max-width:960px">
+					<thead>
+						<tr>
+							<th><?php esc_html_e( 'Product', 'super-ninety-four' ); ?></th>
+							<th><?php esc_html_e( 'Price ID', 'super-ninety-four' ); ?></th>
+							<th><?php esc_html_e( 'Amount', 'super-ninety-four' ); ?></th>
+							<th><?php esc_html_e( 'Type', 'super-ninety-four' ); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+						<?php foreach ( $catalog as $row ) : ?>
+							<tr>
+								<td><?php echo esc_html( (string) ( $row['product_name'] ?? '' ) ); ?></td>
+								<td><code><?php echo esc_html( (string) ( $row['price_id'] ?? '' ) ); ?></code></td>
+								<td>
+									<?php
+									$cents = isset( $row['unit_amount'] ) ? (int) $row['unit_amount'] : 0;
+									$cur   = isset( $row['currency'] ) ? strtoupper( (string) $row['currency'] ) : 'USD';
+									echo esc_html( sprintf( '%s %0.2f', $cur, $cents / 100 ) );
+									?>
+								</td>
+								<td><?php echo esc_html( (string) ( $row['price_type'] ?? '' ) ); ?></td>
+							</tr>
+						<?php endforeach; ?>
+					</tbody>
+				</table>
+			<?php endif; ?>
+
+			<h2><?php esc_html_e( 'Stripe API keys', 'super-ninety-four' ); ?></h2>
 			<table class="form-table" role="presentation">
 				<tr>
 					<th scope="row"><?php esc_html_e( 'Enable Stripe', 'super-ninety-four' ); ?></th>

@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'SNF_VERSION', '2.12.0' );
+define( 'SNF_VERSION', '2.12.1' );
 
 require_once get_template_directory() . '/inc/account-hub.php';
 require_once get_template_directory() . '/inc/memberships.php';
@@ -19,6 +19,7 @@ require_once get_template_directory() . '/inc/plugin-integrations.php';
 require_once get_template_directory() . '/inc/messages.php';
 require_once get_template_directory() . '/inc/reciprocal.php';
 require_once get_template_directory() . '/inc/membership-subscriptions.php';
+require_once get_template_directory() . '/inc/supabase-payments.php';
 require_once get_template_directory() . '/inc/stripe.php';
 require_once get_template_directory() . '/inc/home.php';
 require_once get_template_directory() . '/inc/events.php';

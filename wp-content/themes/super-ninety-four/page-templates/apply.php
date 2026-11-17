@@ -17,6 +17,23 @@ $apply_email = isset( $_GET['email'] ) ? sanitize_email( wp_unslash( $_GET['emai
 $plans      = snf_get_membership_plans();
 $plan_list  = isset( $plans['plans'] ) && is_array( $plans['plans'] ) ? $plans['plans'] : array();
 $initiation = isset( $plans['initiation_fee'] ) && is_array( $plans['initiation_fee'] ) ? $plans['initiation_fee'] : array();
+
+$application_label  = __( '4-Week Experience Application', 'super-ninety-four' );
+$application_amount = '$97.00';
+$stripe_ready       = function_exists( 'snf_stripe_is_ready' ) && snf_stripe_is_ready();
+if ( function_exists( 'snf_supabase_get_stripe_catalog' ) ) {
+	$sync_catalog = snf_supabase_get_stripe_catalog();
+	if ( is_array( $sync_catalog ) ) {
+		foreach ( $sync_catalog as $row ) {
+			$name = isset( $row['product_name'] ) ? (string) $row['product_name'] : '';
+			if ( $name && false !== stripos( $name, '4-week' ) && isset( $row['unit_amount'] ) ) {
+				$application_label  = $name;
+				$application_amount = sprintf( '$%0.2f', ( (int) $row['unit_amount'] ) / 100 );
+				break;
+			}
+		}
+	}
+}
 ?>
 <main class="snf-page snf-hub snf-hub--apply" data-figma-ready="true" data-figma-node="2139:2">
 	<section class="snf-apply" aria-label="<?php esc_attr_e( 'Event admissions application', 'super-ninety-four' ); ?>">
@@ -114,7 +131,21 @@ $initiation = isset( $plans['initiation_fee'] ) && is_array( $plans['initiation_
 			</div>
 
 			<div class="snf-apply-steps__panel" data-step-panel="3" role="tabpanel" hidden>
-				<?php if ( ! empty( $initiation['amount'] ) ) : ?>
+				<p class="snf-apply-steps__meta">
+					<?php
+					printf(
+						/* translators: 1: application product name, 2: amount */
+						esc_html__( 'Application fee: %1$s — %2$s', 'super-ninety-four' ),
+						esc_html( $application_label ),
+						esc_html( $application_amount )
+					);
+					?>
+				</p>
+				<?php if ( $stripe_ready ) : ?>
+					<p class="snf-apply-steps__meta">
+						<?php esc_html_e( 'You’ll continue to secure Stripe Checkout for this application fee. Preferred membership plan is saved for admissions.', 'super-ninety-four' ); ?>
+					</p>
+				<?php elseif ( ! empty( $initiation['amount'] ) ) : ?>
 					<p class="snf-apply-steps__meta">
 						<?php
 						printf(
@@ -127,7 +158,7 @@ $initiation = isset( $plans['initiation_fee'] ) && is_array( $plans['initiation_
 				<?php endif; ?>
 
 				<fieldset class="snf-apply-steps__plans">
-					<legend><?php esc_html_e( 'Membership plan', 'super-ninety-four' ); ?></legend>
+					<legend><?php esc_html_e( 'Preferred membership plan', 'super-ninety-four' ); ?></legend>
 					<?php foreach ( $plan_list as $index => $plan ) : ?>
 						<label class="snf-apply-steps__plan">
 							<input
@@ -164,7 +195,17 @@ $initiation = isset( $plans['initiation_fee'] ) && is_array( $plans['initiation_
 						<?php esc_html_e( 'Back', 'super-ninety-four' ); ?>
 					</button>
 					<button class="snf-hub__action snf-hub__action--primary" type="submit">
-						<?php esc_html_e( 'Continue to dues checkout', 'super-ninety-four' ); ?>
+						<?php
+						echo $stripe_ready
+							? esc_html(
+								sprintf(
+									/* translators: %s: application fee amount */
+									__( 'Pay application fee (%s)', 'super-ninety-four' ),
+									$application_amount
+								)
+							)
+							: esc_html__( 'Continue to dues checkout', 'super-ninety-four' );
+						?>
 					</button>
 				</div>
 			</div>

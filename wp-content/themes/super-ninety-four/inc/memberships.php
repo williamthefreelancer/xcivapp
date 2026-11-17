@@ -833,9 +833,23 @@ function snf_handle_apply_membership_checkout() {
 		update_user_meta( (int) $user->ID, 'snf_pending_membership_plan', $plan_slug );
 	}
 
+	// Prefer Stripe Checkout for the synced $97 application SKU (Supabase Data Management).
+	if ( is_user_logged_in() && function_exists( 'snf_stripe_is_ready' ) && snf_stripe_is_ready() && function_exists( 'snf_stripe_create_application_checkout' ) ) {
+		$stripe_url = snf_stripe_create_application_checkout( get_current_user_id(), $plan_slug );
+		if ( ! is_wp_error( $stripe_url ) && $stripe_url ) {
+			wp_safe_redirect( $stripe_url );
+			exit;
+		}
+		if ( is_wp_error( $stripe_url ) && function_exists( 'wc_add_notice' ) ) {
+			wc_add_notice( $stripe_url->get_error_message(), 'error' );
+		}
+	}
+
 	$result = snf_membership_prepare_checkout_for_plan( $plan_slug );
 	if ( is_wp_error( $result ) ) {
-		wc_add_notice( $result->get_error_message(), 'error' );
+		if ( function_exists( 'wc_add_notice' ) ) {
+			wc_add_notice( $result->get_error_message(), 'error' );
+		}
 		wp_safe_redirect( snf_get_page_url( 'under-consideration' ) );
 		exit;
 	}

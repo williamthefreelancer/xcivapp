@@ -129,11 +129,11 @@
           return;
         }
       }
-      showStatus("Preparing club dues checkout…");
+      showStatus("Preparing application checkout…");
       const submit = applyForm.querySelector('button[type="submit"]');
       if (submit) submit.disabled = true;
       // Native POST → admin-post.php?action=snf_apply_membership
-      // (initiation + selected plan products → WooCommerce checkout).
+      // Prefers Stripe Checkout sku=application (Supabase Sync), else Woo checkout.
     });
 
     showStep(1);
