@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'SNF_VERSION', '2.16.1' );
+define( 'SNF_VERSION', '2.16.2' );
 
 require_once get_template_directory() . '/inc/account-hub.php';
 require_once get_template_directory() . '/inc/memberships.php';
@@ -94,7 +94,7 @@ function snf_get_site_pages() {
 		),
 		'contact' => array(
 			'title'    => 'Contact',
-			'template' => 'page-templates/public-content.php',
+			'template' => 'page-templates/blank-canvas.php',
 		),
 		'newsletter' => array(
 			'title'    => 'Newsletter',
@@ -337,7 +337,6 @@ function snf_scripts() {
 		'apply',
 		'messages',
 		'inquiries',
-		'contact',
 		'under-consideration',
 	);
 	$is_hub = false;

@@ -87,9 +87,10 @@ button {
 	pointer-events: auto;
 }
 
-.snf-header--guest .snf-header__container {
-	grid-template-columns: minmax(140px, 1fr) auto minmax(140px, 1fr);
-	column-gap: clamp(0.75rem, 2vw, 1.5rem);
+/* Brand left · primary nav center · utilities right */
+.snf-header--with-nav .snf-header__container {
+	grid-template-columns: minmax(160px, 1fr) auto minmax(160px, 1fr);
+	column-gap: clamp(0.75rem, 2vw, 1.75rem);
 }
 
 .snf-header__logo {
@@ -97,11 +98,13 @@ button {
 	align-items: center;
 	justify-self: start;
 	line-height: 0;
+	position: relative;
+	z-index: 36;
 }
 
 .snf-header__logo img {
 	display: block;
-	width: min(209px, 52vw);
+	width: min(209px, 48vw);
 	height: auto;
 }
 
@@ -273,8 +276,10 @@ button {
 	outline: none;
 }
 
-.snf-header--guest .snf-header__actions {
+.snf-header--with-nav .snf-header__actions {
 	justify-self: end;
+	position: relative;
+	z-index: 36;
 }
 
 body.snf-nav-open {
@@ -292,20 +297,20 @@ body.snf-nav-open {
 }
 
 @media (max-width: 1280px) {
-	.snf-header--guest .snf-header__container {
+	.snf-header--with-nav .snf-header__container {
 		grid-template-columns: minmax(0, 1fr) auto auto;
 		row-gap: 0.65rem;
 	}
 
-	.snf-header--guest .snf-primary-nav {
+	.snf-header--with-nav .snf-primary-nav {
 		justify-self: end;
 	}
 
-	.snf-header--guest .snf-primary-nav__toggle {
+	.snf-header--with-nav .snf-primary-nav__toggle {
 		display: inline-flex;
 	}
 
-	.snf-header--guest .snf-primary-nav__panel {
+	.snf-header--with-nav .snf-primary-nav__panel {
 		display: none;
 		position: absolute;
 		top: calc(100% + 0.55rem);
@@ -319,11 +324,11 @@ body.snf-nav-open {
 		box-shadow: 0 18px 40px rgba(0, 0, 0, 0.4);
 	}
 
-	.snf-header--guest .snf-primary-nav.is-open .snf-primary-nav__panel {
+	.snf-header--with-nav .snf-primary-nav.is-open .snf-primary-nav__panel {
 		display: block;
 	}
 
-	.snf-header--guest .snf-primary-nav__list {
+	.snf-header--with-nav .snf-primary-nav__list {
 		display: grid;
 		gap: 0.15rem;
 		padding: 0;
@@ -334,8 +339,8 @@ body.snf-nav-open {
 		backdrop-filter: none;
 	}
 
-	.snf-header--guest .snf-primary-nav__link,
-	.snf-header--guest .snf-primary-nav__trigger {
+	.snf-header--with-nav .snf-primary-nav__link,
+	.snf-header--with-nav .snf-primary-nav__trigger {
 		width: 100%;
 		justify-content: space-between;
 		padding: 0.75rem 0.85rem;
@@ -343,7 +348,7 @@ body.snf-nav-open {
 		font-size: 0.9rem;
 	}
 
-	.snf-header--guest .snf-primary-nav__dropdown {
+	.snf-header--with-nav .snf-primary-nav__dropdown {
 		position: static;
 		top: auto;
 		left: auto;
@@ -366,37 +371,39 @@ body.snf-nav-open {
 	align-items: center;
 	justify-content: flex-end;
 	justify-self: end;
-	flex-wrap: wrap;
-	/* Meta cluster | Apply CTA | account — uneven gaps create hierarchy */
-	gap: 0.55rem clamp(1.15rem, 2.4vw, 1.75rem);
+	flex-wrap: nowrap;
+	/* Quiet meta · Apply CTA · account icon */
+	gap: 0.65rem clamp(0.9rem, 1.8vw, 1.4rem);
 }
 
 .snf-header__meta {
 	display: flex;
 	align-items: center;
-	gap: 0.95rem;
+	gap: 0.85rem;
 	min-width: 0;
 }
 
 .snf-header__phone {
-	font-size: 0.8125rem;
+	font-size: 0.78rem;
 	font-weight: 500;
 	letter-spacing: 0.04em;
 	line-height: 1.2;
 	color: var(--snf-ink-soft);
+	opacity: 0.88;
 	white-space: nowrap;
-	transition: color 160ms ease;
+	transition: color 160ms ease, opacity 160ms ease;
 }
 
 .snf-header__phone:hover,
 .snf-header__phone:focus-visible {
 	color: var(--snf-ink-muted);
+	opacity: 1;
 	outline: none;
 }
 
 .snf-header__login {
-	font-size: 0.875rem;
-	font-weight: 500;
+	font-size: 0.84rem;
+	font-weight: 600;
 	letter-spacing: 0.01em;
 	line-height: 1.2;
 	color: var(--snf-ink);
@@ -1624,6 +1631,12 @@ body.snf-no-header.admin-bar {
 	margin-top: 0.15rem;
 }
 
+@media (max-width: 1100px) {
+	.snf-header--with-nav .snf-header__phone {
+		display: none;
+	}
+}
+
 @media (max-width: 900px) {
 	.snf-hero__container {
 		height: auto;
@@ -1652,20 +1665,15 @@ body.snf-no-header.admin-bar {
 	}
 
 	.snf-header__actions {
-		gap: 0.45rem 0.85rem;
+		gap: 0.45rem 0.75rem;
 	}
 
 	.snf-header__meta {
-		gap: 0.7rem;
-	}
-
-	.snf-header__phone {
-		font-size: 0.75rem;
-		letter-spacing: 0.03em;
+		gap: 0.65rem;
 	}
 
 	.snf-header__login {
-		font-size: 0.8rem;
+		font-size: 0.78rem;
 	}
 
 	.snf-header__apply {

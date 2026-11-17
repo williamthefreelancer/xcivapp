@@ -8,10 +8,10 @@
 <body <?php body_class(); ?>>
 <?php wp_body_open(); ?>
 <?php
-$snf_show_guest_nav = ! is_user_logged_in();
-$snf_guest_items    = $snf_show_guest_nav ? snf_primary_menu_items() : array();
+$snf_primary_items = snf_primary_menu_items();
+$snf_is_member     = is_user_logged_in();
 ?>
-<header class="snf-header<?php echo $snf_show_guest_nav ? ' snf-header--guest' : ''; ?>">
+<header class="snf-header snf-header--with-nav<?php echo $snf_is_member ? ' snf-header--member' : ' snf-header--guest'; ?>">
 	<div class="snf-container snf-header__container">
 		<a class="snf-header__logo" href="<?php echo esc_url( home_url( '/' ) ); ?>">
 			<img
@@ -23,21 +23,20 @@ $snf_guest_items    = $snf_show_guest_nav ? snf_primary_menu_items() : array();
 			>
 		</a>
 
-		<?php if ( $snf_show_guest_nav ) : ?>
-			<nav class="snf-primary-nav" aria-label="<?php esc_attr_e( 'Primary', 'super-ninety-four' ); ?>">
-				<button
-					class="snf-primary-nav__toggle"
-					type="button"
-					aria-expanded="false"
-					aria-controls="snf-primary-nav-panel"
-				>
-					<span class="snf-primary-nav__toggle-label"><?php esc_html_e( 'Menu', 'super-ninety-four' ); ?></span>
-					<span class="snf-primary-nav__toggle-bars" aria-hidden="true"></span>
-				</button>
+		<nav class="snf-primary-nav" aria-label="<?php esc_attr_e( 'Primary', 'super-ninety-four' ); ?>">
+			<button
+				class="snf-primary-nav__toggle"
+				type="button"
+				aria-expanded="false"
+				aria-controls="snf-primary-nav-panel"
+			>
+				<span class="snf-primary-nav__toggle-label"><?php esc_html_e( 'Menu', 'super-ninety-four' ); ?></span>
+				<span class="snf-primary-nav__toggle-bars" aria-hidden="true"></span>
+			</button>
 
-				<div id="snf-primary-nav-panel" class="snf-primary-nav__panel">
-					<ul class="snf-primary-nav__list">
-						<?php foreach ( $snf_guest_items as $item ) : ?>
+			<div id="snf-primary-nav-panel" class="snf-primary-nav__panel">
+				<ul class="snf-primary-nav__list">
+					<?php foreach ( $snf_primary_items as $item ) : ?>
 							<?php
 							$type     = isset( $item['type'] ) ? $item['type'] : 'link';
 							$label    = isset( $item['label'] ) ? $item['label'] : '';
@@ -99,22 +98,23 @@ $snf_guest_items    = $snf_show_guest_nav ? snf_primary_menu_items() : array();
 									</a>
 								</li>
 							<?php endif; ?>
-						<?php endforeach; ?>
-					</ul>
-				</div>
-			</nav>
-		<?php endif; ?>
+					<?php endforeach; ?>
+				</ul>
+			</div>
+		</nav>
 
 		<div class="snf-header__actions">
 			<div class="snf-header__meta">
 				<a class="snf-header__phone" href="tel:9804619980">980-461-9980</a>
-				<a class="snf-header__login" href="<?php echo esc_url( is_user_logged_in() ? snf_get_dashboard_url() : snf_get_page_url( 'member-login' ) ); ?>">
-					<?php echo esc_html( is_user_logged_in() ? __( 'Dashboard', 'super-ninety-four' ) : __( 'Member login', 'super-ninety-four' ) ); ?>
+				<a class="snf-header__login" href="<?php echo esc_url( $snf_is_member ? snf_get_dashboard_url() : snf_get_page_url( 'member-login' ) ); ?>">
+					<?php echo esc_html( $snf_is_member ? __( 'Dashboard', 'super-ninety-four' ) : __( 'Member login', 'super-ninety-four' ) ); ?>
 				</a>
 			</div>
-			<a class="snf-header__apply" href="<?php echo esc_url( snf_get_page_url( 'apply' ) ); ?>">
-				<?php esc_html_e( 'Apply', 'super-ninety-four' ); ?>
-			</a>
+			<?php if ( ! $snf_is_member ) : ?>
+				<a class="snf-header__apply" href="<?php echo esc_url( snf_get_page_url( 'apply' ) ); ?>">
+					<?php esc_html_e( 'Apply', 'super-ninety-four' ); ?>
+				</a>
+			<?php endif; ?>
 
 			<div class="snf-account">
 				<button

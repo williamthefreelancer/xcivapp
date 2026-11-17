@@ -1,7 +1,7 @@
 <?php
 /**
  * Template Name: Public Content
- * Description: Lightweight public landing pages (Contact, Service Inquiries).
+ * Description: Lightweight public landing pages (Service Inquiries).
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -15,11 +15,6 @@ $copy = array(
 		'eyebrow' => __( 'Desk', 'super-ninety-four' ),
 		'title'   => __( 'Service inquiries', 'super-ninety-four' ),
 		'lede'    => __( 'Request Lifestyle Concierge services for properties, suites, and guest movement across the SUPER NINETY FOUR circuit.', 'super-ninety-four' ),
-	),
-	'contact'   => array(
-		'eyebrow' => __( 'Reach us', 'super-ninety-four' ),
-		'title'   => __( 'Contact', 'super-ninety-four' ),
-		'lede'    => __( 'Write the desk for membership questions, reciprocal access, and hospitality coordination.', 'super-ninety-four' ),
 	),
 );
 
@@ -37,15 +32,6 @@ if ( 'inquiries' === $slug && function_exists( 'snf_get_dashboard_service_inquir
 			'url'   => $card['url'],
 		);
 	}
-} elseif ( 'contact' === $slug ) {
-	$actions[] = array(
-		'label' => __( 'Call 980-461-9980', 'super-ninety-four' ),
-		'url'   => 'tel:9804619980',
-	);
-	$actions[] = array(
-		'label' => __( 'Apply for consideration', 'super-ninety-four' ),
-		'url'   => snf_get_page_url( 'apply' ),
-	);
 }
 
 get_header();
