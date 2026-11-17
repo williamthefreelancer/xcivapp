@@ -55,9 +55,12 @@ $cart_url = function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : home_url(
 <main class="snf-workshop" data-figma-ready="true" data-figma-node="2046:2">
 	<?php
 	if ( function_exists( 'wc_print_notices' ) ) {
-		echo '<div class="snf-workshop__notices snf-container">';
+		ob_start();
 		wc_print_notices();
-		echo '</div>';
+		$workshop_notices = trim( (string) ob_get_clean() );
+		if ( '' !== $workshop_notices ) {
+			echo '<div class="snf-workshop__notices snf-container">' . $workshop_notices . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		}
 	}
 	?>
 	<div class="snf-workshop__countdown" data-snf-countdown="<?php echo esc_attr( $countdown['target'] ?? '' ); ?>" data-figma-slot="workshop-countdown">
@@ -220,24 +223,40 @@ $cart_url = function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : home_url(
 				<input type="hidden" name="snf_cart_name" value="">
 				<input type="hidden" name="snf_cart_email" value="">
 				<input type="hidden" name="snf_cart_phone" value="">
-				<input type="hidden" name="snf_cart_firm" value="">
 
 				<div class="snf-workshop__panel is-active" data-step-panel="1">
 					<label class="snf-workshop__field">
-						<span><?php esc_html_e( 'Full name *', 'super-ninety-four' ); ?></span>
-						<input type="text" name="snf_workshop_name" required autocomplete="name">
+						<span class="screen-reader-text"><?php esc_html_e( 'Full name', 'super-ninety-four' ); ?></span>
+						<input
+							type="text"
+							name="snf_workshop_name"
+							required
+							autocomplete="name"
+							placeholder="<?php esc_attr_e( 'Full name', 'super-ninety-four' ); ?>"
+							aria-label="<?php esc_attr_e( 'Full name', 'super-ninety-four' ); ?>"
+						>
 					</label>
 					<label class="snf-workshop__field">
-						<span><?php esc_html_e( 'Email *', 'super-ninety-four' ); ?></span>
-						<input type="email" name="snf_workshop_email" required autocomplete="email">
+						<span class="screen-reader-text"><?php esc_html_e( 'Your email', 'super-ninety-four' ); ?></span>
+						<input
+							type="email"
+							name="snf_workshop_email"
+							required
+							autocomplete="email"
+							placeholder="<?php esc_attr_e( 'Your email', 'super-ninety-four' ); ?>"
+							aria-label="<?php esc_attr_e( 'Your email', 'super-ninety-four' ); ?>"
+						>
 					</label>
 					<label class="snf-workshop__field">
-						<span><?php esc_html_e( 'Phone *', 'super-ninety-four' ); ?></span>
-						<input type="tel" name="snf_workshop_phone" required autocomplete="tel">
-					</label>
-					<label class="snf-workshop__field">
-						<span><?php esc_html_e( 'Firm / organization', 'super-ninety-four' ); ?></span>
-						<input type="text" name="snf_workshop_firm" autocomplete="organization">
+						<span class="screen-reader-text"><?php esc_html_e( 'Your phone', 'super-ninety-four' ); ?></span>
+						<input
+							type="tel"
+							name="snf_workshop_phone"
+							required
+							autocomplete="tel"
+							placeholder="<?php esc_attr_e( 'Your phone', 'super-ninety-four' ); ?>"
+							aria-label="<?php esc_attr_e( 'Your phone', 'super-ninety-four' ); ?>"
+						>
 					</label>
 					<button class="snf-workshop__button" type="button" data-snf-next-step>
 						<?php esc_html_e( 'Continue to ticket selection', 'super-ninety-four' ); ?>
@@ -258,6 +277,7 @@ $cart_url = function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : home_url(
 							<span><?php esc_html_e( 'Quantity', 'super-ninety-four' ); ?></span>
 							<input
 								type="number"
+								class="qty"
 								name="quantity"
 								value="1"
 								min="1"
@@ -271,7 +291,7 @@ $cart_url = function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : home_url(
 						<button class="snf-workshop__button snf-workshop__button--ghost" type="button" data-snf-prev-step>
 							<?php esc_html_e( 'Back', 'super-ninety-four' ); ?>
 						</button>
-						<button class="snf-workshop__button snf-workshop__button--submit single_add_to_cart_button" type="submit" name="add-to-cart" value="<?php echo esc_attr( (string) $product->get_id() ); ?>">
+						<button class="snf-workshop__button snf-workshop__button--submit single_add_to_cart_button button alt" type="submit" name="add-to-cart" value="<?php echo esc_attr( (string) $product->get_id() ); ?>">
 							<?php
 							printf(
 								/* translators: %s: workshop price */

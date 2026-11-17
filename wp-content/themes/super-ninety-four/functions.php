@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'SNF_VERSION', '2.10.0' );
+define( 'SNF_VERSION', '2.10.1' );
 
 require_once get_template_directory() . '/inc/account-hub.php';
 require_once get_template_directory() . '/inc/dashboard-shell.php';
@@ -901,6 +901,56 @@ function snf_is_lifestyle_concierge_workshop( $post_id = null ) {
 }
 
 /**
+ * Read workshop contact fields from the add-to-cart request.
+ *
+ * @return array{name:string,email:string,phone:string}
+ */
+function snf_workshop_request_contact_fields() {
+	$name  = isset( $_REQUEST['snf_cart_name'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['snf_cart_name'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	$email = isset( $_REQUEST['snf_cart_email'] ) ? sanitize_email( wp_unslash( $_REQUEST['snf_cart_email'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	$phone = isset( $_REQUEST['snf_cart_phone'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['snf_cart_phone'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
+	// Fall back to visible form fields if hidden cart mirrors were empty.
+	if ( '' === $name && isset( $_REQUEST['snf_workshop_name'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$name = sanitize_text_field( wp_unslash( $_REQUEST['snf_workshop_name'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	}
+	if ( '' === $email && isset( $_REQUEST['snf_workshop_email'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$email = sanitize_email( wp_unslash( $_REQUEST['snf_workshop_email'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	}
+	if ( '' === $phone && isset( $_REQUEST['snf_workshop_phone'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$phone = sanitize_text_field( wp_unslash( $_REQUEST['snf_workshop_phone'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	}
+
+	return array(
+		'name'  => $name,
+		'email' => $email,
+		'phone' => $phone,
+	);
+}
+
+/**
+ * Block workshop add-to-cart when contact fields are incomplete.
+ *
+ * @param bool $passed     Whether validation passed.
+ * @param int  $product_id Product ID.
+ * @return bool
+ */
+function snf_workshop_validate_add_to_cart( $passed, $product_id ) {
+	if ( ! $passed || ! snf_is_lifestyle_concierge_workshop( $product_id ) ) {
+		return $passed;
+	}
+
+	$contact = snf_workshop_request_contact_fields();
+	if ( '' === $contact['name'] || ! is_email( $contact['email'] ) || '' === $contact['phone'] ) {
+		wc_add_notice( __( 'Please enter your full name, email, and phone before adding the workshop to your cart.', 'super-ninety-four' ), 'error' );
+		return false;
+	}
+
+	return $passed;
+}
+add_filter( 'woocommerce_add_to_cart_validation', 'snf_workshop_validate_add_to_cart', 10, 2 );
+
+/**
  * Persist workshop contact fields onto cart line items.
  *
  * @param array $cart_item_data Existing cart item data.
@@ -912,21 +962,8 @@ function snf_workshop_add_cart_item_data( $cart_item_data, $product_id ) {
 		return $cart_item_data;
 	}
 
-	$fields = array(
-		'name'  => 'snf_cart_name',
-		'email' => 'snf_cart_email',
-		'phone' => 'snf_cart_phone',
-		'firm'  => 'snf_cart_firm',
-	);
-
-	foreach ( $fields as $key => $request_key ) {
-		if ( empty( $_REQUEST[ $request_key ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			continue;
-		}
-		$value = sanitize_text_field( wp_unslash( $_REQUEST[ $request_key ] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		if ( 'email' === $key ) {
-			$value = sanitize_email( wp_unslash( $_REQUEST[ $request_key ] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		}
+	$contact = snf_workshop_request_contact_fields();
+	foreach ( $contact as $key => $value ) {
 		if ( '' !== $value ) {
 			$cart_item_data[ 'snf_workshop_' . $key ] = $value;
 		}
@@ -941,6 +978,61 @@ function snf_workshop_add_cart_item_data( $cart_item_data, $product_id ) {
 add_filter( 'woocommerce_add_cart_item_data', 'snf_workshop_add_cart_item_data', 10, 2 );
 
 /**
+ * Prefill WooCommerce customer billing from workshop contact details.
+ *
+ * @param string $cart_item_key Cart item key.
+ * @param int    $product_id    Product ID.
+ * @param int    $quantity      Quantity.
+ * @param int    $variation_id  Variation ID.
+ * @param array  $variation     Variation data.
+ * @param array  $cart_item_data Cart item data.
+ */
+function snf_workshop_prefill_customer_from_cart( $cart_item_key, $product_id, $quantity, $variation_id, $variation, $cart_item_data ) {
+	if ( ! snf_is_lifestyle_concierge_workshop( $product_id ) || ! function_exists( 'WC' ) || ! WC()->customer ) {
+		return;
+	}
+
+	$name  = isset( $cart_item_data['snf_workshop_name'] ) ? (string) $cart_item_data['snf_workshop_name'] : '';
+	$email = isset( $cart_item_data['snf_workshop_email'] ) ? (string) $cart_item_data['snf_workshop_email'] : '';
+	$phone = isset( $cart_item_data['snf_workshop_phone'] ) ? (string) $cart_item_data['snf_workshop_phone'] : '';
+
+	if ( $email ) {
+		WC()->customer->set_billing_email( $email );
+	}
+	if ( $phone ) {
+		WC()->customer->set_billing_phone( $phone );
+	}
+	if ( $name ) {
+		$parts = preg_split( '/\s+/', trim( $name ), 2 );
+		WC()->customer->set_billing_first_name( $parts[0] ?? $name );
+		WC()->customer->set_billing_last_name( $parts[1] ?? '' );
+	}
+}
+add_action( 'woocommerce_add_to_cart', 'snf_workshop_prefill_customer_from_cart', 20, 6 );
+
+/**
+ * Send workshop purchases to cart after add-to-cart.
+ *
+ * @param string $url Default redirect URL.
+ * @return string
+ */
+function snf_workshop_add_to_cart_redirect( $url ) {
+	$product_id = 0;
+	if ( isset( $_REQUEST['add-to-cart'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$product_id = absint( $_REQUEST['add-to-cart'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	} elseif ( isset( $_REQUEST['product_id'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$product_id = absint( $_REQUEST['product_id'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	}
+
+	if ( $product_id && snf_is_lifestyle_concierge_workshop( $product_id ) && function_exists( 'wc_get_cart_url' ) ) {
+		return wc_get_cart_url();
+	}
+
+	return $url;
+}
+add_filter( 'woocommerce_add_to_cart_redirect', 'snf_workshop_add_to_cart_redirect' );
+
+/**
  * Show workshop contact meta in cart/checkout.
  *
  * @param array $item_data Display rows.
@@ -949,10 +1041,9 @@ add_filter( 'woocommerce_add_cart_item_data', 'snf_workshop_add_cart_item_data',
  */
 function snf_workshop_cart_item_data( $item_data, $cart_item ) {
 	$map = array(
-		'snf_workshop_name'  => __( 'Attendee', 'super-ninety-four' ),
-		'snf_workshop_email' => __( 'Email', 'super-ninety-four' ),
-		'snf_workshop_phone' => __( 'Phone', 'super-ninety-four' ),
-		'snf_workshop_firm'  => __( 'Firm', 'super-ninety-four' ),
+		'snf_workshop_name'  => __( 'Full name', 'super-ninety-four' ),
+		'snf_workshop_email' => __( 'Your email', 'super-ninety-four' ),
+		'snf_workshop_phone' => __( 'Your phone', 'super-ninety-four' ),
 	);
 
 	foreach ( $map as $key => $label ) {
@@ -978,10 +1069,9 @@ add_filter( 'woocommerce_get_item_data', 'snf_workshop_cart_item_data', 10, 2 );
  */
 function snf_workshop_checkout_create_order_line_item( $item, $cart_item_key, $values ) {
 	$map = array(
-		'snf_workshop_name'  => __( 'Attendee', 'super-ninety-four' ),
-		'snf_workshop_email' => __( 'Email', 'super-ninety-four' ),
-		'snf_workshop_phone' => __( 'Phone', 'super-ninety-four' ),
-		'snf_workshop_firm'  => __( 'Firm', 'super-ninety-four' ),
+		'snf_workshop_name'  => __( 'Full name', 'super-ninety-four' ),
+		'snf_workshop_email' => __( 'Your email', 'super-ninety-four' ),
+		'snf_workshop_phone' => __( 'Your phone', 'super-ninety-four' ),
 	);
 
 	foreach ( $map as $key => $label ) {

@@ -87,13 +87,12 @@
       snf_workshop_name: "snf_cart_name",
       snf_workshop_email: "snf_cart_email",
       snf_workshop_phone: "snf_cart_phone",
-      snf_workshop_firm: "snf_cart_firm",
     };
     Object.entries(map).forEach(([from, to]) => {
       const source = purchase.querySelector(`[name="${from}"]`);
       const target = purchase.querySelector(`[name="${to}"]`);
       if (source && target) {
-        target.value = source.value || "";
+        target.value = (source.value || "").trim();
       }
     });
   };
