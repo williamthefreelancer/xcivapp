@@ -101,13 +101,11 @@ add_action( 'init', 'snf_ensure_serp_product_categories', 30 );
 /**
  * Read SERP query params from the request.
  *
- * @return array{q:string,where:string,when:string}
+ * @return array{q:string}
  */
 function snf_get_serp_request_args() {
 	return array(
-		'q'     => isset( $_GET['q'] ) ? sanitize_text_field( wp_unslash( $_GET['q'] ) ) : '',
-		'where' => isset( $_GET['where'] ) ? sanitize_text_field( wp_unslash( $_GET['where'] ) ) : '',
-		'when'  => isset( $_GET['when'] ) ? sanitize_text_field( wp_unslash( $_GET['when'] ) ) : '',
+		'q' => isset( $_GET['q'] ) ? sanitize_text_field( wp_unslash( $_GET['q'] ) ) : '',
 	);
 }
 
@@ -142,28 +140,6 @@ function snf_woocommerce_product_query( $q ) {
 		'operator' => 'IN',
 	);
 	$q->set( 'tax_query', $tax_query );
-
-	$meta_query = $q->get( 'meta_query' );
-	if ( ! is_array( $meta_query ) ) {
-		$meta_query = array();
-	}
-	if ( $args['where'] ) {
-		$meta_query[] = array(
-			'key'     => '_snf_location',
-			'value'   => $args['where'],
-			'compare' => 'LIKE',
-		);
-	}
-	if ( $args['when'] ) {
-		$meta_query[] = array(
-			'key'     => '_snf_when',
-			'value'   => $args['when'],
-			'compare' => 'LIKE',
-		);
-	}
-	if ( $meta_query ) {
-		$q->set( 'meta_query', $meta_query );
-	}
 }
 add_action( 'woocommerce_product_query', 'snf_woocommerce_product_query' );
 

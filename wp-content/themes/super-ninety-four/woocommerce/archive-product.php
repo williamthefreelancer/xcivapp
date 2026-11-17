@@ -11,8 +11,6 @@ get_header( 'shop' );
 
 $args          = snf_get_serp_request_args();
 $query         = $args['q'];
-$where         = $args['where'];
-$when          = $args['when'];
 $result_count  = (int) $GLOBALS['wp_query']->found_posts;
 $display_query = $query ? $query : __( 'events & services', 'super-ninety-four' );
 $shop_url      = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'shop' ) : home_url( '/shop/' );
@@ -31,9 +29,6 @@ $shop_url      = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permal
 					number_format_i18n( $result_count ),
 					'“' . esc_html( $display_query ) . '”'
 				);
-				if ( $where || $when ) {
-					echo ' · ' . esc_html( trim( implode( ' · ', array_filter( array( $where, $when ) ) ) ) );
-				}
 				?>
 			</p>
 

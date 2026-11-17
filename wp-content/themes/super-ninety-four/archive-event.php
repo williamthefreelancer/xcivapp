@@ -5,8 +5,6 @@
 get_header();
 
 $query = isset( $_GET['q'] ) ? sanitize_text_field( wp_unslash( $_GET['q'] ) ) : '';
-$where = isset( $_GET['where'] ) ? sanitize_text_field( wp_unslash( $_GET['where'] ) ) : '';
-$when  = isset( $_GET['when'] ) ? sanitize_text_field( wp_unslash( $_GET['when'] ) ) : '';
 
 $args = array(
 	'post_type'      => 'event',
@@ -39,9 +37,6 @@ $display_query = $query ? $query : __( 'events & services', 'super-ninety-four' 
 					number_format_i18n( $result_count ),
 					'“' . esc_html( $display_query ) . '”'
 				);
-				if ( $where || $when ) {
-					echo ' · ' . esc_html( trim( implode( ' · ', array_filter( array( $where, $when ) ) ) ) );
-				}
 				?>
 			</p>
 
