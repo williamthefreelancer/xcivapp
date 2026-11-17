@@ -169,7 +169,7 @@ function snf_get_reciprocal_clubs() {
 			'title'        => __( 'BADLANDS BRA', 'super-ninety-four' ),
 			'mark'         => 'BB',
 			'mark_label'   => __( 'BADLANDS BRA', 'super-ninety-four' ),
-			'hero'         => $media['hero'],
+			'hero'         => $upload_uri . 'badlands-bra-image-background.jpg',
 			'hero_alt'     => __( 'Badlands Bra members-only experience', 'super-ninety-four' ),
 			'mid_image'    => $media['mid_image'],
 			'gallery'      => $media['gallery'],
