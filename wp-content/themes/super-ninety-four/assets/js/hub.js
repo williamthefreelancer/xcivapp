@@ -60,7 +60,11 @@
       currentStep = Math.min(maxStep, Math.max(1, Number(step) || 1));
       stepButtons.forEach((btn) => {
         const active = String(btn.dataset.step) === String(currentStep);
-        btn.setAttribute("aria-current", active ? "step" : "false");
+        if (active) {
+          btn.setAttribute("aria-current", "step");
+        } else {
+          btn.removeAttribute("aria-current");
+        }
       });
       stepItems.forEach((item) => {
         const n = Number(item.dataset.stepIndicator) || 0;

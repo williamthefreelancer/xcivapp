@@ -51,13 +51,13 @@ $initiation = isset( $plans['initiation_fee'] ) && is_array( $plans['initiation_
 					</button>
 				</li>
 				<li class="snf-apply__step" data-step-indicator="2">
-					<button type="button" class="snf-apply__step-btn" data-step="2" aria-current="false">
+					<button type="button" class="snf-apply__step-btn" data-step="2">
 						<span class="snf-apply__step-num" aria-hidden="true">2</span>
 						<span class="snf-apply__step-label"><?php esc_html_e( 'Profile', 'super-ninety-four' ); ?></span>
 					</button>
 				</li>
 				<li class="snf-apply__step" data-step-indicator="3">
-					<button type="button" class="snf-apply__step-btn" data-step="3" aria-current="false">
+					<button type="button" class="snf-apply__step-btn" data-step="3">
 						<span class="snf-apply__step-num" aria-hidden="true">3</span>
 						<span class="snf-apply__step-label"><?php esc_html_e( 'Intent', 'super-ninety-four' ); ?></span>
 					</button>
