@@ -4399,6 +4399,12 @@ body.snf-no-header .snf-event {
 	line-height: 0;
 	text-decoration: none;
 	flex-shrink: 0;
+	min-width: 0;
+}
+
+.snf-event__brand--wordmark {
+	flex: 1 1 auto;
+	max-width: min(100%, 280px);
 }
 
 .snf-event__logo {
@@ -4406,6 +4412,14 @@ body.snf-no-header .snf-event {
 	width: auto;
 	height: 42px;
 	max-height: 42px;
+}
+
+.snf-event__logo--wordmark {
+	width: 100%;
+	height: auto;
+	max-height: 56px;
+	object-fit: contain;
+	object-position: left center;
 }
 
 .snf-event__avatar {

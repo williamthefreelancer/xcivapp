@@ -31,6 +31,13 @@ $member_email = isset( $member['email'] ) ? (string) $member['email'] : '';
 $member_club  = isset( $member['club'] ) ? (string) $member['club'] : '';
 $plan_list    = isset( $plans['plans'] ) && is_array( $plans['plans'] ) ? $plans['plans'] : array();
 $initiation   = isset( $plans['initiation_fee'] ) && is_array( $plans['initiation_fee'] ) ? $plans['initiation_fee'] : array();
+$logo         = isset( $event['logo'] ) && is_array( $event['logo'] ) ? $event['logo'] : array();
+$logo_url     = ! empty( $logo['url'] )
+	? (string) $logo['url']
+	: get_template_directory_uri() . '/assets/icons/female-body-icon-white.svg';
+$logo_width   = ! empty( $logo['width'] ) ? (int) $logo['width'] : 28;
+$logo_height  = ! empty( $logo['height'] ) ? (int) $logo['height'] : 42;
+$logo_variant = ( ! empty( $logo['variant'] ) && 'wordmark' === $logo['variant'] ) ? 'wordmark' : 'icon';
 ?>
 <main
 	class="snf-page snf-event"
@@ -41,13 +48,13 @@ $initiation   = isset( $plans['initiation_fee'] ) && is_array( $plans['initiatio
 	<section class="snf-event__shell snf-container" aria-label="<?php echo esc_attr( $event['title'] ); ?>">
 		<article class="snf-event__frame">
 			<header class="snf-event__topbar">
-				<a class="snf-event__brand" href="<?php echo esc_url( home_url( '/' ) ); ?>">
+				<a class="snf-event__brand snf-event__brand--<?php echo esc_attr( $logo_variant ); ?>" href="<?php echo esc_url( home_url( '/' ) ); ?>">
 					<img
-						class="snf-event__logo"
-						src="<?php echo esc_url( get_template_directory_uri() . '/assets/icons/female-body-icon-white.svg' ); ?>"
-						alt="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>"
-						width="28"
-						height="42"
+						class="snf-event__logo snf-event__logo--<?php echo esc_attr( $logo_variant ); ?>"
+						src="<?php echo esc_url( $logo_url ); ?>"
+						alt="<?php echo esc_attr( $event['title'] ); ?>"
+						width="<?php echo esc_attr( (string) $logo_width ); ?>"
+						height="<?php echo esc_attr( (string) $logo_height ); ?>"
 						decoding="async"
 					>
 				</a>

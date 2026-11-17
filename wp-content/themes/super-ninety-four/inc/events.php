@@ -54,6 +54,54 @@ function snf_get_event_admission_audience( $post = null ) {
 }
 
 /**
+ * Header brand logo filename under assets/icons/ for a select-event slug.
+ *
+ * @param string $slug Event/product slug.
+ * @return array{file:string,width:int,height:int,variant:string}
+ */
+function snf_get_event_brand_logo( $slug ) {
+	$slug = sanitize_title( (string) $slug );
+	if ( 'the-eight-hundred-plus-journeys' === $slug ) {
+		$slug = 'the-eight-hundred-plus-journeys-event';
+	}
+	if ( 'the-badlands-bra-party-bus-gathering' === $slug ) {
+		$slug = 'the-badlands-bra-private-gathering';
+	}
+
+	$map = array(
+		'the-township-adventures-event'         => array(
+			'file'    => 'events/the-cultural-guide-of-township-adventures-white.svg',
+			'width'   => 220,
+			'height'  => 89,
+			'variant' => 'wordmark',
+		),
+		'the-eight-hundred-plus-journeys-event' => array(
+			'file'    => 'events/the-800-plus-journeys-logo-white.svg',
+			'width'   => 220,
+			'height'  => 50,
+			'variant' => 'wordmark',
+		),
+		'the-badlands-bra-private-gathering'    => array(
+			'file'    => 'female-body-icon-white.svg',
+			'width'   => 28,
+			'height'  => 42,
+			'variant' => 'icon',
+		),
+	);
+
+	if ( isset( $map[ $slug ] ) ) {
+		return $map[ $slug ];
+	}
+
+	return array(
+		'file'    => 'female-body-icon-white.svg',
+		'width'   => 28,
+		'height'  => 42,
+		'variant' => 'icon',
+	);
+}
+
+/**
  * Default image filename for known event slugs.
  *
  * @param string $slug Event post slug.
@@ -319,6 +367,8 @@ function snf_get_event_single_data( $post = null ) {
 	$member      = function_exists( 'snf_get_hub_member_context' ) ? snf_get_hub_member_context() : array();
 	$plans       = function_exists( 'snf_get_membership_plans' ) ? snf_get_membership_plans() : array();
 	$rendered    = $content ? apply_filters( 'the_content', $content ) : '';
+	$logo        = snf_get_event_brand_logo( $slug );
+	$logo_url    = get_template_directory_uri() . '/assets/icons/' . ltrim( (string) $logo['file'], '/' );
 
 	return array(
 		'id'           => $post_id,
@@ -333,6 +383,12 @@ function snf_get_event_single_data( $post = null ) {
 		'content'      => $rendered,
 		'image'        => $image,
 		'video'        => $video,
+		'logo'         => array(
+			'url'     => $logo_url,
+			'width'   => (int) $logo['width'],
+			'height'  => (int) $logo['height'],
+			'variant' => (string) $logo['variant'],
+		),
 		'countdown'    => snf_event_countdown_parts( $starts_at ),
 		'action_url'   => snf_get_event_action_url( $post_id ),
 		'action_label' => snf_get_event_action_label( $post_id ),
