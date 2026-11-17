@@ -242,6 +242,13 @@ function snf_get_woo_product_cards_by_category( $category_slug, $limit = 12 ) {
 		$image_id = $product->get_image_id();
 		$image    = $image_id ? wp_get_attachment_image_url( $image_id, 'large' ) : '';
 
+		if ( ! $image && 'services' === $category_slug && function_exists( 'snf_get_default_service_product_images' ) ) {
+			$defaults = snf_get_default_service_product_images();
+			if ( ! empty( $defaults[ $post->post_name ] ) ) {
+				$image = get_template_directory_uri() . '/assets/images/services/' . $defaults[ $post->post_name ];
+			}
+		}
+
 		$card_url = get_permalink( $post->ID );
 		if ( function_exists( 'snf_is_lifestyle_concierge_workshop' ) && snf_is_lifestyle_concierge_workshop( $post->ID ) ) {
 			$card_url = snf_get_workshop_landing_url();

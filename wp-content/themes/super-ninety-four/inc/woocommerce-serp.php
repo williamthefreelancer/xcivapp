@@ -506,3 +506,99 @@ function snf_ensure_event_product_serp_meta() {
 	}
 }
 add_action( 'init', 'snf_ensure_event_product_serp_meta', 40 );
+
+/**
+ * Default theme images for known service products (under assets/images/services/).
+ *
+ * @return array<string, string> product slug => filename
+ */
+function snf_get_default_service_product_images() {
+	return array(
+		'janitorial-cleaning-service'               => 'commercial-janitor-cleaning.jpg',
+		'litter-pickup-service'                     => 'grounds-litter-pickup.png',
+		'professional-line-sitting-courier-service' => 'line-sitting-service.png',
+	);
+}
+
+/**
+ * Attach a theme image file as a product featured image.
+ *
+ * @param int    $product_id Product ID.
+ * @param string $filename   File under assets/images/services/.
+ * @return int Attachment ID or 0.
+ */
+function snf_attach_theme_service_image( $product_id, $filename ) {
+	$product_id = (int) $product_id;
+	$filename   = basename( (string) $filename );
+	if ( $product_id <= 0 || '' === $filename ) {
+		return 0;
+	}
+
+	$source = get_template_directory() . '/assets/images/services/' . $filename;
+	if ( ! file_exists( $source ) ) {
+		return 0;
+	}
+
+	require_once ABSPATH . 'wp-admin/includes/file.php';
+	require_once ABSPATH . 'wp-admin/includes/media.php';
+	require_once ABSPATH . 'wp-admin/includes/image.php';
+
+	$tmp = wp_tempnam( $filename );
+	if ( ! $tmp || ! copy( $source, $tmp ) ) {
+		return 0;
+	}
+
+	$file_array = array(
+		'name'     => $filename,
+		'tmp_name' => $tmp,
+	);
+
+	$attachment_id = media_handle_sideload( $file_array, $product_id );
+	if ( is_wp_error( $attachment_id ) ) {
+		@unlink( $tmp ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+		return 0;
+	}
+
+	set_post_thumbnail( $product_id, (int) $attachment_id );
+	return (int) $attachment_id;
+}
+
+/**
+ * Ensure known service products have a featured image from theme assets.
+ */
+function snf_ensure_service_product_images() {
+	if ( ! class_exists( 'WooCommerce' ) ) {
+		return;
+	}
+
+	$map = snf_get_default_service_product_images();
+	if ( ! $map ) {
+		return;
+	}
+
+	$query = new WP_Query(
+		array(
+			'post_type'      => 'product',
+			'post_status'    => 'publish',
+			'posts_per_page' => 20,
+			'post_name__in'  => array_keys( $map ),
+			'fields'         => 'ids',
+			'no_found_rows'  => true,
+		)
+	);
+
+	foreach ( $query->posts as $product_id ) {
+		$product_id = (int) $product_id;
+		if ( has_post_thumbnail( $product_id ) ) {
+			continue;
+		}
+
+		$post = get_post( $product_id );
+		if ( ! $post || empty( $map[ $post->post_name ] ) ) {
+			continue;
+		}
+
+		snf_attach_theme_service_image( $product_id, $map[ $post->post_name ] );
+	}
+}
+add_action( 'init', 'snf_ensure_service_product_images', 46 );
