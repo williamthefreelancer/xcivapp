@@ -6,7 +6,7 @@
 
 $event_id = snf_get_requested_event_id();
 if ( $event_id && snf_is_lifestyle_concierge_workshop( $event_id ) ) {
-	wp_safe_redirect( get_permalink( $event_id ) );
+	wp_safe_redirect( snf_get_workshop_landing_url() );
 	exit;
 }
 

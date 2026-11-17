@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'SNF_VERSION', '2.9.8' );
+define( 'SNF_VERSION', '2.10.0' );
 
 require_once get_template_directory() . '/inc/account-hub.php';
 require_once get_template_directory() . '/inc/dashboard-shell.php';
@@ -361,6 +361,17 @@ function snf_scripts() {
 		);
 	}
 
+	$is_workshop_product = function_exists( 'is_product' ) && is_product() && snf_is_lifestyle_concierge_workshop( get_the_ID() );
+	if ( $is_workshop_product ) {
+		wp_enqueue_script(
+			'snf-workshop',
+			get_template_directory_uri() . '/assets/js/workshop.js',
+			array(),
+			SNF_VERSION,
+			true
+		);
+	}
+
 }
 add_action( 'wp_enqueue_scripts', 'snf_scripts' );
 
@@ -390,6 +401,31 @@ function snf_resolve_listing_product_slug( $slug ) {
  */
 function snf_get_dashboard_event_card_by_slug( $slug, $image_file = '', $fallback_url = '' ) {
 	$slug = snf_resolve_listing_product_slug( $slug );
+
+	// Workshop cards always deep-link to the product landing (never a legacy event/page).
+	if ( snf_get_workshop_product_slug() === $slug ) {
+		$product_post = get_page_by_path( $slug, OBJECT, 'product' );
+		$product      = ( $product_post && class_exists( 'WooCommerce' ) ) ? wc_get_product( $product_post->ID ) : null;
+		$location     = $product_post ? (string) get_post_meta( $product_post->ID, '_snf_location', true ) : '';
+		$timing       = $product_post ? (string) get_post_meta( $product_post->ID, '_snf_when', true ) : '';
+		$image        = $image_file
+			? get_template_directory_uri() . '/assets/images/events/' . ltrim( $image_file, '/' )
+			: '';
+
+		if ( ! $image && $product && $product->get_image_id() ) {
+			$thumb = wp_get_attachment_image_url( $product->get_image_id(), 'medium_large' );
+			if ( $thumb ) {
+				$image = $thumb;
+			}
+		}
+
+		return array(
+			'title' => $product ? $product->get_name() : __( 'The Lifestyle Concierge Club Workshop', 'super-ninety-four' ),
+			'meta'  => trim( implode( ' · ', array_filter( array( $location, $timing ) ) ) ),
+			'url'   => snf_get_workshop_landing_url(),
+			'image' => $image,
+		);
+	}
 
 	$product_post = get_page_by_path( $slug, OBJECT, 'product' );
 	if ( $product_post && class_exists( 'WooCommerce' ) ) {
@@ -589,23 +625,101 @@ function snf_get_dashboard_service_inquiry_cards() {
 }
 
 /**
- * Lifestyle Concierge workshop landing URL for service CTAs.
+ * Canonical Lifestyle Concierge Club Workshop product slug.
+ *
+ * @return string
+ */
+function snf_get_workshop_product_slug() {
+	return 'the-lifestyle-concierge-club-workshop';
+}
+
+/**
+ * Lifestyle Concierge workshop landing URL (Woo product page only).
  *
  * @return string
  */
 function snf_get_workshop_landing_url() {
-	$workshop = get_page_by_path( 'the-lifestyle-concierge-club-workshop', OBJECT, 'product' );
-	if ( $workshop instanceof WP_Post ) {
+	$workshop = get_page_by_path( snf_get_workshop_product_slug(), OBJECT, 'product' );
+	if ( $workshop instanceof WP_Post && 'publish' === $workshop->post_status ) {
 		return get_permalink( $workshop );
 	}
 
-	$workshop = get_page_by_path( 'the-lifestyle-concierge-club-workshop', OBJECT, 'event' );
-	if ( $workshop instanceof WP_Post ) {
-		return get_permalink( $workshop );
-	}
-
-	return home_url( '/' );
+	return home_url( '/product/' . snf_get_workshop_product_slug() . '/' );
 }
+
+/**
+ * One-time cleanup of legacy workshop event/page posts (product is kept).
+ */
+function snf_delete_legacy_workshop_landing_posts() {
+	if ( get_option( 'snf_workshop_legacy_cleaned' ) ) {
+		return;
+	}
+
+	$slug = snf_get_workshop_product_slug();
+
+	foreach ( array( 'event', 'page' ) as $post_type ) {
+		$legacy = get_page_by_path( $slug, OBJECT, $post_type );
+		if ( ! $legacy instanceof WP_Post ) {
+			continue;
+		}
+		// Never delete the WooCommerce product itself.
+		if ( 'product' === $legacy->post_type ) {
+			continue;
+		}
+		wp_delete_post( $legacy->ID, true );
+	}
+
+	update_option( 'snf_workshop_legacy_cleaned', 1, false );
+}
+add_action( 'after_switch_theme', 'snf_delete_legacy_workshop_landing_posts' );
+add_action( 'admin_init', 'snf_delete_legacy_workshop_landing_posts', 30 );
+
+/**
+ * Redirect legacy workshop URLs to the product landing.
+ */
+function snf_redirect_legacy_workshop_landing() {
+	if ( is_admin() || wp_doing_ajax() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
+		return;
+	}
+
+	$target = snf_get_workshop_landing_url();
+	if ( ! $target ) {
+		return;
+	}
+
+	$request_path = isset( $_SERVER['REQUEST_URI'] ) ? (string) wp_parse_url( wp_unslash( $_SERVER['REQUEST_URI'] ), PHP_URL_PATH ) : '';
+	if ( ! $request_path ) {
+		return;
+	}
+
+	$slug = snf_get_workshop_product_slug();
+	$legacy_patterns = array(
+		'#/(?:event|events)/' . preg_quote( $slug, '#' ) . '/?$#',
+		'#/' . preg_quote( $slug, '#' ) . '/?$#',
+	);
+
+	foreach ( $legacy_patterns as $pattern ) {
+		if ( preg_match( $pattern, $request_path ) ) {
+			// Allow the real product permalink to render.
+			if ( preg_match( '#/product/' . preg_quote( $slug, '#' ) . '/?$#', $request_path ) ) {
+				return;
+			}
+			wp_safe_redirect( $target, 301 );
+			exit;
+		}
+	}
+
+	// Deep-links that still pass an old workshop event id.
+	$requested = snf_get_requested_event_id();
+	if ( $requested && snf_is_lifestyle_concierge_workshop( $requested ) ) {
+		$current = untrailingslashit( home_url( $request_path ) );
+		if ( untrailingslashit( $target ) !== $current && ! is_singular( 'product' ) ) {
+			wp_safe_redirect( $target, 301 );
+			exit;
+		}
+	}
+}
+add_action( 'template_redirect', 'snf_redirect_legacy_workshop_landing', 15 );
 
 /**
  * Full landing content for a service inquiry page.
@@ -787,6 +901,99 @@ function snf_is_lifestyle_concierge_workshop( $post_id = null ) {
 }
 
 /**
+ * Persist workshop contact fields onto cart line items.
+ *
+ * @param array $cart_item_data Existing cart item data.
+ * @param int   $product_id    Product ID.
+ * @return array
+ */
+function snf_workshop_add_cart_item_data( $cart_item_data, $product_id ) {
+	if ( ! snf_is_lifestyle_concierge_workshop( $product_id ) ) {
+		return $cart_item_data;
+	}
+
+	$fields = array(
+		'name'  => 'snf_cart_name',
+		'email' => 'snf_cart_email',
+		'phone' => 'snf_cart_phone',
+		'firm'  => 'snf_cart_firm',
+	);
+
+	foreach ( $fields as $key => $request_key ) {
+		if ( empty( $_REQUEST[ $request_key ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			continue;
+		}
+		$value = sanitize_text_field( wp_unslash( $_REQUEST[ $request_key ] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( 'email' === $key ) {
+			$value = sanitize_email( wp_unslash( $_REQUEST[ $request_key ] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		}
+		if ( '' !== $value ) {
+			$cart_item_data[ 'snf_workshop_' . $key ] = $value;
+		}
+	}
+
+	if ( ! empty( $cart_item_data['snf_workshop_email'] ) || ! empty( $cart_item_data['snf_workshop_name'] ) ) {
+		$cart_item_data['unique_key'] = md5( microtime() . wp_rand() );
+	}
+
+	return $cart_item_data;
+}
+add_filter( 'woocommerce_add_cart_item_data', 'snf_workshop_add_cart_item_data', 10, 2 );
+
+/**
+ * Show workshop contact meta in cart/checkout.
+ *
+ * @param array $item_data Display rows.
+ * @param array $cart_item Cart item.
+ * @return array
+ */
+function snf_workshop_cart_item_data( $item_data, $cart_item ) {
+	$map = array(
+		'snf_workshop_name'  => __( 'Attendee', 'super-ninety-four' ),
+		'snf_workshop_email' => __( 'Email', 'super-ninety-four' ),
+		'snf_workshop_phone' => __( 'Phone', 'super-ninety-four' ),
+		'snf_workshop_firm'  => __( 'Firm', 'super-ninety-four' ),
+	);
+
+	foreach ( $map as $key => $label ) {
+		if ( empty( $cart_item[ $key ] ) ) {
+			continue;
+		}
+		$item_data[] = array(
+			'key'   => $label,
+			'value' => $cart_item[ $key ],
+		);
+	}
+
+	return $item_data;
+}
+add_filter( 'woocommerce_get_item_data', 'snf_workshop_cart_item_data', 10, 2 );
+
+/**
+ * Copy workshop contact meta onto the order line item.
+ *
+ * @param WC_Order_Item_Product $item          Order item.
+ * @param string                $cart_item_key Cart key.
+ * @param array                 $values        Cart values.
+ */
+function snf_workshop_checkout_create_order_line_item( $item, $cart_item_key, $values ) {
+	$map = array(
+		'snf_workshop_name'  => __( 'Attendee', 'super-ninety-four' ),
+		'snf_workshop_email' => __( 'Email', 'super-ninety-four' ),
+		'snf_workshop_phone' => __( 'Phone', 'super-ninety-four' ),
+		'snf_workshop_firm'  => __( 'Firm', 'super-ninety-four' ),
+	);
+
+	foreach ( $map as $key => $label ) {
+		if ( empty( $values[ $key ] ) ) {
+			continue;
+		}
+		$item->add_meta_data( $label, $values[ $key ], true );
+	}
+}
+add_action( 'woocommerce_checkout_create_order_line_item', 'snf_workshop_checkout_create_order_line_item', 10, 3 );
+
+/**
  * Loose text match for home/archive search (empty query matches everything).
  *
  * @param string $haystack Source text.
@@ -850,12 +1057,13 @@ function snf_get_event_action_url( $post_id = null ) {
 	$post_id = $post_id ? (int) $post_id : get_the_ID();
 	$post    = get_post( $post_id );
 
-	// WooCommerce products always deep-link to their product page / checkout path.
-	if ( $post && 'product' === $post->post_type ) {
-		return get_permalink( $post_id );
+	// Workshop always uses the dedicated product landing.
+	if ( snf_is_lifestyle_concierge_workshop( $post_id ) ) {
+		return snf_get_workshop_landing_url();
 	}
 
-	if ( snf_is_lifestyle_concierge_workshop( $post_id ) ) {
+	// WooCommerce products always deep-link to their product page / checkout path.
+	if ( $post && 'product' === $post->post_type ) {
 		return get_permalink( $post_id );
 	}
 

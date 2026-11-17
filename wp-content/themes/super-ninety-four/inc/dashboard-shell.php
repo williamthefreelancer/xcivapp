@@ -242,10 +242,15 @@ function snf_get_woo_product_cards_by_category( $category_slug, $limit = 12 ) {
 		$image_id = $product->get_image_id();
 		$image    = $image_id ? wp_get_attachment_image_url( $image_id, 'large' ) : '';
 
+		$card_url = get_permalink( $post->ID );
+		if ( function_exists( 'snf_is_lifestyle_concierge_workshop' ) && snf_is_lifestyle_concierge_workshop( $post->ID ) ) {
+			$card_url = snf_get_workshop_landing_url();
+		}
+
 		$cards[] = array(
 			'title' => $product->get_name(),
 			'meta'  => trim( implode( ' · ', array_filter( array( $location, $when ) ) ) ),
-			'url'   => get_permalink( $post->ID ),
+			'url'   => $card_url,
 			'image' => $image ? $image : '',
 		);
 	}
