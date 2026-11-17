@@ -5665,7 +5665,8 @@ table {
 	.snf-reciprocal__hub-grid,
 	.snf-reciprocal__gallery,
 	.snf-reciprocal__hero-grid,
-	.snf-reciprocal__why {
+	.snf-reciprocal__why,
+	.snf-reciprocal__form-row {
 		grid-template-columns: 1fr;
 	}
 
