@@ -1,6 +1,6 @@
 <?php
 /**
- * Event single — Figma Event #1 (node 174:2).
+ * Event single — Figma select-event landings (174:2 / 2167:214 / 2167:243).
  *
  * @var array<string, mixed> $args {
  *     @type array $event Event payload from snf_get_event_single_data().
@@ -15,12 +15,13 @@ if ( ! $event ) {
 	return;
 }
 
-$countdown = isset( $event['countdown'] ) && is_array( $event['countdown'] ) ? $event['countdown'] : array();
-$member    = isset( $event['member'] ) && is_array( $event['member'] ) ? $event['member'] : array();
-$plans     = isset( $event['plans'] ) && is_array( $event['plans'] ) ? $event['plans'] : array();
-$audience  = ( isset( $event['audience'] ) && 'non-members' === $event['audience'] ) ? 'non-members' : 'members';
-$is_member = 'members' === $audience;
-$avatar    = get_template_directory_uri() . '/assets/icons/user-profile.svg';
+$countdown  = isset( $event['countdown'] ) && is_array( $event['countdown'] ) ? $event['countdown'] : array();
+$member     = isset( $event['member'] ) && is_array( $event['member'] ) ? $event['member'] : array();
+$plans      = isset( $event['plans'] ) && is_array( $event['plans'] ) ? $event['plans'] : array();
+$audience   = ( isset( $event['audience'] ) && 'non-members' === $event['audience'] ) ? 'non-members' : 'members';
+$is_member  = 'members' === $audience;
+$figma_node = ! empty( $event['figma_node'] ) ? (string) $event['figma_node'] : '174:2';
+$avatar     = get_template_directory_uri() . '/assets/icons/user-profile.svg';
 if ( ! empty( $member['avatar'] ) ) {
 	$avatar = $member['avatar'];
 }
@@ -34,7 +35,7 @@ $initiation   = isset( $plans['initiation_fee'] ) && is_array( $plans['initiatio
 <main
 	class="snf-page snf-event"
 	data-figma-ready="true"
-	data-figma-node="174:2"
+	data-figma-node="<?php echo esc_attr( $figma_node ); ?>"
 	data-admission-audience="<?php echo esc_attr( $audience ); ?>"
 >
 	<section class="snf-event__shell snf-container" aria-label="<?php echo esc_attr( $event['title'] ); ?>">

@@ -278,7 +278,7 @@ function snf_get_default_event_product_serp_meta() {
 		),
 		'the-township-adventures-event'         => array(
 			'location' => __( 'Township cultural circuit', 'super-ninety-four' ),
-			'when'     => __( 'Members select event', 'super-ninety-four' ),
+			'when'     => __( 'Cultural township immersion', 'super-ninety-four' ),
 			'action'   => __( 'View event', 'super-ninety-four' ),
 		),
 		'the-lifestyle-concierge-club-workshop' => array(
