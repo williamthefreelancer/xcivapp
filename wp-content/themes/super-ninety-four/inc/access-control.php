@@ -123,10 +123,6 @@ function snf_get_public_page_slugs() {
 		'find-other-reciprocal-programs',
 		'select-events-by-non-members',
 		'expo',
-		'grounds-litter-pickup',
-		'line-sitting-service',
-		'courier-service',
-		'commercial-janitor-cleaning',
 	);
 }
 

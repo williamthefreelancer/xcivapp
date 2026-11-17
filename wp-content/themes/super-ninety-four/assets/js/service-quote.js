@@ -1,13 +1,13 @@
 (() => {
-  const root = document.querySelector(".snf-service");
+  const root = document.querySelector(".snf-quote");
   if (!root) return;
 
   const motionItems = root.querySelectorAll(
-    ".snf-service__hero, .snf-service__benefits, .snf-service__pricing"
+    ".snf-quote__hero, .snf-quote__section, .snf-quote__pricing"
   );
 
   motionItems.forEach((el, index) => {
-    el.classList.add("snf-service__motion");
+    el.classList.add("snf-quote__motion");
     el.style.setProperty("--snf-delay", `${Math.min(index * 80, 240)}ms`);
   });
 

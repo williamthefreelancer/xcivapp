@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'SNF_VERSION', '2.14.2' );
+define( 'SNF_VERSION', '2.15.0' );
 
 require_once get_template_directory() . '/inc/account-hub.php';
 require_once get_template_directory() . '/inc/memberships.php';
@@ -27,6 +27,7 @@ require_once get_template_directory() . '/inc/expo-marketplace.php';
 require_once get_template_directory() . '/inc/lead-rider.php';
 require_once get_template_directory() . '/inc/woocommerce-serp.php';
 require_once get_template_directory() . '/inc/woocommerce-endpoints.php';
+require_once get_template_directory() . '/inc/service-quotes.php';
 
 function snf_setup() {
 	add_theme_support( 'title-tag' );
@@ -119,22 +120,6 @@ function snf_get_site_pages() {
 			'title'    => 'Expo',
 			'template' => 'page-templates/expo-marketplace.php',
 		),
-		'grounds-litter-pickup' => array(
-			'title'    => 'Parking Lot & Commercial Grounds Cleaning',
-			'template' => 'page-templates/service-inquiry.php',
-		),
-		'line-sitting-service' => array(
-			'title'    => 'Professional Line Sitting Service',
-			'template' => 'page-templates/service-inquiry.php',
-		),
-		'courier-service' => array(
-			'title'    => 'Courier Service',
-			'template' => 'page-templates/service-inquiry.php',
-		),
-		'commercial-janitor-cleaning' => array(
-			'title'    => 'Commercial Janitorial Cleaning & Consulting',
-			'template' => 'page-templates/service-inquiry.php',
-		),
 	);
 }
 
@@ -153,6 +138,10 @@ function snf_get_obsolete_page_slugs() {
 		'parking-lot-commercial-grounds-cleaning',
 		'professional-line-sitting-service',
 		'commercial-janitorial-cleaning-consulting',
+		'grounds-litter-pickup',
+		'line-sitting-service',
+		'courier-service',
+		'commercial-janitor-cleaning',
 		'event-by-admission',
 		'account-settings-for-profile',
 		// Legacy page copies of Woo products (products themselves are kept).
@@ -249,7 +238,7 @@ add_action( 'init', 'snf_ensure_site_pages', 20 );
 function snf_scripts() {
 	wp_enqueue_style(
 		'snf-fonts',
-		'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=League+Gothic&family=Manrope:wght@400;500;600&family=Open+Sans:wght@600;700&display=swap',
+		'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Lato:wght@700&family=League+Gothic&family=Manrope:wght@400;500;600&family=Open+Sans:wght@600;700&display=swap',
 		array(),
 		null
 	);
@@ -378,24 +367,11 @@ function snf_scripts() {
 		wp_localize_script( 'snf-messages', 'snfMessages', snf_messages_get_bootstrap() );
 	}
 
-	$service_slugs = array(
-		'grounds-litter-pickup',
-		'line-sitting-service',
-		'commercial-janitor-cleaning',
-	);
-	$uses_service_inquiry = is_page_template( 'page-templates/service-inquiry.php' );
-	if ( ! $uses_service_inquiry ) {
-		foreach ( $service_slugs as $service_slug ) {
-			if ( is_page( $service_slug ) ) {
-				$uses_service_inquiry = true;
-				break;
-			}
-		}
-	}
-	if ( $uses_service_inquiry ) {
+	$is_service_quote = function_exists( 'is_product' ) && is_product() && function_exists( 'snf_is_service_quote_product' ) && snf_is_service_quote_product( get_the_ID() );
+	if ( $is_service_quote ) {
 		wp_enqueue_script(
-			'snf-service-inquiry',
-			get_template_directory_uri() . '/assets/js/service-inquiry.js',
+			'snf-service-quote',
+			get_template_directory_uri() . '/assets/js/service-quote.js',
 			array(),
 			SNF_VERSION,
 			true
@@ -648,29 +624,26 @@ function snf_get_dashboard_reciprocal_cards() {
  */
 function snf_get_dashboard_service_inquiry_cards() {
 	$img_base = get_template_directory_uri() . '/assets/images/services/';
+	$url_for  = function_exists( 'snf_get_service_quote_product_url' )
+		? 'snf_get_service_quote_product_url'
+		: 'snf_get_page_url';
 	$cards    = array(
 		array(
-			'title' => __( 'Parking Lot & Commercial Grounds Cleaning', 'super-ninety-four' ),
-			'meta'  => __( 'Litter pickup service', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'grounds-litter-pickup' ),
-			'image' => $img_base . 'grounds-litter-pickup.png',
+			'title' => __( 'Litter Pickup Service', 'super-ninety-four' ),
+			'meta'  => __( 'Parking lots · Commercial grounds', 'super-ninety-four' ),
+			'url'   => call_user_func( $url_for, 'litter-pickup-service' ),
+			'image' => $img_base . 'litter-pickup-service-image-2.png',
 		),
 		array(
-			'title' => __( 'Professional Line Sitting Service', 'super-ninety-four' ),
-			'meta'  => __( 'Busy lines · Obtaining consumer goods', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'line-sitting-service' ),
-			'image' => $img_base . 'line-sitting-service.png',
+			'title' => __( 'Professional Line Sitting & Courier Service', 'super-ninety-four' ),
+			'meta'  => __( 'Busy lines · Shopping runs · Handoffs', 'super-ninety-four' ),
+			'url'   => call_user_func( $url_for, 'professional-line-sitting-courier-service' ),
+			'image' => $img_base . 'lifestyle-service-image-1.png',
 		),
 		array(
-			'title' => __( 'Courier Service', 'super-ninety-four' ),
-			'meta'  => __( 'Shopping runs · Consumer goods delivery', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'courier-service' ),
-			'image' => $img_base . 'line-sitting-service.png',
-		),
-		array(
-			'title' => __( 'Commercial Janitorial Cleaning & Consulting', 'super-ninety-four' ),
-			'meta'  => __( 'Suites · Bars · Property consulting', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'commercial-janitor-cleaning' ),
+			'title' => __( 'Janitorial Cleaning Service', 'super-ninety-four' ),
+			'meta'  => __( 'Suites · Bars · Overnight reset', 'super-ninety-four' ),
+			'url'   => call_user_func( $url_for, 'janitorial-cleaning-service' ),
 			'image' => $img_base . 'commercial-janitor-cleaning.jpg',
 		),
 	);
@@ -830,101 +803,40 @@ function snf_redirect_legacy_workshop_landing() {
 add_action( 'template_redirect', 'snf_redirect_legacy_workshop_landing', 15 );
 
 /**
- * Full landing content for a service inquiry page.
+ * Legacy alias — service inquiry pages now redirect to quote products.
  *
- * @param string $slug Page slug.
+ * @param string $slug Legacy page slug or product slug.
  * @return array<string, mixed>|null
  */
 function snf_get_service_inquiry( $slug = '' ) {
-	$slug     = $slug ? sanitize_title( $slug ) : '';
-	$img_base = get_template_directory_uri() . '/assets/images/services/';
-	$workshop = snf_get_workshop_landing_url();
-	$inquiry  = snf_get_page_url( 'apply' );
-
-	$services = array(
-		'grounds-litter-pickup'         => array(
-			'title'            => __( 'Grounds Litter Pickup', 'super-ninety-four' ),
-			'lede'             => __( 'Scheduled exterior litter control for property managers running business parks and bar-tenant corridors — walk routes, bag, and clear before guests and cameras notice.', 'super-ninety-four' ),
-			'image'            => $img_base . 'grounds-litter-pickup.png',
-			'benefits_heading' => __( 'What your property gets on every service cycle', 'super-ninety-four' ),
-			'benefits'         => array(
-				__( 'Mapped walk routes for parks, lots, and tenant frontage', 'super-ninety-four' ),
-				__( 'Bagged debris removed before peak guest hours', 'super-ninety-four' ),
-				__( 'Bar-tenant curb lines kept camera-ready', 'super-ninety-four' ),
-				__( 'Photo log of cleared zones after each visit', 'super-ninety-four' ),
-				__( 'One invoice lane for multi-site property managers', 'super-ninety-four' ),
-			),
-			'price'            => '$000.00/mo',
-			'card_description' => __( 'Exterior litter pickup on a fixed monthly route: business-park grounds + bar-tenant frontage only — bagged, logged, and cleared to a photographed standard.', 'super-ninety-four' ),
-			'workshop_url'     => $workshop,
-			'inquiry_url'      => $inquiry,
-		),
-		'line-sitting-service'          => array(
-			'title'            => __( 'Line Sitting Service', 'super-ninety-four' ),
-			'lede'             => __( 'Trained sitters hold your place in high-demand consumer-goods lines so principals reclaim the hours without losing the drop, release, or reservation window.', 'super-ninety-four' ),
-			'image'            => $img_base . 'line-sitting-service.png',
-			'benefits_heading' => __( 'What you get when we hold the line', 'super-ninety-four' ),
-			'benefits'         => array(
-				__( 'On-site presence through the full queue window', 'super-ninety-four' ),
-				__( 'Live status pings before your handover', 'super-ninety-four' ),
-				__( 'Rules-aware holding for retail & release events', 'super-ninety-four' ),
-				__( 'Proxy checkout handoff when you arrive', 'super-ninety-four' ),
-				__( 'Single-request booking for one SKU or drop', 'super-ninety-four' ),
-			),
-			'price'            => '$000.00/mo',
-			'card_description' => __( 'Line sitting for consumer-goods drops and busy retail queues: we hold your place, ping status, and hand the position to you at the agreed minute — one request, one line, one outcome.', 'super-ninety-four' ),
-			'workshop_url'     => $workshop,
-			'inquiry_url'      => $inquiry,
-		),
-		'commercial-janitor-cleaning'   => array(
-			'title'            => __( 'Commercial Janitorial Cleaning & Consulting', 'super-ninety-four' ),
-			'lede'             => __( 'Interior janitorial coverage plus cleaning-program consulting for business-park suites and bar tenants — restrooms, floors, and back-of-house reset on a calendar you can audit.', 'super-ninety-four' ),
-			'image'            => $img_base . 'commercial-janitor-cleaning.jpg',
-			'benefits_heading' => __( 'What your suites and bars get each visit', 'super-ninety-four' ),
-			'benefits'         => array(
-				__( 'Restroom and floor reset to a written checklist', 'super-ninety-four' ),
-				__( 'Bar back-of-house wipe-down after service hours', 'super-ninety-four' ),
-				__( 'Suite common areas kept tenant-ready', 'super-ninety-four' ),
-				__( 'Supply restock notes for managers', 'super-ninety-four' ),
-				__( 'Consulting on cadence, scopes, and multi-site standards', 'super-ninety-four' ),
-				__( 'Recurring calendar with visit confirmation', 'super-ninety-four' ),
-			),
-			'price'            => '$000.00/mo',
-			'card_description' => __( 'Commercial janitorial cleaning and consulting for business-park suites and bar tenants: checklist-driven interior reset plus program guidance on a recurring monthly cadence you can verify.', 'super-ninety-four' ),
-			'workshop_url'     => $workshop,
-			'inquiry_url'      => $inquiry,
-		),
-		'courier-service'               => array(
-			'title'            => __( 'Courier Service', 'super-ninety-four' ),
-			'lede'             => __( 'Discreet shopping runs and consumer-goods handoffs for principals who need a trusted courier between retail, residence, and club stops — same-day windows when the circuit allows.', 'super-ninety-four' ),
-			'image'            => $img_base . 'line-sitting-service.png',
-			'benefits_heading' => __( 'What you get on every courier request', 'super-ninety-four' ),
-			'benefits'         => array(
-				__( 'Pickup and delivery across mapped city club corridors', 'super-ninety-four' ),
-				__( 'Live status before handoff', 'super-ninety-four' ),
-				__( 'Receipt photo log when goods change hands', 'super-ninety-four' ),
-				__( 'Single-request booking for one run or multi-stop loop', 'super-ninety-four' ),
-				__( 'Discretion-first handling for private purchases', 'super-ninety-four' ),
-			),
-			'price'            => '$000.00/mo',
-			'card_description' => __( 'Courier runs for shopping and consumer-goods delivery across the club circuit: booked windows, status pings, and a photographed handoff — one request, one route, one outcome.', 'super-ninety-four' ),
-			'workshop_url'     => $workshop,
-			'inquiry_url'      => $inquiry,
-		),
-	);
-
-	/**
-	 * Filter the full service inquiry content map.
-	 *
-	 * @param array $services Service inquiry definitions keyed by slug.
-	 */
-	$services = apply_filters( 'snf_service_inquiry_content', $services );
-
-	if ( $slug && isset( $services[ $slug ] ) ) {
-		return $services[ $slug ];
+	$slug = $slug ? sanitize_title( $slug ) : '';
+	if ( ! $slug || ! function_exists( 'snf_get_service_quote' ) ) {
+		return null;
 	}
 
-	return null;
+	$map = array(
+		'grounds-litter-pickup'       => 'litter-pickup-service',
+		'line-sitting-service'        => 'professional-line-sitting-courier-service',
+		'courier-service'             => 'professional-line-sitting-courier-service',
+		'commercial-janitor-cleaning' => 'janitorial-cleaning-service',
+	);
+	$product_slug = isset( $map[ $slug ] ) ? $map[ $slug ] : $slug;
+	$quote        = snf_get_service_quote( $product_slug );
+	if ( ! $quote ) {
+		return null;
+	}
+
+	return array(
+		'title'            => $quote['title'],
+		'lede'             => $quote['lede'],
+		'image'            => $quote['image'],
+		'benefits_heading' => $quote['can_heading'],
+		'benefits'         => $quote['can_items'],
+		'price'            => $quote['price'],
+		'card_description' => $quote['card_description'],
+		'workshop_url'     => snf_get_workshop_landing_url(),
+		'inquiry_url'      => $quote['cta_url'],
+	);
 }
 
 /**
@@ -1246,21 +1158,41 @@ function snf_search_text_matches( $haystack, $needle ) {
 }
 
 /**
- * Service inquiry results for the home search engine.
- * Returns no rows until real service listings are published.
+ * Service quote product results for the home search engine.
  *
  * @param string $query Search query.
  * @return array<int, array<string, string>>
  */
 function snf_get_service_inquiry_search_results( $query = '' ) {
+	$results = array();
+	$query   = trim( (string) $query );
+
+	if ( $query && function_exists( 'snf_get_service_quote_product_slugs' ) ) {
+		foreach ( snf_get_service_quote_product_slugs() as $slug ) {
+			$quote = snf_get_service_quote( $slug );
+			if ( ! $quote ) {
+				continue;
+			}
+			$haystack = strtolower( $quote['title'] . ' ' . $quote['lede'] . ' ' . $slug );
+			if ( ! snf_search_text_matches( $haystack, $query ) ) {
+				continue;
+			}
+			$results[] = array(
+				'title' => $quote['title'],
+				'meta'  => $quote['lede'],
+				'url'   => snf_get_service_quote_product_url( $slug ),
+				'image' => $quote['image'],
+			);
+		}
+	}
+
 	/**
-	 * Filter service inquiry search results.
-	 * Empty by default until listings are added.
+	 * Filter service quote search results.
 	 *
 	 * @param array  $results Result rows.
 	 * @param string $query   Search query.
 	 */
-	return apply_filters( 'snf_service_inquiry_search_results', array(), $query );
+	return apply_filters( 'snf_service_inquiry_search_results', $results, $query );
 }
 
 /**

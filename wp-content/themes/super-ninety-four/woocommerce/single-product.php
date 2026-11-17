@@ -10,16 +10,18 @@ defined( 'ABSPATH' ) || exit;
 $is_workshop   = false;
 $is_event      = false;
 $is_reciprocal = false;
+$is_service    = false;
 if ( have_posts() ) {
 	the_post();
 	$product_id    = get_the_ID();
 	$is_workshop   = function_exists( 'snf_is_lifestyle_concierge_workshop' ) && snf_is_lifestyle_concierge_workshop( $product_id );
 	$is_reciprocal = ! $is_workshop && function_exists( 'snf_is_reciprocal_club_landing' ) && snf_is_reciprocal_club_landing( $product_id );
-	$is_event      = ! $is_workshop && ! $is_reciprocal && function_exists( 'snf_is_figma_event_landing' ) && snf_is_figma_event_landing( $product_id );
+	$is_service    = ! $is_workshop && ! $is_reciprocal && function_exists( 'snf_is_service_quote_product' ) && snf_is_service_quote_product( $product_id );
+	$is_event      = ! $is_workshop && ! $is_reciprocal && ! $is_service && function_exists( 'snf_is_figma_event_landing' ) && snf_is_figma_event_landing( $product_id );
 	rewind_posts();
 }
 
-$blank_chrome = $is_workshop || $is_event || $is_reciprocal;
+$blank_chrome = $is_workshop || $is_event || $is_reciprocal || $is_service;
 get_header( $blank_chrome ? 'empty' : 'shop' );
 
 while ( have_posts() ) :
@@ -44,6 +46,20 @@ while ( have_posts() ) :
 				'club',
 				array(
 					'club' => $club,
+				)
+			);
+			continue;
+		}
+	}
+
+	if ( $is_service ) {
+		$quote = snf_get_service_quote( get_post_field( 'post_name', get_the_ID() ) );
+		if ( $quote ) {
+			get_template_part(
+				'template-parts/service',
+				'quote',
+				array(
+					'quote' => $quote,
 				)
 			);
 			continue;
