@@ -1,6 +1,6 @@
 <?php
 /**
- * My Account dashboard — community search + listing sliders.
+ * My Account dashboard — listing sliders.
  *
  * @see     https://woocommerce.com/document/template-structure/
  * @package SuperNinetyFour

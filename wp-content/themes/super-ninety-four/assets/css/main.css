@@ -1354,7 +1354,28 @@ button {
 
 /* Woo My Account surface inside hybrid shell */
 .snf-dashboard--account .snf-dashboard-shell {
-	padding-top: 1.25rem;
+	padding-top: 0.25rem;
+	gap: clamp(0.85rem, 1.8vw, 1.15rem);
+}
+
+.snf-dashboard--account .snf-dashboard-shell__main {
+	gap: clamp(0.85rem, 1.8vw, 1.15rem);
+}
+
+.snf-dashboard--account .snf-dashboard__listings {
+	gap: clamp(1rem, 2vw, 1.35rem);
+}
+
+.snf-dashboard--account .snf-dashboard__row-head {
+	margin-bottom: 0.45rem;
+}
+
+.snf-dashboard--account .woocommerce-MyAccount-content > .woocommerce-notices-wrapper:empty,
+.snf-dashboard--account .woocommerce-MyAccount-content > .woocommerce-message:empty,
+.snf-dashboard--account .woocommerce-MyAccount-content > .woocommerce-info:empty {
+	display: none;
+	margin: 0;
+	padding: 0;
 }
 
 .snf-account-surface {
