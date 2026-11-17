@@ -522,9 +522,8 @@ add_action( 'init', 'snf_ensure_event_product_serp_meta', 40 );
  */
 function snf_get_default_service_product_images() {
 	return array(
-		'janitorial-cleaning-service'               => 'commercial-janitor-cleaning.jpg',
-		'litter-pickup-service'                     => 'litter-pickup-service-image-2.png',
-		'professional-line-sitting-courier-service' => 'lifestyle-service-image-1.png',
+		'janitorial-cleaning-service' => 'commercial-janitor-cleaning.jpg',
+		'litter-pickup-service'       => 'litter-pickup-service-image-2.png',
 	);
 }
 

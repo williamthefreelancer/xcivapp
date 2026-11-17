@@ -17,7 +17,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 function snf_get_service_quote_product_slugs() {
 	return array(
 		'litter-pickup-service',
-		'professional-line-sitting-courier-service',
 		'janitorial-cleaning-service',
 	);
 }
@@ -29,13 +28,10 @@ function snf_get_service_quote_product_slugs() {
  */
 function snf_get_service_quote_legacy_redirects() {
 	return array(
-		'grounds-litter-pickup'         => 'litter-pickup-service',
-		'line-sitting-service'          => 'professional-line-sitting-courier-service',
-		'courier-service'               => 'professional-line-sitting-courier-service',
-		'commercial-janitor-cleaning'   => 'janitorial-cleaning-service',
-		'litter-pickup-service'         => 'litter-pickup-service',
-		'janitorial-cleaning-service'   => 'janitorial-cleaning-service',
-		'professional-line-sitting-courier-service' => 'professional-line-sitting-courier-service',
+		'grounds-litter-pickup'       => 'litter-pickup-service',
+		'commercial-janitor-cleaning' => 'janitorial-cleaning-service',
+		'litter-pickup-service'       => 'litter-pickup-service',
+		'janitorial-cleaning-service' => 'janitorial-cleaning-service',
 	);
 }
 
@@ -106,33 +102,6 @@ function snf_get_service_quote( $slug = '' ) {
 			'plan_title'       => __( '4X/Weekly Overnight (Sun-Wed)', 'super-ninety-four' ),
 			'price'            => '$400.00/mo',
 			'card_description' => __( 'Exterior litter pickup on a fixed overnight route for business-park grounds and bar-tenant frontage — bagged, logged, and cleared to a photographed standard.', 'super-ninety-four' ),
-			'cta_label'        => __( 'Get Quote Now', 'super-ninety-four' ),
-			'cta_url'          => $apply,
-		),
-		'professional-line-sitting-courier-service' => array(
-			'title'            => __( 'Professional Line Sitting & Courier Service', 'super-ninety-four' ),
-			'lede'             => __( 'Trained sitters and discreet couriers hold your place and move consumer goods so principals reclaim the hours without losing the drop, release, or handoff window.', 'super-ninety-four' ),
-			'image'            => $img_base . 'lifestyle-service-image-1.png',
-			'can_heading'      => __( 'What Can SUPER NINETY FOUR Do For You?', 'super-ninety-four' ),
-			'can_items'        => array(
-				__( 'On-site presence through the full queue window', 'super-ninety-four' ),
-				__( 'Live status pings before your handover', 'super-ninety-four' ),
-				__( 'Rules-aware holding for retail and release events', 'super-ninety-four' ),
-				__( 'Pickup and delivery across mapped club corridors', 'super-ninety-four' ),
-				__( 'Receipt photo log when goods change hands', 'super-ninety-four' ),
-			),
-			'cannot_heading'   => __( 'What SUPER NINETY FOUR Can Not Do For You?', 'super-ninety-four' ),
-			'cannot_items'     => array(
-				__( 'Guarantee stock if the retailer sells out before you arrive', 'super-ninety-four' ),
-				__( 'Break posted venue or retailer queue rules', 'super-ninety-four' ),
-				__( 'Transport illegal, hazardous, or restricted goods', 'super-ninety-four' ),
-				__( 'Overnight holding without a booked request', 'super-ninety-four' ),
-				__( 'Proxy identity fraud or ticket scalping', 'super-ninety-four' ),
-			),
-			'pricing_heading'  => __( 'Service Pricing Is', 'super-ninety-four' ),
-			'plan_title'       => __( 'On-Demand Line & Courier Window', 'super-ninety-four' ),
-			'price'            => '$400.00/mo',
-			'card_description' => __( 'Line sitting and courier runs for consumer-goods drops: we hold your place, ping status, and hand off with a photographed receipt — one request, one outcome.', 'super-ninety-four' ),
 			'cta_label'        => __( 'Get Quote Now', 'super-ninety-four' ),
 			'cta_url'          => $apply,
 		),
@@ -240,3 +209,53 @@ function snf_redirect_legacy_service_quote_pages() {
 	}
 }
 add_action( 'template_redirect', 'snf_redirect_legacy_service_quote_pages', 16 );
+
+/**
+ * Permanently delete the retired line-sitting/courier Woo product.
+ */
+function snf_delete_retired_line_sitting_courier_product() {
+	if ( get_option( 'snf_deleted_line_sitting_courier_product_v1' ) ) {
+		return;
+	}
+
+	$slug = 'professional-line-sitting-courier-service';
+	$post = get_page_by_path( $slug, OBJECT, 'product' );
+	if ( $post instanceof WP_Post ) {
+		wp_delete_post( $post->ID, true );
+	}
+
+	update_option( 'snf_deleted_line_sitting_courier_product_v1', 1, false );
+}
+add_action( 'after_switch_theme', 'snf_delete_retired_line_sitting_courier_product' );
+add_action( 'admin_init', 'snf_delete_retired_line_sitting_courier_product', 33 );
+add_action( 'init', 'snf_delete_retired_line_sitting_courier_product', 60 );
+
+/**
+ * Send retired line-sitting/courier URLs to the shop.
+ */
+function snf_redirect_retired_line_sitting_courier_product() {
+	if ( is_admin() || wp_doing_ajax() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
+		return;
+	}
+
+	$request_path = isset( $_SERVER['REQUEST_URI'] ) ? (string) wp_parse_url( wp_unslash( $_SERVER['REQUEST_URI'] ), PHP_URL_PATH ) : '';
+	if ( ! $request_path ) {
+		return;
+	}
+
+	$patterns = array(
+		'#/product/professional-line-sitting-courier-service/?$#',
+		'#/line-sitting-service/?$#',
+		'#/courier-service/?$#',
+		'#/professional-line-sitting-service/?$#',
+	);
+
+	foreach ( $patterns as $pattern ) {
+		if ( preg_match( $pattern, $request_path ) ) {
+			$shop = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'shop' ) : home_url( '/shop/' );
+			wp_safe_redirect( $shop ? $shop : home_url( '/' ), 301 );
+			exit;
+		}
+	}
+}
+add_action( 'template_redirect', 'snf_redirect_retired_line_sitting_courier_product', 15 );
