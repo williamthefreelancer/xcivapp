@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'SNF_VERSION', '2.13.1' );
+define( 'SNF_VERSION', '2.14.1' );
 
 require_once get_template_directory() . '/inc/account-hub.php';
 require_once get_template_directory() . '/inc/memberships.php';
@@ -149,24 +149,23 @@ function snf_get_obsolete_page_slugs() {
 		'my-profile',
 		'settings',
 		'reciprocal-programs',
-		// Reciprocal landings live as Woo products — do not recreate pages with these slugs.
-		'the-clubs-at-wyoma-square',
-		'the-city-clubs-at-super-ninety-four',
-		'the-clubs-at-back-creek',
-		'the-badlands-bra-club',
 		'service-inquiries',
 		'parking-lot-commercial-grounds-cleaning',
 		'professional-line-sitting-service',
 		'commercial-janitorial-cleaning-consulting',
 		'event-by-admission',
 		'account-settings-for-profile',
-		// Legacy page copies of Woo event products (products themselves are kept).
+		// Legacy page copies of Woo products (products themselves are kept).
 		'the-township-adventures-event',
 		'the-badlands-bra-private-gathering',
 		'the-eight-hundred-plus-journeys-event',
 		'the-badlands-bra-party-bus-gathering',
 		'the-eight-hundred-plus-journeys',
 		'the-lifestyle-concierge-club-workshop',
+		'the-clubs-at-back-creek',
+		'the-badlands-bra-club',
+		'the-clubs-at-wyoma-square',
+		'the-city-clubs-at-super-ninety-four',
 		'expo-marketplace-by-members',
 		'expo-marketplace-by-non-members',
 	);
@@ -250,7 +249,7 @@ add_action( 'init', 'snf_ensure_site_pages', 20 );
 function snf_scripts() {
 	wp_enqueue_style(
 		'snf-fonts',
-		'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Manrope:wght@400;500;600&display=swap',
+		'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=League+Gothic&family=Manrope:wght@400;500;600&family=Open+Sans:wght@600;700&display=swap',
 		array(),
 		null
 	);

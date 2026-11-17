@@ -1,13 +1,13 @@
 <?php
 /**
  * Template Name: Reciprocal Club
- * Description: Back Creek / Badlands style reciprocal club landing.
+ * Description: Figma inquiries-single-page reciprocal club landing.
  */
 
 $slug = get_post_field( 'post_name', get_queried_object_id() );
 $club = snf_get_reciprocal_club( $slug );
 
-get_header();
+get_header( 'empty' );
 
 if ( ! $club ) {
 	?>
@@ -20,9 +20,9 @@ if ( ! $club ) {
 		</section>
 	</main>
 	<?php
-	get_footer();
+	get_footer( 'empty' );
 	return;
 }
 
 get_template_part( 'template-parts/reciprocal', 'club', array( 'club' => $club ) );
-get_footer();
+get_footer( 'empty' );

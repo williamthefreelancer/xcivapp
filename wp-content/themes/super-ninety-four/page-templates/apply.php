@@ -13,6 +13,7 @@ $query_label = isset( $_GET['q'] ) ? sanitize_text_field( wp_unslash( $_GET['q']
 $focus_title = $event_title ? $event_title : $query_label;
 $apply_name  = isset( $_GET['name'] ) ? sanitize_text_field( wp_unslash( $_GET['name'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 $apply_email = isset( $_GET['email'] ) ? sanitize_email( wp_unslash( $_GET['email'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+$apply_phone = isset( $_GET['phone'] ) ? sanitize_text_field( wp_unslash( $_GET['phone'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
 $plans      = snf_get_membership_plans();
 $plan_list  = isset( $plans['plans'] ) && is_array( $plans['plans'] ) ? $plans['plans'] : array();
@@ -100,7 +101,7 @@ if ( function_exists( 'snf_supabase_get_stripe_catalog' ) ) {
 				</label>
 				<label class="snf-hub__control snf-hub__control--full">
 					<span><?php esc_html_e( 'Phone', 'super-ninety-four' ); ?></span>
-					<input type="tel" name="snf_apply_phone" autocomplete="tel" required>
+					<input type="tel" name="snf_apply_phone" autocomplete="tel" value="<?php echo esc_attr( $apply_phone ); ?>" required>
 				</label>
 				<button class="snf-hub__action snf-hub__action--primary" type="button" data-snf-next-step>
 					<?php esc_html_e( 'Continue to profile', 'super-ninety-four' ); ?>

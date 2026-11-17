@@ -343,6 +343,14 @@ function snf_get_product_brand_url( $term ) {
 		return snf_get_page_url( 'find-other-reciprocal-programs' );
 	}
 
+	if ( function_exists( 'snf_get_reciprocal_club_url' ) ) {
+		$club_url = snf_get_reciprocal_club_url( $term->slug );
+		$hub_url  = snf_get_page_url( 'find-other-reciprocal-programs' );
+		if ( $club_url && untrailingslashit( $club_url ) !== untrailingslashit( $hub_url ) ) {
+			return $club_url;
+		}
+	}
+
 	// Prefer a published reciprocal landing page when one exists.
 	$page = get_page_by_path( $term->slug );
 	if ( $page instanceof WP_Post && 'publish' === $page->post_status ) {
