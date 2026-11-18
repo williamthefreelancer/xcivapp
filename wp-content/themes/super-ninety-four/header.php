@@ -20,6 +20,7 @@ $snf_is_member     = is_user_logged_in();
 				width="209"
 				height="20"
 				decoding="async"
+				fetchpriority="high"
 			>
 		</a>
 

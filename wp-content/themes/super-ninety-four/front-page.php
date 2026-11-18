@@ -31,6 +31,7 @@ $rules_faq   = isset( $home['rules_faq'] ) ? $home['rules_faq'] : array();
 					width="209"
 					height="20"
 					decoding="async"
+					fetchpriority="high"
 				>
 			</div>
 			<?php get_template_part( 'template-parts/search', 'events' ); ?>
@@ -76,14 +77,18 @@ $rules_faq   = isset( $home['rules_faq'] ) ? $home['rules_faq'] : array();
 			</header>
 			<div class="snf-home-standard__split">
 				<figure class="snf-home-standard__media">
-					<img
-						src="<?php echo esc_url( $standard['media']['src'] ); ?>"
-						alt="<?php echo esc_attr( $standard['media']['alt'] ); ?>"
-						width="640"
-						height="480"
-						loading="lazy"
-						decoding="async"
-					>
+					<?php
+					snf_the_optimized_image(
+						$standard['media']['src'],
+						array(
+							'alt'     => $standard['media']['alt'],
+							'width'   => 640,
+							'height'  => 480,
+							'loading' => 'lazy',
+							'class'   => 'snf-home-standard__img',
+						)
+					);
+					?>
 				</figure>
 				<ul class="snf-home-standard__features">
 					<?php foreach ( $standard['features'] as $feature ) : ?>

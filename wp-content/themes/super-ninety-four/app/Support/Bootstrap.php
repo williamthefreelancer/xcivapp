@@ -41,6 +41,7 @@ final class Bootstrap {
 		'woocommerce-endpoints.php',
 		'service-quotes.php',
 		'schema.php',
+		'performance.php',
 	);
 
 	/**

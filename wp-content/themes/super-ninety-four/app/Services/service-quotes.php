@@ -86,7 +86,7 @@ function snf_get_service_quote( $slug = '' ) {
 		'litter-pickup-service' => array(
 			'title'            => __( 'Litter Pickup Service', 'super-ninety-four' ),
 			'lede'             => __( 'Cleaning up litter around parking lots so properties are clean and professionals or client that come to those offices with a smile.', 'super-ninety-four' ),
-			'image'            => $img_base . 'litter-pickup-service-image-2.png',
+			'image'            => $img_base . 'litter-pickup-service-image-2.jpg',
 			'can_heading'      => __( 'What Can SUPER NINETY FOUR Do For You?', 'super-ninety-four' ),
 			'can_items'        => array(
 				__( 'Mapped walk routes for parks, lots, and tenant frontage', 'super-ninety-four' ),
@@ -113,7 +113,7 @@ function snf_get_service_quote( $slug = '' ) {
 		'professional-line-sitting-courier-service' => array(
 			'title'            => __( 'Professional Line Sitting & Courier Service', 'super-ninety-four' ),
 			'lede'             => __( 'Trained sitters and discreet couriers hold your place and move consumer goods so principals reclaim the hours without losing the drop, release, or handoff window.', 'super-ninety-four' ),
-			'image'            => $img_base . 'lifestyle-service-image-1.png',
+			'image'            => $img_base . 'lifestyle-service-image-1.jpg',
 			'can_heading'      => __( 'What Can SUPER NINETY FOUR Do For You?', 'super-ninety-four' ),
 			'can_items'        => array(
 				__( 'On-site presence through the full queue window', 'super-ninety-four' ),
@@ -298,7 +298,7 @@ function snf_ensure_line_sitting_courier_quote_product() {
 	update_post_meta( $product_id, '_catalog_visibility', 'visible' );
 
 	if ( function_exists( 'snf_attach_theme_service_image' ) ) {
-		snf_attach_theme_service_image( $product_id, 'lifestyle-service-image-1.png' );
+		snf_attach_theme_service_image( $product_id, 'lifestyle-service-image-1.jpg' );
 	}
 }
 add_action( 'after_switch_theme', 'snf_ensure_line_sitting_courier_quote_product' );

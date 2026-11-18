@@ -31,11 +31,11 @@ Theme already sets `viewport` in `header.php`. Keep it:
 
 | Metric | Goal | What usually fixes it here |
 |--------|------|----------------------------|
-| LCP | Fast hero | Compress event JPGs; priority on hero; avoid huge unoptimized uploads |
+| LCP | Fast hero | Self-hosted fonts; WebP + `fetchpriority` on heroes; compressed theme JPGs |
 | CLS | Stable layout | Always set image dimensions; don’t inject late banners above content |
-| INP | Responsive UI | Keep header JS light; avoid heavy main-thread work on tap |
+| INP | Responsive UI | Theme `dist/main.js` is a thin island loader; heavy Vue/expo chunks load only when needed |
 
-Check: PageSpeed Insights + GSC Core Web Vitals for the production domain.
+Theme helpers live in `app/Services/performance.php` (dequeue unused Woo/BP/emoji assets on public pages, preload fonts/CSS). After deploy, re-check [PageSpeed Insights](https://pagespeed.web.dev/) for `superninetyfour.com` (mobile).
 
 ## Tablet-specific
 

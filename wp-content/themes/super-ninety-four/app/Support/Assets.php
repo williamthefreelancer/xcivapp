@@ -27,15 +27,18 @@ final class Assets {
 		$theme_dir = get_template_directory();
 		$version   = defined( 'SNF_VERSION' ) ? SNF_VERSION : null;
 
-		$css_path = $theme_dir . '/dist/main.css';
-		$js_path  = $theme_dir . '/dist/main.js';
+		$css_path  = $theme_dir . '/dist/main.css';
+		$js_path   = $theme_dir . '/dist/main.js';
+		$fonts_css = $theme_dir . '/assets/fonts/snf-fonts.css';
 
-		wp_enqueue_style(
-			'snf-fonts',
-			'https://fonts.googleapis.com/css2?family=Lato:wght@600&family=League+Gothic&family=Open+Sans:wght@400;600&display=swap',
-			array(),
-			null
-		);
+		if ( file_exists( $fonts_css ) ) {
+			wp_enqueue_style(
+				'snf-fonts',
+				$theme_uri . '/assets/fonts/snf-fonts.css',
+				array(),
+				(string) filemtime( $fonts_css )
+			);
+		}
 
 		if ( file_exists( $css_path ) ) {
 			wp_enqueue_style(
@@ -54,10 +57,14 @@ final class Assets {
 			);
 		}
 
-		$script_deps = array();
-		$uses_marketplace = ( function_exists( 'snf_is_expo_marketplace_page' ) && snf_is_expo_marketplace_page() )
-			|| ( function_exists( 'is_shop' ) && is_shop() )
-			|| ( function_exists( 'is_product_taxonomy' ) && is_product_taxonomy() );
+		$script_deps      = array();
+		$uses_marketplace = function_exists( 'snf_needs_marketplace_assets' )
+			? snf_needs_marketplace_assets()
+			: (
+				( function_exists( 'snf_is_expo_marketplace_page' ) && snf_is_expo_marketplace_page() )
+				|| ( function_exists( 'is_shop' ) && is_shop() )
+				|| ( function_exists( 'is_product_taxonomy' ) && is_product_taxonomy() )
+			);
 
 		if ( $uses_marketplace ) {
 			$script_deps[] = 'jquery';
@@ -75,7 +82,10 @@ final class Assets {
 				'https://api.mapbox.com/mapbox-gl-js/v3.9.0/mapbox-gl.js',
 				array(),
 				'3.9.0',
-				true
+				array(
+					'in_footer' => true,
+					'strategy'  => 'defer',
+				)
 			);
 			$script_deps[] = 'mapbox-gl';
 		}
@@ -86,7 +96,10 @@ final class Assets {
 				$theme_uri . '/dist/main.js',
 				$script_deps,
 				(string) filemtime( $js_path ),
-				true
+				array(
+					'in_footer' => true,
+					'strategy'  => 'defer',
+				)
 			);
 		} else {
 			self::enqueue_legacy_fallback( $theme_uri, $version, $uses_marketplace );
@@ -123,7 +136,7 @@ final class Assets {
 			'page-templates/public-content.php',
 			'page-templates/under-consideration.php',
 		);
-		$hub_slugs = array(
+		$hub_slugs     = array(
 			'billing-details',
 			'member-login',
 			'apply',
@@ -131,7 +144,7 @@ final class Assets {
 			'inquiries',
 			'under-consideration',
 		);
-		$is_hub = false;
+		$is_hub        = false;
 		foreach ( $hub_templates as $hub_template ) {
 			if ( is_page_template( $hub_template ) ) {
 				$is_hub = true;
@@ -161,10 +174,10 @@ final class Assets {
 			wp_localize_script( 'snf-main', 'snfMessages', snf_messages_get_bootstrap() );
 		}
 
-		$uses_media = function_exists( 'snf_is_media_library_request' ) && snf_is_media_library_request();
+		$uses_media       = function_exists( 'snf_is_media_library_request' ) && snf_is_media_library_request();
 		$is_event_landing = ( function_exists( 'is_product' ) && is_product() && function_exists( 'snf_is_figma_event_landing' ) && snf_is_figma_event_landing( get_the_ID() ) )
 			|| ( is_singular( 'event' ) && function_exists( 'snf_is_figma_event_landing' ) && snf_is_figma_event_landing( get_the_ID() ) );
-		$uses_live = $is_event_landing
+		$uses_live        = $is_event_landing
 			|| ( function_exists( 'is_product' ) && is_product() )
 			|| is_singular( 'event' );
 
@@ -186,7 +199,10 @@ final class Assets {
 			$theme_uri . '/assets/js/header.js',
 			array(),
 			$version,
-			true
+			array(
+				'in_footer' => true,
+				'strategy'  => 'defer',
+			)
 		);
 
 		$uses_dashboard_script = is_page_template( 'page-templates/woocommerce-account.php' )
@@ -204,7 +220,10 @@ final class Assets {
 				$theme_uri . '/assets/js/dashboard.js',
 				array(),
 				$version,
-				true
+				array(
+					'in_footer' => true,
+					'strategy'  => 'defer',
+				)
 			);
 		}
 
@@ -217,7 +236,10 @@ final class Assets {
 				$theme_uri . '/assets/js/expo-marketplace.js',
 				array( 'mapbox-gl' ),
 				$version,
-				true
+				array(
+					'in_footer' => true,
+					'strategy'  => 'defer',
+				)
 			);
 			if ( function_exists( 'snf_get_expo_js_bootstrap' ) ) {
 				wp_localize_script(
@@ -234,7 +256,10 @@ final class Assets {
 				$theme_uri . '/assets/js/marketplace.js',
 				array( 'jquery' ),
 				$version,
-				true
+				array(
+					'in_footer' => true,
+					'strategy'  => 'defer',
+				)
 			);
 			wp_localize_script(
 				'snf-marketplace',
@@ -251,7 +276,7 @@ final class Assets {
 			'page-templates/public-content.php',
 			'page-templates/under-consideration.php',
 		);
-		$is_hub = false;
+		$is_hub        = false;
 		foreach ( $hub_templates as $hub_template ) {
 			if ( is_page_template( $hub_template ) ) {
 				$is_hub = true;
@@ -264,7 +289,10 @@ final class Assets {
 				$theme_uri . '/assets/js/hub.js',
 				array(),
 				$version,
-				true
+				array(
+					'in_footer' => true,
+					'strategy'  => 'defer',
+				)
 			);
 			if ( function_exists( 'snf_get_page_url' ) ) {
 				wp_localize_script(
@@ -283,7 +311,10 @@ final class Assets {
 				$theme_uri . '/assets/js/messages.js',
 				array(),
 				$version,
-				true
+				array(
+					'in_footer' => true,
+					'strategy'  => 'defer',
+				)
 			);
 			if ( function_exists( 'snf_messages_get_bootstrap' ) ) {
 				wp_localize_script( 'snf-messages', 'snfMessages', snf_messages_get_bootstrap() );
@@ -297,7 +328,10 @@ final class Assets {
 				$theme_uri . '/assets/js/service-quote.js',
 				array(),
 				$version,
-				true
+				array(
+					'in_footer' => true,
+					'strategy'  => 'defer',
+				)
 			);
 		}
 
@@ -308,7 +342,10 @@ final class Assets {
 				$theme_uri . '/assets/js/workshop.js',
 				array(),
 				$version,
-				true
+				array(
+					'in_footer' => true,
+					'strategy'  => 'defer',
+				)
 			);
 		}
 
@@ -320,7 +357,10 @@ final class Assets {
 				$theme_uri . '/assets/js/event-single.js',
 				array(),
 				$version,
-				true
+				array(
+					'in_footer' => true,
+					'strategy'  => 'defer',
+				)
 			);
 		}
 
@@ -334,7 +374,10 @@ final class Assets {
 				$theme_uri . '/assets/js/media-library.js',
 				array(),
 				$version,
-				true
+				array(
+					'in_footer' => true,
+					'strategy'  => 'defer',
+				)
 			);
 			if ( function_exists( 'snf_get_media_js_bootstrap' ) ) {
 				wp_localize_script( 'snf-media-library', 'snfMedia', snf_get_media_js_bootstrap() );

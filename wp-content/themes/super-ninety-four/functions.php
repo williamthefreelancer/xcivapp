@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'SNF_VERSION', '2.26.0' );
+define( 'SNF_VERSION', '2.27.0' );
 
 $snf_autoload = get_template_directory() . '/vendor/autoload.php';
 if ( file_exists( $snf_autoload ) ) {
@@ -540,13 +540,13 @@ function snf_get_dashboard_service_inquiry_cards() {
 			'title' => __( 'Litter Pickup Service', 'super-ninety-four' ),
 			'meta'  => __( 'Parking lots · Commercial grounds', 'super-ninety-four' ),
 			'url'   => call_user_func( $url_for, 'litter-pickup-service' ),
-			'image' => $img_base . 'litter-pickup-service-image-2.png',
+			'image' => $img_base . 'litter-pickup-service-image-2.jpg',
 		),
 		array(
 			'title' => __( 'Professional Line Sitting & Courier Service', 'super-ninety-four' ),
 			'meta'  => __( 'Busy lines · Shopping runs · Handoffs', 'super-ninety-four' ),
 			'url'   => call_user_func( $url_for, 'professional-line-sitting-courier-service' ),
-			'image' => $img_base . 'lifestyle-service-image-1.png',
+			'image' => $img_base . 'lifestyle-service-image-1.jpg',
 		),
 		array(
 			'title' => __( 'Janitorial Cleaning Service', 'super-ninety-four' ),

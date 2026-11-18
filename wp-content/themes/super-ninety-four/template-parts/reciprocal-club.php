@@ -45,14 +45,19 @@ $hero_lede    = ! empty( $club['hero_lede'] ) ? (string) $club['hero_lede'] : (s
 >
 	<section class="snf-reciprocal__hero" aria-label="<?php echo esc_attr( $club['title'] ); ?>" data-figma-slot="image-background">
 		<div class="snf-reciprocal__hero-media">
-			<img
-				class="snf-reciprocal__hero-img"
-				src="<?php echo esc_url( $hero ); ?>"
-				alt="<?php echo esc_attr( $club['hero_alt'] ); ?>"
-				width="1400"
-				height="567"
-				decoding="async"
-			>
+			<?php
+			snf_the_optimized_image(
+				$hero,
+				array(
+					'class'          => 'snf-reciprocal__hero-img',
+					'alt'            => (string) $club['hero_alt'],
+					'width'          => 1400,
+					'height'         => 567,
+					'loading'        => '',
+					'fetchpriority'  => 'high',
+				)
+			);
+			?>
 			<div class="snf-reciprocal__hero-grid">
 				<div class="snf-reciprocal__hero-copy">
 					<h1 class="snf-reciprocal__hero-heading"><?php echo esc_html( $hero_heading ); ?></h1>
@@ -103,14 +108,17 @@ $hero_lede    = ! empty( $club['hero_lede'] ) ? (string) $club['hero_lede'] : (s
 	</section>
 
 	<section class="snf-reciprocal__mid" data-figma-slot="image-section" aria-hidden="true">
-		<img
-			src="<?php echo esc_url( $mid_image ); ?>"
-			alt=""
-			width="1400"
-			height="567"
-			decoding="async"
-			loading="lazy"
-		>
+		<?php
+		snf_the_optimized_image(
+			$mid_image,
+			array(
+				'alt'     => '',
+				'width'   => 1400,
+				'height'  => 567,
+				'loading' => 'lazy',
+			)
+		);
+		?>
 	</section>
 
 	<section class="snf-reciprocal__about" data-figma-slot="about" aria-labelledby="snf-reciprocal-about-heading">
@@ -125,14 +133,22 @@ $hero_lede    = ! empty( $club['hero_lede'] ) ? (string) $club['hero_lede'] : (s
 	<section class="snf-reciprocal__gallery" data-figma-slot="image-section-3" aria-label="<?php echo esc_attr( $club['title'] ); ?>">
 		<?php foreach ( $gallery as $index => $gallery_src ) : ?>
 			<figure class="snf-reciprocal__gallery-item">
-				<img
-					src="<?php echo esc_url( $gallery_src ); ?>"
-					alt="<?php echo esc_attr( sprintf( /* translators: 1: club title, 2: image number */ __( '%1$s gallery image %2$d', 'super-ninety-four' ), $club['title'], $index + 1 ) ); ?>"
-					width="467"
-					height="567"
-					decoding="async"
-					loading="lazy"
-				>
+				<?php
+				snf_the_optimized_image(
+					$gallery_src,
+					array(
+						'alt'     => sprintf(
+							/* translators: 1: club title, 2: image number */
+							__( '%1$s gallery image %2$d', 'super-ninety-four' ),
+							$club['title'],
+							$index + 1
+						),
+						'width'   => 467,
+						'height'  => 567,
+						'loading' => 'lazy',
+					)
+				);
+				?>
 			</figure>
 		<?php endforeach; ?>
 	</section>
