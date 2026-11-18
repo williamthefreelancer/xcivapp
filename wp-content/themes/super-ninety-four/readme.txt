@@ -2,8 +2,8 @@
 Contributors: superninetyfour
 Requires at least: 6.0
 Tested up to: 6.8
-Requires PHP: 8.0
-Stable tag: 2.28.0
+Requires PHP: 8.3
+Stable tag: 2.32.0
 License: GNU General Public License v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -24,6 +24,12 @@ the WooCommerce sales funnel via the theme funnel API (leads, quote cart,
 workshop interest, reciprocal / apply deep-links).
 
 == Changelog ==
+
+= 2.32.0 =
+* Align theme headers: Requires PHP 8.3, License + License URI in style.css
+* Sync Stable tag with style.css / SNF_VERSION (2.32.0)
+* Move club roles, member guards, admin-bar + Apply applicant tagging into theme
+* Drop Content Control / Code Snippets plugin sync (plugins removed)
 
 = 2.28.0 =
 * SureForms funnel bridge: form→intent map, embeds on reciprocal/quote, REST webhooks

@@ -127,20 +127,13 @@ Events: `checkout.session.completed`, `checkout.session.async_payment_succeeded`
 
 Use the installed plugins — do not rebuild these in the theme:
 
-- **SureForms** — Contact / Newsletter embeds on Blank Canvas pages; optional embeds on reciprocal + quote landings
+- **SureForms** — Contact / Newsletter embeds on Blank Canvas pages
 - **SureContact** — CRM inbox
-- **OttoKit** (`suretriggers`) — automations; theme fires `snf_*` actions for Apply → Stripe, workshop reservations, Stripe webhooks, and SureForms funnel leads
+- **OttoKit** (`suretriggers`) — automations; theme fires `snf_*` actions for Apply → Stripe, workshop reservations, and Stripe webhooks
 
-### SureForms → WooCommerce funnel API
+Club roles (`snf_member`, `snf_reciprocal`, `snf_staff`, `snf_applicant`) and member-area redirects live in the theme (`app/Services/access-control.php`). Content Control and Code Snippets are not required.
 
-Theme bridge: `app/Services/sureforms-funnel.php` (WP Admin → **WooCommerce → SNF Funnel**).
-
-- Map SureForms form IDs → intents (`contact`, `newsletter`, `service_quote`, `workshop_interest`, `reciprocal_interest`, `apply_lead`)
-- REST webhooks: `POST /wp-json/snf/v1/funnel/lead` (or `/funnel/{intent}`) with header `X-SNF-Funnel-Secret`
-- Optional `SNF_FUNNEL_WEBHOOK_SECRET` in `wp-config.php`
-- SureForms Pro: registers **Super Ninety Four Funnel** native actions when Pro is active
-
-Transactional Apply / workshop checkout / Woo cart stay theme-owned; SureForms feeds leads into the same funnel.
+Transactional Apply / workshop checkout / Woo cart stay theme-owned; SureForms stays on blank-canvas marketing pages.
 
 ### After deploy
 

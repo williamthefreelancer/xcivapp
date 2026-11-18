@@ -1,9 +1,12 @@
 <?php
 /**
- * Club roles + Content Control sync for Super Ninety Four.
+ * Club roles + theme-native member access for Super Ninety Four.
+ *
+ * Replaces Content Control + Code Snippets soft-guards. Roles, redirects,
+ * admin-bar policy, and Apply applicant tagging all live in the theme.
  *
  * Hook contract:
- * - Listen: init / admin_init for role + Content Control sync.
+ * - Listen: init (roles), template_redirect (guards), after_setup_theme (admin bar).
  * - Emit/filter: snf_protected_page_slugs, snf_protected_page_templates, snf_user_can_access_member_areas.
  */
 
@@ -51,7 +54,7 @@ function snf_get_club_roles() {
 }
 
 /**
- * Roles allowed through Content Control on member/account pages.
+ * Roles allowed on member/account pages.
  *
  * @return string[]
  */
@@ -85,7 +88,7 @@ function snf_get_protected_page_slugs() {
 	}
 
 	/**
-	 * Filter protected page slugs synced into Content Control.
+	 * Filter protected page slugs for theme access control.
 	 *
 	 * @param string[] $slugs Slugs.
 	 */
@@ -93,7 +96,7 @@ function snf_get_protected_page_slugs() {
 }
 
 /**
- * Page templates that Content Control should treat as member-only.
+ * Page templates that should be treated as member-only.
  *
  * @return string[]
  */
@@ -108,7 +111,7 @@ function snf_get_protected_page_templates() {
 	);
 
 	/**
-	 * Filter protected page templates for Content Control.
+	 * Filter protected page templates for theme access control.
 	 *
 	 * @param string[] $templates Template paths relative to theme.
 	 */
@@ -142,17 +145,27 @@ function snf_get_public_page_slugs() {
 }
 
 /**
- * Register club roles.
+ * Register / refresh club roles.
  */
 function snf_register_club_roles() {
 	foreach ( snf_get_club_roles() as $role_key => $role ) {
-		if ( get_role( $role_key ) ) {
+		$existing = get_role( $role_key );
+		if ( ! $existing ) {
+			add_role( $role_key, $role['name'], $role['capabilities'] );
 			continue;
 		}
-		add_role( $role_key, $role['name'], $role['capabilities'] );
+
+		foreach ( $role['capabilities'] as $cap => $grant ) {
+			if ( $grant ) {
+				$existing->add_cap( $cap );
+			} else {
+				$existing->remove_cap( $cap );
+			}
+		}
 	}
 }
 add_action( 'init', 'snf_register_club_roles', 5 );
+add_action( 'after_switch_theme', 'snf_register_club_roles' );
 
 /**
  * Resolve page IDs for a list of slugs.
@@ -213,138 +226,119 @@ function snf_user_can_access_member_areas() {
 }
 
 /**
- * Upsert a Content Control restriction post.
+ * Whether the current front-end request needs member access.
  *
- * @param string               $slug     Restriction post_name.
- * @param string               $title    Title.
- * @param array<string, mixed> $settings Restriction settings.
- * @param int                  $order    Menu order.
- * @return int
+ * @return bool
  */
-function snf_upsert_content_control_restriction( $slug, $title, $settings, $order = 1 ) {
-	$existing = get_posts(
-		array(
-			'post_type'      => 'cc_restriction',
-			'name'           => $slug,
-			'post_status'    => array( 'publish', 'draft' ),
-			'posts_per_page' => 1,
-			'fields'         => 'ids',
-		)
-	);
-
-	$message = isset( $settings['customMessage'] ) ? (string) $settings['customMessage'] : '';
-	$postarr = array(
-		'post_title'   => $title,
-		'post_name'    => $slug,
-		'post_status'  => 'publish',
-		'post_type'    => 'cc_restriction',
-		'post_content' => $message,
-		'menu_order'   => (int) $order,
-	);
-
-	if ( ! empty( $existing ) ) {
-		$postarr['ID']  = (int) $existing[0];
-		$restriction_id = wp_update_post( $postarr, true );
-	} else {
-		$restriction_id = wp_insert_post( $postarr, true );
+function snf_request_requires_member_access() {
+	if ( is_admin() || wp_doing_ajax() || wp_doing_cron() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
+		return false;
 	}
 
-	if ( is_wp_error( $restriction_id ) || ! $restriction_id ) {
-		return 0;
+	if ( function_exists( 'snf_is_sureforms_host_page' ) && snf_is_sureforms_host_page() ) {
+		return false;
 	}
 
-	update_post_meta( (int) $restriction_id, 'restriction_settings', $settings );
-	update_post_meta( (int) $restriction_id, 'data_version', 3 );
+	foreach ( snf_get_public_page_slugs() as $slug ) {
+		if ( is_page( $slug ) ) {
+			return false;
+		}
+	}
 
-	return (int) $restriction_id;
+	$protected_slugs = snf_get_protected_page_slugs();
+	foreach ( $protected_slugs as $slug ) {
+		if ( is_page( $slug ) ) {
+			return true;
+		}
+	}
+
+	if ( is_singular( 'page' ) ) {
+		$templates = snf_get_protected_page_templates();
+		foreach ( $templates as $template ) {
+			if ( function_exists( 'snf_is_page_template' ) && snf_is_page_template( $template ) ) {
+				return true;
+			}
+			if ( is_page_template( $template ) ) {
+				return true;
+			}
+		}
+	}
+
+	if ( function_exists( 'is_account_page' ) && is_account_page() ) {
+		return true;
+	}
+
+	if ( function_exists( 'bp_is_members_directory' ) && bp_is_members_directory() ) {
+		return true;
+	}
+	if ( function_exists( 'bp_is_activity_directory' ) && bp_is_activity_directory() ) {
+		return true;
+	}
+	if ( function_exists( 'bp_is_groups_directory' ) && bp_is_groups_directory() ) {
+		return true;
+	}
+	if ( function_exists( 'bp_is_user' ) && bp_is_user() ) {
+		return true;
+	}
+	if ( function_exists( 'bp_is_group' ) && bp_is_group() ) {
+		return true;
+	}
+
+	return false;
 }
 
 /**
- * Sync Content Control restrictions for theme member surfaces + public funnel.
+ * Redirect guests / non-members away from protected club surfaces.
  */
-function snf_sync_content_control_access() {
-	if ( ! post_type_exists( 'cc_restriction' ) ) {
+function snf_guard_member_areas() {
+	if ( ! snf_request_requires_member_access() ) {
 		return;
 	}
 
-	$protected_ids = snf_resolve_page_ids( snf_get_protected_page_slugs(), true );
-	$public_ids    = snf_resolve_page_ids( snf_get_public_page_slugs(), false );
-	// Never lock the public funnel.
-	$protected_ids = array_values( array_diff( $protected_ids, $public_ids ) );
-
-	$login_page = get_page_by_path( 'member-login' );
-	$login_url  = $login_page ? get_permalink( $login_page ) : wp_login_url();
-
-	$settings = get_option( 'content_control_settings', array() );
-	if ( ! is_array( $settings ) ) {
-		$settings = array();
-	}
-	$settings['defaultDenialMessage'] = 'This area is for Super Ninety Four members. Please sign in to continue.';
-	$settings['excludeAdmins']        = true;
-	update_option( 'content_control_settings', $settings );
-
-	$condition_items = array();
-	if ( $protected_ids ) {
-		$condition_items[] = array(
-			'id'         => 'snf_member_pages',
-			'type'       => 'rule',
-			'name'       => 'content_is_selected_page',
-			'notOperand' => false,
-			'options'    => array(
-				'selected' => $protected_ids,
-			),
-		);
-	}
-
-	$templates = snf_get_protected_page_templates();
-	if ( $templates ) {
-		$condition_items[] = array(
-			'id'         => 'snf_member_templates',
-			'type'       => 'rule',
-			'name'       => 'content_is_page_with_template',
-			'notOperand' => false,
-			'options'    => array(
-				'selected' => $templates,
-			),
-		);
-	}
-
-	if ( ! $condition_items ) {
+	if ( snf_user_can_access_member_areas() ) {
 		return;
 	}
 
-	$member_restriction = array(
-		'userStatus'              => 'logged_in',
-		'roleMatch'               => 'match',
-		'userRoles'               => snf_get_member_access_roles(),
-		'protectionMethod'        => 'redirect',
-		'redirectType'            => 'custom',
-		'redirectUrl'             => $login_url,
-		'replacementType'         => 'message',
-		'replacementPage'         => 0,
-		'archiveHandling'         => 'redirect',
-		'archiveReplacementPage'  => 0,
-		'archiveRedirectType'     => 'custom',
-		'archiveRedirectUrl'      => $login_url,
-		'additionalQueryHandling' => 'filter_post_content',
-		'showExcerpts'            => false,
-		'overrideMessage'         => true,
-		'customMessage'           => 'This area is for Super Ninety Four members. Please sign in with a Club Member, Reciprocal, or Staff account.',
-		'showInSearch'            => false,
-		'conditions'              => array(
-			'logicalOperator' => 'or',
-			'items'           => $condition_items,
-		),
-	);
+	$login = function_exists( 'snf_get_page_url' ) ? snf_get_page_url( 'member-login' ) : wp_login_url();
+	if ( ! is_user_logged_in() ) {
+		wp_safe_redirect( $login );
+		exit;
+	}
 
-	snf_upsert_content_control_restriction(
-		'member-only-club-areas',
-		'Member-only club areas',
-		$member_restriction,
-		1
-	);
+	$target = function_exists( 'snf_get_page_url' ) ? snf_get_page_url( 'under-consideration' ) : home_url( '/' );
+	wp_safe_redirect( $target );
+	exit;
 }
-add_action( 'init', 'snf_sync_content_control_access', 40 );
+add_action( 'template_redirect', 'snf_guard_member_areas', 35 );
+
+/**
+ * Hide the admin bar on the front end for non-admins.
+ */
+function snf_hide_admin_bar_for_club_users() {
+	if ( is_admin() || current_user_can( 'manage_options' ) ) {
+		return;
+	}
+	show_admin_bar( false );
+}
+add_action( 'after_setup_theme', 'snf_hide_admin_bar_for_club_users' );
+
+/**
+ * Tag logged-in visitors without a club role as Under Consideration on Apply.
+ */
+function snf_mark_applicant_on_apply() {
+	if ( ! is_user_logged_in() || ! is_page( 'apply' ) ) {
+		return;
+	}
+
+	$user = wp_get_current_user();
+	$skip = array( 'administrator', 'snf_staff', 'snf_reciprocal', 'snf_member', 'snf_applicant' );
+	if ( array_intersect( $skip, (array) $user->roles ) ) {
+		return;
+	}
+
+	snf_assign_club_role( (int) $user->ID, 'snf_applicant' );
+}
+add_action( 'template_redirect', 'snf_mark_applicant_on_apply', 20 );
 
 /**
  * Assign a club role to a user (replaces other snf_* roles, keeps staff caps intact).

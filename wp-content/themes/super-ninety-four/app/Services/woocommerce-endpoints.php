@@ -287,7 +287,7 @@ function snf_membership_rows_from_subscriptions( $user_id ) {
 }
 
 /**
- * Theme club-role + live membership meta (Content Control gates access).
+ * Theme club-role + live membership meta (theme access control gates access).
  *
  * @param int $user_id User ID.
  * @return array<int, array<string, string>>
@@ -319,7 +319,7 @@ function snf_membership_rows_from_theme( $user_id ) {
 		array(
 			'eyebrow' => __( 'Club status', 'super-ninety-four' ),
 			'title'   => $role_label,
-			'meta'    => __( 'Roles + Content Control. Subscriptions via theme memberships (no paid plugin).', 'super-ninety-four' ),
+			'meta'    => __( 'Theme club roles + access control. Subscriptions via theme memberships (no paid plugin).', 'super-ninety-four' ),
 			'status'  => __( 'Access', 'super-ninety-four' ),
 			'tone'    => $tone,
 			'url'     => snf_get_page_url( 'apply' ),
@@ -416,7 +416,7 @@ function snf_get_membership_endpoint_data( $user_id = 0 ) {
 			break;
 	}
 
-	// Always merge theme club context so Content Control roles stay visible.
+	// Always merge theme club context so club roles stay visible.
 	$theme_rows = snf_membership_rows_from_theme( $user_id );
 	if ( 'theme' === $engine ) {
 		$rows = $theme_rows;

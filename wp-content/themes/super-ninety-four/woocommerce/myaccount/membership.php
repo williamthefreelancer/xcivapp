@@ -29,7 +29,7 @@ $panel = snf_get_membership_endpoint_panel();
 			<?php
 			printf(
 				/* translators: %s: engine label */
-				esc_html__( 'Data source: %s. Club dues and reciprocal programs use theme roles/meta, WooCommerce order hooks, and Action Scheduler (or WP-Cron). Content Control still gates member areas.', 'super-ninety-four' ),
+				esc_html__( 'Data source: %s. Club dues and reciprocal programs use theme roles/meta, WooCommerce order hooks, and Action Scheduler (or WP-Cron). Theme access control gates member areas.', 'super-ninety-four' ),
 				esc_html( $data['engine_label'] )
 			);
 			?>
