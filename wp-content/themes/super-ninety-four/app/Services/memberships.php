@@ -46,6 +46,21 @@ const SNF_PRODUCT_INITIATION_META = '_snf_is_initiation';
 /** Product meta: mark product as application fee ($97). */
 const SNF_PRODUCT_APPLICATION_META = '_snf_is_application';
 
+/** Product meta: Stripe Product id (test mode). */
+const SNF_PRODUCT_STRIPE_PRODUCT_TEST = '_snf_stripe_product_id_test';
+
+/** Product meta: Stripe Product id (live mode). */
+const SNF_PRODUCT_STRIPE_PRODUCT_LIVE = '_snf_stripe_product_id_live';
+
+/** Product meta: Stripe Price id (test mode). */
+const SNF_PRODUCT_STRIPE_PRICE_TEST = '_snf_stripe_price_id_test';
+
+/** Product meta: Stripe Price id (live mode). */
+const SNF_PRODUCT_STRIPE_PRICE_LIVE = '_snf_stripe_price_id_live';
+
+/** Option: mirrored Stripe catalog id map for admin / health. */
+const SNF_OPTION_STRIPE_CATALOG_IDS = 'snf_stripe_catalog_ids_v1';
+
 /** User meta: application fee paid (1|0). */
 const SNF_META_APPLICATION = 'snf_application_paid';
 
@@ -735,6 +750,149 @@ function snf_membership_schedule_cron() {
 add_action( 'init', 'snf_membership_schedule_cron', 30 );
 
 /**
+ * Flat membership commerce rows used for Woo seed + Stripe Product/Price sync.
+ *
+ * @return array<int, array{sku:string,title:string,amount_raw:float,kind:string,plan:string}>
+ */
+function snf_get_membership_catalog_rows() {
+	$defs = snf_get_membership_plan_definitions();
+	$rows = array(
+		array(
+			'sku'        => isset( $defs['application_fee']['product_slug'] ) ? $defs['application_fee']['product_slug'] : 'membership-application',
+			'title'      => __( 'Club Application Fee', 'super-ninety-four' ),
+			'amount_raw' => isset( $defs['application_fee']['amount_raw'] ) ? (float) $defs['application_fee']['amount_raw'] : 97.0,
+			'kind'       => 'application',
+			'plan'       => '',
+		),
+		array(
+			'sku'        => $defs['initiation_fee']['product_slug'],
+			'title'      => __( 'Club Initiation Fee', 'super-ninety-four' ),
+			'amount_raw' => (float) $defs['initiation_fee']['amount_raw'],
+			'kind'       => 'initiation',
+			'plan'       => '',
+		),
+	);
+
+	foreach ( $defs['plans'] as $plan ) {
+		$rows[] = array(
+			'sku'        => $plan['product_slug'],
+			'title'      => $plan['name'],
+			'amount_raw' => (float) $plan['amount_raw'],
+			'kind'       => 'dues',
+			'plan'       => $plan['slug'],
+		);
+	}
+
+	/**
+	 * Filter membership catalog rows (Woo + Stripe).
+	 *
+	 * @param array<int, array{sku:string,title:string,amount_raw:float,kind:string,plan:string}> $rows Rows.
+	 */
+	return apply_filters( 'snf_membership_catalog_rows', $rows );
+}
+
+/**
+ * Persist Stripe Product/Price ids onto a Woo product + option map.
+ *
+ * @param int    $product_id Woo product ID.
+ * @param string $sku        Catalog SKU.
+ * @param string $mode       test|live.
+ * @param string $product    Stripe product id.
+ * @param string $price      Stripe price id.
+ */
+function snf_set_membership_product_stripe_ids( $product_id, $sku, $mode, $product, $price ) {
+	$product_id = (int) $product_id;
+	$mode       = ( 'live' === $mode ) ? 'live' : 'test';
+	$sku        = sanitize_title( (string) $sku );
+	$product    = sanitize_text_field( (string) $product );
+	$price      = sanitize_text_field( (string) $price );
+
+	if ( $product_id <= 0 || ! $sku ) {
+		return;
+	}
+
+	if ( 'live' === $mode ) {
+		update_post_meta( $product_id, SNF_PRODUCT_STRIPE_PRODUCT_LIVE, $product );
+		update_post_meta( $product_id, SNF_PRODUCT_STRIPE_PRICE_LIVE, $price );
+	} else {
+		update_post_meta( $product_id, SNF_PRODUCT_STRIPE_PRODUCT_TEST, $product );
+		update_post_meta( $product_id, SNF_PRODUCT_STRIPE_PRICE_TEST, $price );
+	}
+
+	$map = get_option( SNF_OPTION_STRIPE_CATALOG_IDS, array() );
+	if ( ! is_array( $map ) ) {
+		$map = array();
+	}
+	if ( empty( $map[ $sku ] ) || ! is_array( $map[ $sku ] ) ) {
+		$map[ $sku ] = array();
+	}
+	$map[ $sku ][ $mode ] = array(
+		'product_id'     => $product,
+		'price_id'       => $price,
+		'woo_product_id' => $product_id,
+		'updated_at'     => time(),
+	);
+	update_option( SNF_OPTION_STRIPE_CATALOG_IDS, $map, false );
+}
+
+/**
+ * Stripe ids stored on a Woo membership product.
+ *
+ * @param int $product_id Product ID.
+ * @return array{test:array{product:string,price:string},live:array{product:string,price:string}}
+ */
+function snf_get_membership_product_stripe_ids( $product_id ) {
+	$product_id = (int) $product_id;
+	return array(
+		'test' => array(
+			'product' => (string) get_post_meta( $product_id, SNF_PRODUCT_STRIPE_PRODUCT_TEST, true ),
+			'price'   => (string) get_post_meta( $product_id, SNF_PRODUCT_STRIPE_PRICE_TEST, true ),
+		),
+		'live' => array(
+			'product' => (string) get_post_meta( $product_id, SNF_PRODUCT_STRIPE_PRODUCT_LIVE, true ),
+			'price'   => (string) get_post_meta( $product_id, SNF_PRODUCT_STRIPE_PRICE_LIVE, true ),
+		),
+	);
+}
+
+/**
+ * Presence map for all membership catalog Woo products.
+ *
+ * @return array{ok:bool,missing:string[],products:array<string,int>}
+ */
+function snf_membership_products_status() {
+	$products = array();
+	$missing  = array();
+	foreach ( snf_get_membership_catalog_rows() as $row ) {
+		$id = snf_get_membership_product_id_by_sku( $row['sku'] );
+		$products[ $row['sku'] ] = $id;
+		if ( $id <= 0 ) {
+			$missing[] = $row['sku'];
+		}
+	}
+	return array(
+		'ok'       => empty( $missing ),
+		'missing'  => $missing,
+		'products' => $products,
+	);
+}
+
+/**
+ * Resolve Woo product ID by catalog SKU / post_name.
+ *
+ * @param string $sku Product slug.
+ * @return int
+ */
+function snf_get_membership_product_id_by_sku( $sku ) {
+	$sku = sanitize_title( (string) $sku );
+	if ( ! $sku ) {
+		return 0;
+	}
+	$product = get_page_by_path( $sku, OBJECT, 'product' );
+	return $product ? (int) $product->ID : 0;
+}
+
+/**
  * Resolve product ID for a membership plan slug or the initiation SKU.
  *
  * @param string $key Plan slug, or 'initiation'.
@@ -1139,6 +1297,44 @@ function snf_woocommerce_membership_product_fields() {
 		)
 	);
 
+	$ids = snf_get_membership_product_stripe_ids( get_the_ID() );
+	woocommerce_wp_text_input(
+		array(
+			'id'                => SNF_PRODUCT_STRIPE_PRICE_TEST,
+			'label'             => __( 'Stripe Price (test)', 'super-ninety-four' ),
+			'desc_tip'          => true,
+			'description'       => __( 'Filled by Club → Ensure / sync Stripe catalog. Leave blank unless overriding.', 'super-ninety-four' ),
+			'custom_attributes' => array( 'placeholder' => 'price_…' ),
+			'value'             => $ids['test']['price'],
+		)
+	);
+	woocommerce_wp_text_input(
+		array(
+			'id'                => SNF_PRODUCT_STRIPE_PRICE_LIVE,
+			'label'             => __( 'Stripe Price (live)', 'super-ninety-four' ),
+			'desc_tip'          => true,
+			'description'       => __( 'Filled by Club → Ensure / sync Stripe catalog. Leave blank unless overriding.', 'super-ninety-four' ),
+			'custom_attributes' => array( 'placeholder' => 'price_…' ),
+			'value'             => $ids['live']['price'],
+		)
+	);
+	woocommerce_wp_text_input(
+		array(
+			'id'                => SNF_PRODUCT_STRIPE_PRODUCT_TEST,
+			'label'             => __( 'Stripe Product (test)', 'super-ninety-four' ),
+			'custom_attributes' => array( 'placeholder' => 'prod_…' ),
+			'value'             => $ids['test']['product'],
+		)
+	);
+	woocommerce_wp_text_input(
+		array(
+			'id'                => SNF_PRODUCT_STRIPE_PRODUCT_LIVE,
+			'label'             => __( 'Stripe Product (live)', 'super-ninety-four' ),
+			'custom_attributes' => array( 'placeholder' => 'prod_…' ),
+			'value'             => $ids['live']['product'],
+		)
+	);
+
 	echo '</div>';
 }
 add_action( 'woocommerce_product_options_general_product_data', 'snf_woocommerce_membership_product_fields', 20 );
@@ -1159,8 +1355,53 @@ function snf_woocommerce_save_membership_product_fields( $product_id ) {
 
 	$is_app = isset( $_POST[ SNF_PRODUCT_APPLICATION_META ] ) ? 'yes' : 'no'; // phpcs:ignore WordPress.Security.NonceVerification.Missing
 	update_post_meta( $product_id, SNF_PRODUCT_APPLICATION_META, $is_app );
+
+	$stripe_fields = array(
+		SNF_PRODUCT_STRIPE_PRICE_TEST,
+		SNF_PRODUCT_STRIPE_PRICE_LIVE,
+		SNF_PRODUCT_STRIPE_PRODUCT_TEST,
+		SNF_PRODUCT_STRIPE_PRODUCT_LIVE,
+	);
+	foreach ( $stripe_fields as $field ) {
+		if ( isset( $_POST[ $field ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+			update_post_meta( $product_id, $field, sanitize_text_field( wp_unslash( $_POST[ $field ] ) ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		}
+	}
 }
 add_action( 'woocommerce_process_product_meta', 'snf_woocommerce_save_membership_product_fields', 20 );
+
+/**
+ * End membership when a fully refunded SNF Payments order carried club dues.
+ *
+ * @param int      $order_id Order ID.
+ * @param WC_Order $order    Order.
+ */
+function snf_membership_on_payments_full_refund( $order_id, $order = null ) {
+	$order_id = (int) $order_id;
+	if ( ! $order instanceof WC_Order && function_exists( 'wc_get_order' ) ) {
+		$order = wc_get_order( $order_id );
+	}
+	if ( ! $order instanceof WC_Order ) {
+		return;
+	}
+
+	$user_id = (int) $order->get_user_id();
+	if ( $user_id <= 0 ) {
+		return;
+	}
+
+	$signals = snf_membership_signals_from_order( $order );
+	if ( empty( $signals['plan'] ) && empty( $signals['initiation'] ) && empty( $signals['application'] ) ) {
+		// Fallback: order meta written at activation.
+		if ( 'yes' !== $order->get_meta( '_snf_membership_processed' ) && ! $order->get_meta( '_snf_membership_plan' ) ) {
+			return;
+		}
+	}
+
+	snf_end_membership( $user_id, 'cancelled' );
+	$order->add_order_note( __( 'SUPER NINETY FOUR: membership ended after full Stripe refund.', 'super-ninety-four' ) );
+}
+add_action( 'snf_payments_order_fully_refunded', 'snf_membership_on_payments_full_refund', 10, 2 );
 
 /**
  * Live billing hub data from user meta (+ Woo payment methods when available).

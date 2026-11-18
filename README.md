@@ -118,27 +118,39 @@ Deploy CI runs `composer install --no-dev` and `npm ci && npm run build`, then r
 
 ### SUPER NINETY FOUR Payments (WooCommerce gateway)
 
-Plugin: `wp-content/plugins/snf-payments/`
+Plugin: `wp-content/plugins/snf-payments/` (not Automattic WooPayments). Club Apply → Woo cart → classic checkout + Stripe Payment Element.
 
 1. Activate **SUPER NINETY FOUR Payments** under **Plugins**.
 2. Enable it at **WooCommerce → Settings → Payments → SUPER NINETY FOUR**.
 3. Keys prefer theme / `SNF_STRIPE_*` / **WooCommerce → SNF Stripe**; gateway settings are fallbacks.
-4. Point a Stripe webhook at:
+4. Point a Stripe webhook (primary) at:
 
 `https://YOUR-DOMAIN/wp-json/snf-payments/v1/stripe/webhook`
 
 Events: `payment_intent.succeeded`, `payment_intent.payment_failed`, `charge.refunded`.
 
-Checkout uses Stripe Payment Element on-site (branded multi-step UI). Apply / workshop / event forms still add products to the cart, then redirect here.
+#### Membership Woo SKUs (theme-seeded)
 
-### Stripe webhook (theme / legacy Checkout Sessions)
+| SKU | Role |
+|-----|------|
+| `membership-application` | Application fee ($97) |
+| `membership-initiation` | Initiation fee ($75,000) |
+| `membership-back-creek` | Back Creek dues |
+| `membership-badlands` | Badlands dues |
+| `membership-regions-ne` | Regions NE dues |
+| `membership-city-to-city` | City to City dues |
 
-Point Stripe Dashboard → Developers → Webhooks at:
+Club Critical / **SNF Stripe** → **Ensure membership products**, then **Sync Stripe membership catalog** (creates Products/Prices for the active mode and stores `_snf_stripe_price_id_{test|live}` on each product). To re-link known Stripe ids after a catalog recreate: `php -r "define('WP_USE_THEMES', false); require 'wp-load.php'; require get_template_directory() . '/bin/snf-apply-stripe-catalog-ids.php';"`. Configure webhooks on both sandbox and live Stripe accounts (public HTTPS URL; localhost cannot receive Stripe events).
+
+#### Stripe webhook (theme / Checkout Session bridge)
+
+Also register:
 
 `https://YOUR-DOMAIN/wp-json/snf/v1/stripe/webhook`
 
 Events: `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `payment_intent.succeeded`, `charge.refunded`.
 
+Activations always run through WooCommerce order hooks (`snf_process_membership_order`).
 ### Marketing / CRM
 
 - **SureContact** (optional) — CRM inbox if installed on the host
@@ -173,7 +185,8 @@ wp eval-file wp-content/themes/super-ninety-four/bin/snf-verify-club-stack.php
 2. Confirm theme `vendor/autoload.php` and `dist/main.js` / `dist/main.css` exist (CI builds them).
 3. Confirm **SUPER NINETY FOUR Payments** is active and **BuddyPress** is inactive.
 4. Visit **Settings → Permalinks** and Save once (or rely on deploy `wp rewrite flush`).
-5. Smoke-test Apply → Checkout, `/expo/` RFQ, `/community/` join, `/messages/`, `/my-account/membership/`, and Select Events.
+5. In Club Critical / SNF Stripe: ensure membership products, sync Stripe catalog for the active mode, confirm both webhook URLs + secrets.
+6. Smoke-test Apply → Checkout, `/expo/` RFQ, `/community/` join, `/messages/`, `/my-account/membership/`, and Select Events.
 
 ### Videos & Audio library
 

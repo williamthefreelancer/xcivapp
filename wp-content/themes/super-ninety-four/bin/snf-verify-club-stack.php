@@ -7,6 +7,15 @@
  * @package Super_Ninety_Four
  */
 
+if ( ! function_exists( 'is_plugin_active' ) ) {
+	require_once ABSPATH . 'wp-admin/includes/plugin.php';
+}
+
+$payments_active = function_exists( 'is_plugin_active' ) && is_plugin_active( 'snf-payments/snf-payments.php' );
+$gateway_ready   = $payments_active && class_exists( 'SNF_Payments_Stripe_API' ) && SNF_Payments_Stripe_API::is_ready();
+$membership_ok   = function_exists( 'snf_membership_products_status' ) ? (bool) snf_membership_products_status()['ok'] : false;
+$webhook_secret  = function_exists( 'snf_stripe_get_webhook_secret' ) && (bool) snf_stripe_get_webhook_secret();
+
 $checks = array(
 	'role_member'       => (bool) get_role( 'snf_member' ),
 	'role_reciprocal'   => (bool) get_role( 'snf_reciprocal' ),
@@ -34,6 +43,11 @@ $checks = array(
 	'page_events_nm'    => (bool) get_page_by_path( 'select-events-by-non-members' ),
 	'cpt_circle'        => post_type_exists( 'snf_circle' ),
 	'cpt_rfq'           => post_type_exists( 'snf_rfq' ),
+	'woocommerce'       => class_exists( 'WooCommerce' ),
+	'snf_payments'      => $payments_active,
+	'snf_gateway_ready' => $gateway_ready,
+	'membership_skus'   => $membership_ok,
+	'stripe_webhook'    => $webhook_secret,
 	'buddypress_active' => function_exists( 'buddypress' ) || class_exists( 'BuddyPress', false ),
 );
 

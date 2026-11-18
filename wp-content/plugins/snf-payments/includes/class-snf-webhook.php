@@ -82,8 +82,20 @@ class SNF_Payments_Webhook {
 			}
 		}
 
-		$type = isset( $event['type'] ) ? (string) $event['type'] : '';
-		$data = isset( $event['data']['object'] ) && is_array( $event['data']['object'] ) ? $event['data']['object'] : array();
+		$type     = isset( $event['type'] ) ? (string) $event['type'] : '';
+		$event_id = isset( $event['id'] ) ? sanitize_text_field( (string) $event['id'] ) : '';
+		$data     = isset( $event['data']['object'] ) && is_array( $event['data']['object'] ) ? $event['data']['object'] : array();
+
+		if ( $event_id && get_transient( 'snf_payments_evt_' . $event_id ) ) {
+			return new WP_REST_Response(
+				array(
+					'received'  => true,
+					'duplicate' => true,
+					'type'      => $type,
+				),
+				200
+			);
+		}
 
 		$result = array( 'handled' => false, 'type' => $type );
 
@@ -102,6 +114,18 @@ class SNF_Payments_Webhook {
 				$result['ignored'] = true;
 				break;
 		}
+
+		if ( $event_id ) {
+			set_transient( 'snf_payments_evt_' . $event_id, 1, WEEK_IN_SECONDS );
+		}
+
+		/**
+		 * Fires after an SNF Payments Stripe webhook is processed.
+		 *
+		 * @param array              $event  Decoded event.
+		 * @param array<string,mixed> $result Handler result.
+		 */
+		do_action( 'snf_payments_webhook_handled', $event, $result );
 
 		return new WP_REST_Response( $result, 200 );
 	}
@@ -202,6 +226,17 @@ class SNF_Payments_Webhook {
 		$order = $orders[0];
 		if ( ! empty( $charge['refunded'] ) && $order->get_status() !== 'refunded' ) {
 			$order->update_status( 'refunded', __( 'SUPER NINETY FOUR: Fully refunded via Stripe webhook.', 'snf-payments' ) );
+		}
+
+		if ( ! empty( $charge['refunded'] ) ) {
+			/**
+			 * Fires when an SNF Payments order is fully refunded via Stripe.
+			 * Theme listens to end club membership when the order carried dues.
+			 *
+			 * @param int      $order_id Order ID.
+			 * @param WC_Order $order    Order.
+			 */
+			do_action( 'snf_payments_order_fully_refunded', $order->get_id(), $order );
 		}
 
 		return array(

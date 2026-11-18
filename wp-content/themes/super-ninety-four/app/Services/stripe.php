@@ -1231,13 +1231,50 @@ function snf_stripe_render_settings_page() {
 		</div>
 	</div>
 
+	<?php if ( function_exists( 'snf_commerce_requirements_checklist' ) ) : ?>
+	<div class="snf-admin__grid snf-admin__grid--panels">
+		<section class="snf-admin__panel snf-admin__panel--wide">
+			<h2><?php esc_html_e( 'Commerce requirements', 'super-ninety-four' ); ?></h2>
+			<p class="snf-admin__panel-desc"><?php esc_html_e( 'Checklist for SUPER NINETY FOUR Payments + Club membership catalog.', 'super-ninety-four' ); ?></p>
+			<ul class="snf-admin__list">
+				<?php foreach ( snf_commerce_requirements_checklist() as $req ) : ?>
+					<li>
+						<span><?php echo esc_html( $req['label'] ); ?></span>
+						<span class="snf-admin__pill <?php echo ! empty( $req['ok'] ) ? 'snf-admin__pill--ok' : 'snf-admin__pill--warn'; ?>">
+							<?php echo esc_html( $req['detail'] ); ?>
+						</span>
+					</li>
+				<?php endforeach; ?>
+			</ul>
+			<div class="snf-admin__actions">
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+					<input type="hidden" name="action" value="snf_ops_ensure_membership_products">
+					<input type="hidden" name="snf_ops_redirect" value="snf-stripe">
+					<?php wp_nonce_field( 'snf_ops_ensure_membership', 'snf_ops_ensure_membership_nonce' ); ?>
+					<button type="submit" class="snf-admin__btn snf-admin__btn--ghost"><?php esc_html_e( 'Ensure membership products', 'super-ninety-four' ); ?></button>
+				</form>
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+					<input type="hidden" name="action" value="snf_ops_sync_stripe_membership_catalog">
+					<input type="hidden" name="snf_ops_redirect" value="snf-stripe">
+					<?php wp_nonce_field( 'snf_ops_sync_stripe_membership', 'snf_ops_sync_stripe_membership_nonce' ); ?>
+					<button type="submit" class="snf-admin__btn"><?php esc_html_e( 'Sync Stripe membership catalog', 'super-ninety-four' ); ?></button>
+				</form>
+			</div>
+		</section>
+	</div>
+	<?php endif; ?>
+
 	<div class="snf-admin__grid snf-admin__grid--panels">
 		<section class="snf-admin__panel">
 			<h2><?php esc_html_e( 'API health', 'super-ninety-four' ); ?></h2>
 			<p class="snf-admin__panel-desc"><?php esc_html_e( 'Probes refresh when you save settings below, or via Re-probe APIs in Critical ops.', 'super-ninety-four' ); ?></p>
 			<ul class="snf-admin__list">
 				<li>
-					<span><?php esc_html_e( 'Webhook endpoint', 'super-ninety-four' ); ?></span>
+					<span><?php esc_html_e( 'Payments webhook (primary)', 'super-ninety-four' ); ?></span>
+					<code class="snf-admin__code"><?php echo esc_html( function_exists( 'snf_payments_webhook_url' ) ? snf_payments_webhook_url() : rest_url( 'snf-payments/v1/stripe/webhook' ) ); ?></code>
+				</li>
+				<li>
+					<span><?php esc_html_e( 'Theme webhook (Checkout Sessions)', 'super-ninety-four' ); ?></span>
 					<code class="snf-admin__code"><?php echo esc_html( $webhook ); ?></code>
 				</li>
 				<?php if ( ! empty( $account['id'] ) ) : ?>
@@ -1258,7 +1295,7 @@ function snf_stripe_render_settings_page() {
 					</span>
 				</li>
 			</ul>
-			<p class="snf-admin__muted"><?php esc_html_e( 'Stripe Dashboard → Developers → Webhooks. Events: checkout.session.completed, checkout.session.async_payment_succeeded, payment_intent.succeeded, charge.refunded.', 'super-ninety-four' ); ?></p>
+			<p class="snf-admin__muted"><?php esc_html_e( 'Point Stripe webhooks at both URLs. Payments plugin: payment_intent.succeeded, payment_intent.payment_failed, charge.refunded. Theme bridge: checkout.session.completed, checkout.session.async_payment_succeeded, payment_intent.succeeded, charge.refunded.', 'super-ninety-four' ); ?></p>
 			<div class="snf-admin__actions">
 				<a class="snf-admin__btn snf-admin__btn--ghost" href="<?php echo esc_url( admin_url( 'admin.php?page=snf-club' ) ); ?>"><?php esc_html_e( 'Club overview', 'super-ninety-four' ); ?></a>
 				<?php if ( current_user_can( 'manage_options' ) ) : ?>
@@ -1451,5 +1488,334 @@ function snf_stripe_admin_notices() {
 			echo '</p></div>';
 		}
 	}
+
+	if ( ! function_exists( 'is_plugin_active' ) ) {
+		require_once ABSPATH . 'wp-admin/includes/plugin.php';
+	}
+	$payments_active = function_exists( 'is_plugin_active' ) && is_plugin_active( 'snf-payments/snf-payments.php' );
+	if ( ! $payments_active && class_exists( 'WooCommerce' ) ) {
+		echo '<div class="notice notice-warning"><p>';
+		echo esc_html__( 'SUPER NINETY FOUR Payments is inactive. Club Apply / membership checkout expects that gateway. Activate it under Plugins, then enable it in WooCommerce → Settings → Payments.', 'super-ninety-four' );
+		echo '</p></div>';
+	}
 }
 add_action( 'admin_notices', 'snf_stripe_admin_notices' );
+
+/**
+ * Convert a major-unit amount to Stripe's smallest currency unit.
+ *
+ * @param float  $amount   Major units.
+ * @param string $currency ISO currency.
+ * @return int
+ */
+function snf_stripe_amount_to_cents( $amount, $currency = 'usd' ) {
+	$currency = strtolower( (string) $currency );
+	$zero     = array( 'bif', 'clp', 'djf', 'gnf', 'jpy', 'kmf', 'krw', 'mga', 'pyg', 'rwf', 'ugx', 'vnd', 'vuv', 'xaf', 'xof', 'xpf' );
+	if ( in_array( $currency, $zero, true ) ) {
+		return (int) round( (float) $amount );
+	}
+	return (int) round( (float) $amount * 100 );
+}
+
+/**
+ * Find an existing Stripe Product by snf_sku metadata (current API keys / mode).
+ *
+ * @param string $sku Catalog SKU.
+ * @return array<string, mixed>|null
+ */
+function snf_stripe_find_product_by_sku( $sku ) {
+	$sku = sanitize_title( (string) $sku );
+	if ( ! $sku ) {
+		return null;
+	}
+
+	$query = "metadata['snf_sku']:'" . str_replace( "'", "\\'", $sku ) . "'";
+	$found = snf_stripe_request(
+		'GET',
+		'products/search',
+		array(
+			'query' => $query,
+			'limit' => 1,
+		)
+	);
+	if ( is_wp_error( $found ) || empty( $found['data'][0] ) || ! is_array( $found['data'][0] ) ) {
+		return null;
+	}
+	return $found['data'][0];
+}
+
+/**
+ * Ensure one membership catalog row exists as Stripe Product + one-time Price, linked to Woo.
+ *
+ * @param array{sku:string,title:string,amount_raw:float,kind:string,plan:string} $row  Catalog row.
+ * @param string                                                                   $mode test|live (for meta storage only; API uses active keys).
+ * @return array<string, mixed>|WP_Error
+ */
+function snf_stripe_ensure_membership_catalog_row( array $row, $mode = 'test' ) {
+	$mode = ( 'live' === $mode ) ? 'live' : 'test';
+	$sku  = isset( $row['sku'] ) ? sanitize_title( (string) $row['sku'] ) : '';
+	if ( ! $sku ) {
+		return new WP_Error( 'snf_stripe_row', __( 'Catalog row missing SKU.', 'super-ninety-four' ) );
+	}
+
+	if ( function_exists( 'snf_ensure_membership_products' ) ) {
+		snf_ensure_membership_products( true );
+	}
+
+	$woo_id = function_exists( 'snf_get_membership_product_id_by_sku' )
+		? snf_get_membership_product_id_by_sku( $sku )
+		: 0;
+	if ( $woo_id <= 0 ) {
+		return new WP_Error(
+			'snf_stripe_no_woo',
+			sprintf(
+				/* translators: %s: product slug */
+				__( 'Woo product missing for SKU %s — run Ensure membership products first.', 'super-ninety-four' ),
+				$sku
+			)
+		);
+	}
+
+	$product = snf_stripe_find_product_by_sku( $sku );
+	if ( ! $product ) {
+		$created = snf_stripe_request(
+			'POST',
+			'products',
+			array(
+				'name'     => isset( $row['title'] ) ? (string) $row['title'] : $sku,
+				'metadata' => array(
+					'snf_sku'  => $sku,
+					'snf_kind' => isset( $row['kind'] ) ? (string) $row['kind'] : '',
+					'snf_plan' => isset( $row['plan'] ) ? (string) $row['plan'] : '',
+				),
+			)
+		);
+		if ( is_wp_error( $created ) ) {
+			return $created;
+		}
+		$product = $created;
+	}
+
+	$product_id = isset( $product['id'] ) ? (string) $product['id'] : '';
+	if ( ! $product_id ) {
+		return new WP_Error( 'snf_stripe_no_prod', __( 'Stripe product id missing.', 'super-ninety-four' ) );
+	}
+
+	$existing_ids = function_exists( 'snf_get_membership_product_stripe_ids' )
+		? snf_get_membership_product_stripe_ids( $woo_id )
+		: array( 'test' => array( 'price' => '' ), 'live' => array( 'price' => '' ) );
+	$price_id     = isset( $existing_ids[ $mode ]['price'] ) ? (string) $existing_ids[ $mode ]['price'] : '';
+
+	if ( $price_id ) {
+		$price_get = snf_stripe_request( 'GET', 'prices/' . rawurlencode( $price_id ) );
+		if ( is_wp_error( $price_get ) ) {
+			$price_id = '';
+		}
+	}
+
+	if ( ! $price_id ) {
+		$amount = snf_stripe_amount_to_cents( isset( $row['amount_raw'] ) ? (float) $row['amount_raw'] : 0, 'usd' );
+		$price  = snf_stripe_request(
+			'POST',
+			'prices',
+			array(
+				'product'    => $product_id,
+				'currency'   => 'usd',
+				'unit_amount'=> $amount,
+				'metadata'   => array(
+					'snf_sku'  => $sku,
+					'snf_kind' => isset( $row['kind'] ) ? (string) $row['kind'] : '',
+					'snf_plan' => isset( $row['plan'] ) ? (string) $row['plan'] : '',
+				),
+			)
+		);
+		if ( is_wp_error( $price ) ) {
+			return $price;
+		}
+		$price_id = isset( $price['id'] ) ? (string) $price['id'] : '';
+	}
+
+	if ( ! $price_id ) {
+		return new WP_Error( 'snf_stripe_no_price', __( 'Stripe price id missing.', 'super-ninety-four' ) );
+	}
+
+	if ( function_exists( 'snf_set_membership_product_stripe_ids' ) ) {
+		snf_set_membership_product_stripe_ids( $woo_id, $sku, $mode, $product_id, $price_id );
+	}
+
+	return array(
+		'sku'            => $sku,
+		'woo_product_id' => $woo_id,
+		'product_id'     => $product_id,
+		'price_id'       => $price_id,
+		'mode'           => $mode,
+	);
+}
+
+/**
+ * Sync all membership catalog rows to Stripe Products/Prices for the active key mode.
+ *
+ * @param string|null $mode Force test|live for meta keys; null = from settings.
+ * @return array{ok:bool,mode:string,rows:array<int,array<string,mixed>>,errors:array<int,string>}
+ */
+function snf_stripe_sync_membership_catalog( $mode = null ) {
+	$settings = snf_get_stripe_settings();
+	if ( null === $mode ) {
+		$mode = ( isset( $settings['mode'] ) && 'live' === $settings['mode'] ) ? 'live' : 'test';
+	} else {
+		$mode = ( 'live' === $mode ) ? 'live' : 'test';
+	}
+
+	$out = array(
+		'ok'     => true,
+		'mode'   => $mode,
+		'rows'   => array(),
+		'errors' => array(),
+	);
+
+	if ( ! snf_stripe_get_secret_key() ) {
+		$out['ok']       = false;
+		$out['errors'][] = __( 'Stripe secret key is not configured for the active mode.', 'super-ninety-four' );
+		return $out;
+	}
+
+	$rows = function_exists( 'snf_get_membership_catalog_rows' ) ? snf_get_membership_catalog_rows() : array();
+	foreach ( $rows as $row ) {
+		$result = snf_stripe_ensure_membership_catalog_row( $row, $mode );
+		if ( is_wp_error( $result ) ) {
+			$out['ok']       = false;
+			$out['errors'][] = $result->get_error_message();
+			continue;
+		}
+		$out['rows'][] = $result;
+	}
+
+	return $out;
+}
+
+/**
+ * Commerce requirements checklist for Club Critical / SNF Stripe.
+ *
+ * @return array<int, array{id:string,label:string,ok:bool,detail:string}>
+ */
+function snf_commerce_requirements_checklist() {
+	if ( ! function_exists( 'is_plugin_active' ) ) {
+		require_once ABSPATH . 'wp-admin/includes/plugin.php';
+	}
+
+	$woo_ok      = class_exists( 'WooCommerce' );
+	$plugin_ok   = function_exists( 'is_plugin_active' ) && is_plugin_active( 'snf-payments/snf-payments.php' );
+	$gateway_ok  = false;
+	$gateway_rdy = false;
+	if ( $plugin_ok && class_exists( 'SNF_Payments_Stripe_API' ) ) {
+		$gateway_rdy = SNF_Payments_Stripe_API::is_ready();
+		$gs          = get_option( 'woocommerce_snf_stripe_settings', array() );
+		$gateway_ok  = is_array( $gs ) && isset( $gs['enabled'] ) && 'yes' === $gs['enabled'];
+	}
+
+	$products = function_exists( 'snf_membership_products_status' )
+		? snf_membership_products_status()
+		: array( 'ok' => false, 'missing' => array( 'unknown' ), 'products' => array() );
+
+	$mode       = ( isset( snf_get_stripe_settings()['mode'] ) && 'live' === snf_get_stripe_settings()['mode'] ) ? 'live' : 'test';
+	$linked     = 0;
+	$link_total = 0;
+	if ( ! empty( $products['products'] ) && is_array( $products['products'] ) ) {
+		foreach ( $products['products'] as $woo_id ) {
+			$woo_id = (int) $woo_id;
+			if ( $woo_id <= 0 ) {
+				continue;
+			}
+			++$link_total;
+			$ids = function_exists( 'snf_get_membership_product_stripe_ids' )
+				? snf_get_membership_product_stripe_ids( $woo_id )
+				: array();
+			if ( ! empty( $ids[ $mode ]['price'] ) ) {
+				++$linked;
+			}
+		}
+	}
+	$prices_ok = $link_total > 0 && $linked === $link_total;
+
+	$wh_secret  = (bool) snf_stripe_get_webhook_secret();
+	$blocks_raw = get_option( 'woocommerce_cart_checkout_blocks_enabled', 'no' );
+	$blocks_off = ( 'yes' !== $blocks_raw && '1' !== (string) $blocks_raw );
+
+	$items = array(
+		array(
+			'id'     => 'woocommerce',
+			'label'  => __( 'WooCommerce active', 'super-ninety-four' ),
+			'ok'     => $woo_ok,
+			'detail' => $woo_ok ? __( 'OK', 'super-ninety-four' ) : __( 'Required', 'super-ninety-four' ),
+		),
+		array(
+			'id'     => 'snf_payments',
+			'label'  => __( 'SUPER NINETY FOUR Payments plugin', 'super-ninety-four' ),
+			'ok'     => $plugin_ok,
+			'detail' => $plugin_ok ? __( 'Active', 'super-ninety-four' ) : __( 'Inactive', 'super-ninety-four' ),
+		),
+		array(
+			'id'     => 'gateway',
+			'label'  => __( 'SNF gateway enabled + ready', 'super-ninety-four' ),
+			'ok'     => $gateway_ok && $gateway_rdy,
+			'detail' => ( $gateway_ok && $gateway_rdy )
+				? __( 'Ready', 'super-ninety-four' )
+				: __( 'Enable under WooCommerce → Payments', 'super-ninety-four' ),
+		),
+		array(
+			'id'     => 'membership_products',
+			'label'  => __( 'Membership Woo products (6 SKUs)', 'super-ninety-four' ),
+			'ok'     => ! empty( $products['ok'] ),
+			'detail' => ! empty( $products['ok'] )
+				? __( 'All present', 'super-ninety-four' )
+				: sprintf(
+					/* translators: %s: missing slugs */
+					__( 'Missing: %s', 'super-ninety-four' ),
+					implode( ', ', (array) $products['missing'] )
+				),
+		),
+		array(
+			'id'     => 'stripe_prices',
+			'label'  => sprintf(
+				/* translators: %s: test|live */
+				__( 'Stripe Price IDs linked (%s)', 'super-ninety-four' ),
+				$mode
+			),
+			'ok'     => $prices_ok,
+			'detail' => sprintf(
+				/* translators: 1: linked count, 2: total */
+				__( '%1$d / %2$d', 'super-ninety-four' ),
+				$linked,
+				$link_total
+			),
+		),
+		array(
+			'id'     => 'webhook_secret',
+			'label'  => __( 'Webhook signing secret', 'super-ninety-four' ),
+			'ok'     => $wh_secret,
+			'detail' => $wh_secret ? __( 'Set', 'super-ninety-four' ) : __( 'Missing', 'super-ninety-four' ),
+		),
+		array(
+			'id'     => 'classic_checkout',
+			'label'  => __( 'Classic checkout (Blocks off)', 'super-ninety-four' ),
+			'ok'     => $blocks_off,
+			'detail' => $blocks_off ? __( 'OK', 'super-ninety-four' ) : __( 'Disable Cart/Checkout Blocks', 'super-ninety-four' ),
+		),
+	);
+
+	/**
+	 * Filter commerce requirements checklist rows.
+	 *
+	 * @param array<int, array{id:string,label:string,ok:bool,detail:string}> $items Items.
+	 */
+	return apply_filters( 'snf_commerce_requirements_checklist', $items );
+}
+
+/**
+ * Payments webhook URL (plugin primary).
+ *
+ * @return string
+ */
+function snf_payments_webhook_url() {
+	return rest_url( 'snf-payments/v1/stripe/webhook' );
+}

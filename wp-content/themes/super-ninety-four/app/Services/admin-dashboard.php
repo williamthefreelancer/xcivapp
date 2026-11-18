@@ -229,6 +229,26 @@ function snf_admin_collect_notices() {
 				: __( 'Membership catalog products checked; missing products created.', 'super-ninety-four' ),
 		);
 	}
+	if ( isset( $_GET['stripe_catalog'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$catalog_flag = sanitize_key( wp_unslash( (string) $_GET['stripe_catalog'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( 'ok' === $catalog_flag ) {
+			$notices[] = array(
+				'type'    => 'success',
+				'message' => __( 'Stripe membership catalog synced for the active mode; Price IDs saved on Woo products.', 'super-ninety-four' ),
+			);
+		} elseif ( 'fail' === $catalog_flag ) {
+			$err_msg = __( 'Stripe membership catalog sync reported errors — check keys and Club Critical notices.', 'super-ninety-four' );
+			$stored  = get_transient( 'snf_ops_stripe_catalog_errors_' . get_current_user_id() );
+			if ( is_array( $stored ) && $stored ) {
+				$err_msg .= ' ' . implode( ' ', array_map( 'strval', $stored ) );
+				delete_transient( 'snf_ops_stripe_catalog_errors_' . get_current_user_id() );
+			}
+			$notices[] = array(
+				'type'    => 'error',
+				'message' => $err_msg,
+			);
+		}
+	}
 	if ( isset( $_GET['stripe_probe'] ) && 'ok' === $_GET['stripe_probe'] ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$notices[] = array(
 			'type'    => 'success',
@@ -2247,14 +2267,47 @@ function snf_admin_render_critical_ops_panels( $context = 'club' ) {
 		</section>
 
 		<section class="snf-admin__panel">
+			<h2><?php esc_html_e( 'Commerce requirements', 'super-ninety-four' ); ?></h2>
+			<p class="snf-admin__panel-desc"><?php esc_html_e( 'SNF Club membership checkout requires WooCommerce, SUPER NINETY FOUR Payments, seeded products, and Stripe webhooks.', 'super-ninety-four' ); ?></p>
+			<?php if ( function_exists( 'snf_commerce_requirements_checklist' ) ) : ?>
+				<ul class="snf-admin__list">
+					<?php foreach ( snf_commerce_requirements_checklist() as $req ) : ?>
+						<li>
+							<span><?php echo esc_html( $req['label'] ); ?></span>
+							<span class="snf-admin__pill <?php echo ! empty( $req['ok'] ) ? 'snf-admin__pill--ok' : 'snf-admin__pill--warn'; ?>">
+								<?php echo esc_html( $req['detail'] ); ?>
+							</span>
+						</li>
+					<?php endforeach; ?>
+				</ul>
+			<?php endif; ?>
+			<ul class="snf-admin__list">
+				<li>
+					<span><?php esc_html_e( 'Payments webhook (primary)', 'super-ninety-four' ); ?></span>
+					<code class="snf-admin__code"><?php echo esc_html( function_exists( 'snf_payments_webhook_url' ) ? snf_payments_webhook_url() : rest_url( 'snf-payments/v1/stripe/webhook' ) ); ?></code>
+				</li>
+				<li>
+					<span><?php esc_html_e( 'Theme webhook (Checkout Sessions)', 'super-ninety-four' ); ?></span>
+					<code class="snf-admin__code"><?php echo esc_html( function_exists( 'snf_stripe_webhook_url' ) ? snf_stripe_webhook_url() : rest_url( 'snf/v1/stripe/webhook' ) ); ?></code>
+				</li>
+			</ul>
+		</section>
+
+		<section class="snf-admin__panel">
 			<h2><?php esc_html_e( 'Commerce catalog seed', 'super-ninety-four' ); ?></h2>
-			<p class="snf-admin__panel-desc"><?php esc_html_e( 'Create any missing membership or reciprocal Woo products without changing existing ones.', 'super-ninety-four' ); ?></p>
+			<p class="snf-admin__panel-desc"><?php esc_html_e( 'Create any missing membership or reciprocal Woo products without changing existing ones. Sync creates matching Stripe Products/Prices for the active SNF Stripe mode and stores Price IDs on each product.', 'super-ninety-four' ); ?></p>
 			<div class="snf-admin__actions">
 				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 					<input type="hidden" name="action" value="snf_ops_ensure_membership_products">
 					<input type="hidden" name="snf_ops_redirect" value="<?php echo esc_attr( $redirect ); ?>">
 					<?php wp_nonce_field( 'snf_ops_ensure_membership', 'snf_ops_ensure_membership_nonce' ); ?>
 					<button type="submit" class="snf-admin__btn"><?php esc_html_e( 'Ensure membership products', 'super-ninety-four' ); ?></button>
+				</form>
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+					<input type="hidden" name="action" value="snf_ops_sync_stripe_membership_catalog">
+					<input type="hidden" name="snf_ops_redirect" value="<?php echo esc_attr( $redirect ); ?>">
+					<?php wp_nonce_field( 'snf_ops_sync_stripe_membership', 'snf_ops_sync_stripe_membership_nonce' ); ?>
+					<button type="submit" class="snf-admin__btn snf-admin__btn--ghost"><?php esc_html_e( 'Sync Stripe membership catalog', 'super-ninety-four' ); ?></button>
 				</form>
 				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 					<input type="hidden" name="action" value="snf_ops_ensure_reciprocal_products">
@@ -2664,6 +2717,40 @@ function snf_admin_handle_ops_ensure_membership_products() {
 	exit;
 }
 add_action( 'admin_post_snf_ops_ensure_membership_products', 'snf_admin_handle_ops_ensure_membership_products' );
+
+/**
+ * Sync membership catalog to Stripe Products/Prices (active mode keys).
+ */
+function snf_admin_handle_ops_sync_stripe_membership_catalog() {
+	if ( ! isset( $_POST['snf_ops_sync_stripe_membership_nonce'] ) ) {
+		return;
+	}
+	check_admin_referer( 'snf_ops_sync_stripe_membership', 'snf_ops_sync_stripe_membership_nonce' );
+	if ( ! current_user_can( 'manage_woocommerce' ) ) {
+		wp_die( esc_html__( 'Forbidden.', 'super-ninety-four' ) );
+	}
+
+	$flag = 'fail';
+	if ( function_exists( 'snf_ensure_membership_products' ) ) {
+		snf_ensure_membership_products( true );
+	}
+	if ( function_exists( 'snf_stripe_sync_membership_catalog' ) ) {
+		$result = snf_stripe_sync_membership_catalog();
+		$flag   = ( ! empty( $result['ok'] ) ) ? 'ok' : 'fail';
+		if ( ! empty( $result['errors'] ) && is_array( $result['errors'] ) ) {
+			set_transient(
+				'snf_ops_stripe_catalog_errors_' . get_current_user_id(),
+				array_slice( array_map( 'strval', $result['errors'] ), 0, 8 ),
+				MINUTE_IN_SECONDS * 5
+			);
+		}
+	}
+
+	$page = snf_admin_ops_redirect_page( 'snf-stripe' );
+	wp_safe_redirect( admin_url( 'admin.php?page=' . $page . '&stripe_catalog=' . $flag ) );
+	exit;
+}
+add_action( 'admin_post_snf_ops_sync_stripe_membership_catalog', 'snf_admin_handle_ops_sync_stripe_membership_catalog' );
 
 /**
  * Force-ensure reciprocal Woo products.
