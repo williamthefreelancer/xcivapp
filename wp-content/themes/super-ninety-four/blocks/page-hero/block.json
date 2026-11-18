@@ -1,0 +1,23 @@
+{
+  "apiVersion": 3,
+  "name": "snf/page-hero",
+  "title": "SNF Page Hero",
+  "category": "snf",
+  "icon": "heading",
+  "description": "Branded title and lede for Contact, Newsletter, and Videos & Audio canvases.",
+  "textdomain": "super-ninety-four",
+  "attributes": {
+    "title": {
+      "type": "string",
+      "default": ""
+    },
+    "lede": {
+      "type": "string",
+      "default": ""
+    }
+  },
+  "supports": {
+    "html": false,
+    "align": ["wide", "full"]
+  }
+}

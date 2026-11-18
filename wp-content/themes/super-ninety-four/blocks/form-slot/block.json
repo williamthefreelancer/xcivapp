@@ -1,0 +1,23 @@
+{
+  "apiVersion": 3,
+  "name": "snf/form-slot",
+  "title": "SNF Form Slot",
+  "category": "snf",
+  "icon": "feedback",
+  "description": "Styled wrapper that hosts a SureForms block for Contact or Newsletter.",
+  "textdomain": "super-ninety-four",
+  "attributes": {
+    "heading": {
+      "type": "string",
+      "default": ""
+    },
+    "hint": {
+      "type": "string",
+      "default": ""
+    }
+  },
+  "supports": {
+    "html": false,
+    "align": ["wide"]
+  }
+}

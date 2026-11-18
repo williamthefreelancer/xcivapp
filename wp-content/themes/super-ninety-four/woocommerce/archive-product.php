@@ -14,11 +14,46 @@ $query         = $args['q'];
 $result_count  = (int) $GLOBALS['wp_query']->found_posts;
 $display_query = $query ? $query : __( 'events & services', 'super-ninety-four' );
 $shop_url      = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'shop' ) : home_url( '/shop/' );
+$audience      = function_exists( 'snf_get_marketplace_audience' ) ? snf_get_marketplace_audience() : 'non-members';
+$facets        = function_exists( 'snf_get_marketplace_taxonomy_facets' )
+	? snf_get_marketplace_taxonomy_facets( $audience )
+	: ( function_exists( 'snf_get_serp_product_categories' ) ? snf_get_serp_product_categories() : array() );
+$active_cat    = isset( $_GET['product_cat'] ) ? sanitize_title( wp_unslash( $_GET['product_cat'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 ?>
-<main class="snf-page snf-archive">
+<main class="snf-page snf-archive" data-marketplace-audience="<?php echo esc_attr( $audience ); ?>">
 	<section class="snf-page__frame snf-container" aria-label="<?php esc_attr_e( 'Search events and services', 'super-ninety-four' ); ?>">
 		<div class="snf-archive__search">
 			<?php get_template_part( 'template-parts/search', 'events' ); ?>
+		</div>
+		<div
+			id="snf-marketplace-chips"
+			class="snf-marketplace__chips snf-marketplace__chips--shop"
+			role="group"
+			aria-label="<?php esc_attr_e( 'Filter by category', 'super-ninety-four' ); ?>"
+		>
+			<button
+				type="button"
+				class="snf-marketplace__chip<?php echo '' === $active_cat ? ' is-active' : ''; ?>"
+				data-product-cat=""
+				aria-pressed="<?php echo '' === $active_cat ? 'true' : 'false'; ?>"
+			>
+				<?php esc_html_e( 'All', 'super-ninety-four' ); ?>
+			</button>
+			<?php foreach ( $facets as $facet ) : ?>
+				<?php
+				$slug  = is_array( $facet ) ? (string) $facet['slug'] : (string) $facet;
+				$label = is_array( $facet ) ? (string) $facet['label'] : (string) $facet;
+				$on    = $active_cat === $slug;
+				?>
+				<button
+					type="button"
+					class="snf-marketplace__chip<?php echo $on ? ' is-active' : ''; ?>"
+					data-product-cat="<?php echo esc_attr( $slug ); ?>"
+					aria-pressed="<?php echo $on ? 'true' : 'false'; ?>"
+				>
+					<?php echo esc_html( $label ); ?>
+				</button>
+			<?php endforeach; ?>
 		</div>
 
 		<div class="snf-serp">

@@ -64,26 +64,32 @@ $logo_variant = ( ! empty( $logo['variant'] ) && 'wordmark' === $logo['variant']
 			</header>
 
 			<figure class="snf-event__media">
-				<?php if ( ! empty( $event['video'] ) ) : ?>
-					<iframe
-						src="<?php echo esc_url( $event['video'] ); ?>"
-						title="<?php echo esc_attr( $event['title'] ); ?>"
-						loading="lazy"
-						allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-						allowfullscreen
-					></iframe>
-				<?php elseif ( ! empty( $event['image'] ) ) : ?>
-					<img
-						src="<?php echo esc_url( $event['image'] ); ?>"
-						alt="<?php echo esc_attr( $event['title'] ); ?>"
-						width="1200"
-						height="675"
-						decoding="async"
-					>
-				<?php else : ?>
-					<span class="snf-event__media-empty" aria-hidden="true"></span>
-				<?php endif; ?>
+				<?php
+				get_template_part(
+					'template-parts/media/youtube',
+					'embed',
+					array(
+						'src'    => ! empty( $event['video'] ) ? (string) $event['video'] : '',
+						'title'  => (string) $event['title'],
+						'poster' => ! empty( $event['image'] ) ? (string) $event['image'] : '',
+						'class'  => 'snf-event__media-embed',
+					)
+				);
+				?>
 			</figure>
+
+			<?php
+			if ( ! empty( $event['broadcast'] ) && is_array( $event['broadcast'] ) ) {
+				get_template_part(
+					'template-parts/media/live',
+					'broadcast',
+					array(
+						'event_id'  => (int) ( $event['id'] ?? 0 ),
+						'broadcast' => $event['broadcast'],
+					)
+				);
+			}
+			?>
 
 			<div class="snf-event__body">
 				<div class="snf-event__details">

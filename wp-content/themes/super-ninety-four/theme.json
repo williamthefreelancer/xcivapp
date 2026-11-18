@@ -1,0 +1,81 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/theme.json",
+  "version": 3,
+  "settings": {
+    "appearanceTools": true,
+    "color": {
+      "palette": [
+        {
+          "slug": "ink",
+          "name": "Ink",
+          "color": "#f3ebe8"
+        },
+        {
+          "slug": "ink-muted",
+          "name": "Ink muted",
+          "color": "rgba(243, 235, 232, 0.72)"
+        },
+        {
+          "slug": "grad-top",
+          "name": "Gradient top",
+          "color": "#815B5A"
+        },
+        {
+          "slug": "grad-bottom",
+          "name": "Gradient bottom",
+          "color": "#1B1313"
+        },
+        {
+          "slug": "surface-border",
+          "name": "Surface border",
+          "color": "rgba(243, 235, 232, 0.18)"
+        }
+      ]
+    },
+    "typography": {
+      "fontFamilies": [
+        {
+          "fontFamily": "\"League Gothic\", \"Arial Narrow\", Impact, sans-serif",
+          "name": "League Gothic",
+          "slug": "display"
+        },
+        {
+          "fontFamily": "\"Open Sans\", \"Avenir Next\", \"Segoe UI\", sans-serif",
+          "name": "Open Sans",
+          "slug": "body"
+        },
+        {
+          "fontFamily": "\"Lato\", \"Avenir Next\", \"Segoe UI\", sans-serif",
+          "name": "Lato",
+          "slug": "nav"
+        }
+      ]
+    },
+    "layout": {
+      "contentSize": "720px",
+      "wideSize": "1400px"
+    }
+  },
+  "styles": {
+    "color": {
+      "background": "#1B1313",
+      "text": "#f3ebe8"
+    },
+    "typography": {
+      "fontFamily": "var(--wp--preset--font-family--body)"
+    },
+    "elements": {
+      "heading": {
+        "typography": {
+          "fontFamily": "var(--wp--preset--font-family--display)",
+          "fontWeight": "400"
+        }
+      },
+      "link": {
+        "color": {
+          "text": "#f3ebe8"
+        }
+      }
+    }
+  }
+}

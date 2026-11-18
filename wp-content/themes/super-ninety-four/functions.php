@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Super Ninety Four theme functions.
  */
@@ -7,28 +7,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'SNF_VERSION', '2.20.0' );
+define( 'SNF_VERSION', '2.24.0' );
 
-require_once get_template_directory() . '/inc/account-hub.php';
-require_once get_template_directory() . '/inc/memberships.php';
-require_once get_template_directory() . '/inc/dashboard-shell.php';
-require_once get_template_directory() . '/inc/dashboard-panels.php';
-require_once get_template_directory() . '/inc/buddypress-profile.php';
-require_once get_template_directory() . '/inc/access-control.php';
-require_once get_template_directory() . '/inc/plugin-integrations.php';
-require_once get_template_directory() . '/inc/messages.php';
-require_once get_template_directory() . '/inc/reciprocal.php';
-require_once get_template_directory() . '/inc/membership-subscriptions.php';
-require_once get_template_directory() . '/inc/supabase-payments.php';
-require_once get_template_directory() . '/inc/stripe.php';
-require_once get_template_directory() . '/inc/home.php';
-require_once get_template_directory() . '/inc/events.php';
-require_once get_template_directory() . '/inc/expo-marketplace.php';
-require_once get_template_directory() . '/inc/lead-rider.php';
-require_once get_template_directory() . '/inc/woocommerce-serp.php';
-require_once get_template_directory() . '/inc/woocommerce-endpoints.php';
-require_once get_template_directory() . '/inc/service-quotes.php';
-require_once get_template_directory() . '/inc/schema.php';
+$snf_autoload = get_template_directory() . '/vendor/autoload.php';
+if ( file_exists( $snf_autoload ) ) {
+	require_once $snf_autoload;
+}
+
+\SNF\Support\Bootstrap::init();
 
 function snf_setup() {
 	add_theme_support( 'title-tag' );
@@ -92,7 +78,7 @@ function snf_get_site_pages() {
 		),
 		'videos-audio' => array(
 			'title'    => 'Videos & Audio',
-			'template' => 'page-templates/blank-canvas.php',
+			'template' => 'page-templates/videos-audio.php',
 		),
 		'contact' => array(
 			'title'    => 'Contact',
@@ -324,174 +310,7 @@ function snf_ensure_home_is_front_page() {
 add_action( 'after_switch_theme', 'snf_ensure_site_pages' );
 add_action( 'init', 'snf_ensure_site_pages', 20 );
 
-function snf_scripts() {
-	wp_enqueue_style(
-		'snf-fonts',
-		'https://fonts.googleapis.com/css2?family=Lato:wght@600&family=League+Gothic&family=Open+Sans:wght@400;600&display=swap',
-		array(),
-		null
-	);
-	wp_enqueue_style(
-		'snf-main',
-		get_template_directory_uri() . '/assets/css/main.css',
-		array(),
-		SNF_VERSION
-	);
-	wp_enqueue_script(
-		'snf-header',
-		get_template_directory_uri() . '/assets/js/header.js',
-		array(),
-		SNF_VERSION,
-		true
-	);
 
-	$uses_dashboard_script = is_page_template( 'page-templates/woocommerce-account.php' )
-		|| is_page_template( 'page-templates/select-events.php' )
-		|| is_page_template( 'page-templates/expo-marketplace.php' )
-		|| is_page( 'select-events-by-members' )
-		|| is_page( 'select-events-by-non-members' )
-		|| is_page( 'expo' )
-		|| ( function_exists( 'is_account_page' ) && is_account_page() )
-		|| ( function_exists( 'snf_is_bp_member_profile' ) && snf_is_bp_member_profile() );
-
-	if ( $uses_dashboard_script ) {
-		wp_enqueue_script(
-			'snf-dashboard',
-			get_template_directory_uri() . '/assets/js/dashboard.js',
-			array(),
-			SNF_VERSION,
-			true
-		);
-	}
-
-	if ( function_exists( 'snf_is_expo_marketplace_page' ) && snf_is_expo_marketplace_page() ) {
-		wp_enqueue_style(
-			'mapbox-gl',
-			'https://api.mapbox.com/mapbox-gl-js/v3.9.0/mapbox-gl.css',
-			array(),
-			'3.9.0'
-		);
-		wp_enqueue_script(
-			'mapbox-gl',
-			'https://api.mapbox.com/mapbox-gl-js/v3.9.0/mapbox-gl.js',
-			array(),
-			'3.9.0',
-			true
-		);
-
-		$expo_audience = ( function_exists( 'snf_user_can_access_member_areas' ) && snf_user_can_access_member_areas() )
-			? 'members'
-			: 'non-members';
-		wp_enqueue_script(
-			'snf-expo-marketplace',
-			get_template_directory_uri() . '/assets/js/expo-marketplace.js',
-			array( 'mapbox-gl' ),
-			SNF_VERSION,
-			true
-		);
-		wp_localize_script(
-			'snf-expo-marketplace',
-			'snfExpo',
-			snf_get_expo_js_bootstrap( $expo_audience )
-		);
-	}
-
-	$hub_templates = array(
-		'page-templates/billing-details.php',
-		'page-templates/member-login.php',
-		'page-templates/apply.php',
-		'page-templates/messages.php',
-		'page-templates/public-content.php',
-		'page-templates/under-consideration.php',
-	);
-	$hub_slugs = array(
-		'billing-details',
-		'member-login',
-		'apply',
-		'messages',
-		'inquiries',
-		'under-consideration',
-	);
-	$is_hub = false;
-	foreach ( $hub_templates as $hub_template ) {
-		if ( is_page_template( $hub_template ) ) {
-			$is_hub = true;
-			break;
-		}
-	}
-	if ( ! $is_hub ) {
-		foreach ( $hub_slugs as $hub_slug ) {
-			if ( is_page( $hub_slug ) ) {
-				$is_hub = true;
-				break;
-			}
-		}
-	}
-	if ( $is_hub ) {
-		wp_enqueue_script(
-			'snf-hub',
-			get_template_directory_uri() . '/assets/js/hub.js',
-			array(),
-			SNF_VERSION,
-			true
-		);
-		wp_localize_script(
-			'snf-hub',
-			'snfHub',
-			array(
-				'considerationUrl' => snf_get_page_url( 'under-consideration' ),
-			)
-		);
-	}
-
-	$is_messages = is_page_template( 'page-templates/messages.php' ) || is_page( 'messages' );
-	if ( $is_messages ) {
-		wp_enqueue_script(
-			'snf-messages',
-			get_template_directory_uri() . '/assets/js/messages.js',
-			array(),
-			SNF_VERSION,
-			true
-		);
-		wp_localize_script( 'snf-messages', 'snfMessages', snf_messages_get_bootstrap() );
-	}
-
-	$is_service_quote = function_exists( 'is_product' ) && is_product() && function_exists( 'snf_is_service_quote_product' ) && snf_is_service_quote_product( get_the_ID() );
-	if ( $is_service_quote ) {
-		wp_enqueue_script(
-			'snf-service-quote',
-			get_template_directory_uri() . '/assets/js/service-quote.js',
-			array(),
-			SNF_VERSION,
-			true
-		);
-	}
-
-	$is_workshop_product = function_exists( 'is_product' ) && is_product() && snf_is_lifestyle_concierge_workshop( get_the_ID() );
-	if ( $is_workshop_product ) {
-		wp_enqueue_script(
-			'snf-workshop',
-			get_template_directory_uri() . '/assets/js/workshop.js',
-			array(),
-			SNF_VERSION,
-			true
-		);
-	}
-
-	$is_event_landing = ( function_exists( 'is_product' ) && is_product() && function_exists( 'snf_is_figma_event_landing' ) && snf_is_figma_event_landing( get_the_ID() ) )
-		|| ( is_singular( 'event' ) && function_exists( 'snf_is_figma_event_landing' ) && snf_is_figma_event_landing( get_the_ID() ) );
-	if ( $is_event_landing ) {
-		wp_enqueue_script(
-			'snf-event-single',
-			get_template_directory_uri() . '/assets/js/event-single.js',
-			array(),
-			SNF_VERSION,
-			true
-		);
-	}
-
-}
-add_action( 'wp_enqueue_scripts', 'snf_scripts' );
 
 /**
  * Map legacy event CPT slugs to current WooCommerce product slugs.
@@ -986,7 +805,10 @@ function snf_primary_menu_items() {
 			'type'    => 'link',
 			'label'   => __( 'Videos & Audio', 'super-ninety-four' ),
 			'url'     => snf_get_page_url( 'videos-audio' ),
-			'current' => is_page( 'videos-audio' ),
+			'current' => is_page( 'videos-audio' )
+				|| is_singular( array( 'snf_video', 'snf_audio' ) )
+				|| is_post_type_archive( array( 'snf_video', 'snf_audio' ) )
+				|| is_tax( array( 'snf_media_topic', 'snf_media_series', 'snf_audio_channel', 'snf_broadcast_format' ) ),
 		),
 		array(
 			'type'    => 'link',
@@ -1696,6 +1518,20 @@ function snf_handle_workshop_reserve() {
 	update_post_meta( $reservation_id, 'snf_email', $email );
 	update_post_meta( $reservation_id, 'snf_phone', $phone );
 	update_post_meta( $reservation_id, 'snf_firm', $firm );
+
+	if ( function_exists( 'snf_fire_workshop_reservation_created' ) ) {
+		snf_fire_workshop_reservation_created(
+			(int) $reservation_id,
+			$event_id,
+			$email,
+			array(
+				'full_name' => $full_name,
+				'phone'     => $phone,
+				'firm'      => $firm,
+				'event'     => $event_title,
+			)
+		);
+	}
 
 	$admin_email = get_option( 'admin_email' );
 	if ( $admin_email ) {

@@ -8,6 +8,10 @@ $is_members = snf_is_expo_members_audience();
 $audience   = $is_members ? 'members' : 'non-members';
 $rails      = snf_get_expo_catalog_rails( $audience );
 $routes     = snf_get_lead_rider_routes();
+$facets     = function_exists( 'snf_get_marketplace_taxonomy_facets' )
+	? snf_get_marketplace_taxonomy_facets( $audience )
+	: array();
+$shop_url   = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'shop' ) : home_url( '/shop/' );
 $title      = __( 'Expo', 'super-ninety-four' );
 
 if ( $is_members ) {
@@ -27,10 +31,50 @@ get_header();
 			<p class="snf-hub__eyebrow"><?php echo esc_html( $eyebrow ); ?></p>
 			<h1 class="snf-dashboard__intro-title"><?php echo esc_html( $title ); ?></h1>
 			<p class="snf-hub__lede"><?php echo esc_html( $lede ); ?></p>
+			<?php if ( $shop_url ) : ?>
+				<p class="snf-expo__shop-link">
+					<a class="snf-expo__shop-cta" href="<?php echo esc_url( $shop_url ); ?>">
+						<?php esc_html_e( 'Browse shop', 'super-ninety-four' ); ?>
+					</a>
+				</p>
+			<?php endif; ?>
 			<div class="snf-dashboard__search" data-figma-slot="expo-search">
 				<?php get_template_part( 'template-parts/search', 'events' ); ?>
 			</div>
+			<div
+				id="snf-marketplace-chips"
+				class="snf-marketplace__chips"
+				role="group"
+				aria-label="<?php esc_attr_e( 'Filter by category', 'super-ninety-four' ); ?>"
+				data-figma-slot="expo-taxonomy-chips"
+			>
+				<button
+					type="button"
+					class="snf-marketplace__chip is-active"
+					data-product-cat=""
+					aria-pressed="true"
+				>
+					<?php esc_html_e( 'All', 'super-ninety-four' ); ?>
+				</button>
+				<?php foreach ( $facets as $facet ) : ?>
+					<button
+						type="button"
+						class="snf-marketplace__chip"
+						data-product-cat="<?php echo esc_attr( $facet['slug'] ); ?>"
+						aria-pressed="false"
+					>
+						<?php echo esc_html( $facet['label'] ); ?>
+					</button>
+				<?php endforeach; ?>
+			</div>
 		</div>
+
+		<div
+			id="snf-marketplace-results"
+			class="snf-marketplace__results"
+			data-figma-slot="expo-async-results"
+			hidden
+		></div>
 
 		<div class="snf-expo__listings" data-figma-slot="expo-listings">
 			<?php foreach ( $rails as $rail ) : ?>

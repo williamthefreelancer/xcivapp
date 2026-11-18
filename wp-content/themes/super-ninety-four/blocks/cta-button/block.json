@@ -1,0 +1,26 @@
+{
+  "apiVersion": 3,
+  "name": "snf/cta-button",
+  "title": "SNF CTA Button",
+  "category": "snf",
+  "icon": "button",
+  "description": "Branded call-to-action linking to Apply, workshop, Expo, or a service quote.",
+  "textdomain": "super-ninety-four",
+  "attributes": {
+    "label": {
+      "type": "string",
+      "default": "Continue"
+    },
+    "target": {
+      "type": "string",
+      "default": "apply"
+    },
+    "customUrl": {
+      "type": "string",
+      "default": ""
+    }
+  },
+  "supports": {
+    "html": false
+  }
+}

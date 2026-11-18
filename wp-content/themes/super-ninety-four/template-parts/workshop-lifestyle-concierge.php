@@ -100,26 +100,31 @@ $cart_url = function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : home_url(
 		<p class="snf-workshop__watch-label"><?php esc_html_e( 'WATCH VIDEO BELOW', 'super-ninety-four' ); ?></p>
 
 		<div class="snf-workshop__video" aria-label="<?php esc_attr_e( 'Workshop video', 'super-ninety-four' ); ?>">
-			<?php if ( $video_url ) : ?>
-				<iframe
-					src="<?php echo esc_url( $video_url ); ?>"
-					title="<?php esc_attr_e( 'The Lifestyle Concierge Club Workshop', 'super-ninety-four' ); ?>"
-					loading="lazy"
-					allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-					allowfullscreen
-				></iframe>
-			<?php else : ?>
-				<figure class="snf-workshop__video-poster">
-					<img
-						src="<?php echo esc_url( $hero_image ); ?>"
-						alt="<?php esc_attr_e( 'The Lifestyle Concierge Club Workshop', 'super-ninety-four' ); ?>"
-						width="1200"
-						height="675"
-						decoding="async"
-					>
-				</figure>
-			<?php endif; ?>
+			<?php
+			get_template_part(
+				'template-parts/media/youtube',
+				'embed',
+				array(
+					'src'    => $video_url,
+					'title'  => __( 'The Lifestyle Concierge Club Workshop', 'super-ninety-four' ),
+					'poster' => $hero_image,
+					'class'  => 'snf-workshop__video-embed',
+				)
+			);
+			?>
 		</div>
+		<?php
+		if ( $event_id && function_exists( 'snf_get_event_broadcast_data' ) ) {
+			get_template_part(
+				'template-parts/media/live',
+				'broadcast',
+				array(
+					'event_id'  => $event_id,
+					'broadcast' => snf_get_event_broadcast_data( $event_id ),
+				)
+			);
+		}
+		?>
 	</section>
 
 	<section class="snf-workshop__body snf-container" data-figma-slot="workshop-body">

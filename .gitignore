@@ -16,9 +16,18 @@ wp-content/advanced-cache.php
 wp-content/wp-cache-config.php
 wp-content/debug.log
 
+# Do not commit full plugin trees (installed on host / local only)
+wp-content/plugins/woocommerce/
+wp-content/plugins/sureforms/
+wp-content/plugins/surecontact/
+wp-content/plugins/suretriggers/
+
 # Dependencies / local tooling
 /vendor/
 /node_modules/
+**/node_modules/
+wp-content/themes/super-ninety-four/vendor/
+wp-content/themes/super-ninety-four/node_modules/
 .cursor/
 *.log
 .DS_Store

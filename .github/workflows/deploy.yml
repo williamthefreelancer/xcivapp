@@ -28,6 +28,30 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: wp-content/themes/super-ninety-four/package-lock.json
+
+      - name: Setup PHP / Composer
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          tools: composer
+
+      - name: Build theme assets
+        working-directory: wp-content/themes/super-ninety-four
+        run: |
+          set -euo pipefail
+          composer install --no-dev --optimize-autoloader --no-interaction
+          npm ci
+          npm run build
+          test -f dist/main.css
+          test -f dist/main.js
+          test -f vendor/autoload.php
+
       - name: Validate secrets
         env:
           DREAMHOST_HOST: ${{ secrets.DREAMHOST_HOST }}
@@ -83,5 +107,7 @@ jobs:
             -e "ssh -i ${HOME}/.ssh/dreamhost_deploy -o IdentitiesOnly=yes -o BatchMode=yes" \
             --exclude '.git/' \
             --exclude 'node_modules/' \
+            --exclude 'resources/' \
+            --exclude 'bin/build-islands.mjs' \
             "./wp-content/themes/super-ninety-four/" \
             "${DREAMHOST_USERNAME}@${DREAMHOST_HOST}:${remote_theme}/"

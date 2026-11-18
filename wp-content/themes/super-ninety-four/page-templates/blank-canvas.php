@@ -1,7 +1,7 @@
 <?php
 /**
  * Template Name: Blank Canvas
- * Description: Empty public pages reserved for Figma design conversion.
+ * Description: Public pages with header/footer; renders Gutenberg/plugin blocks when content exists.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -20,7 +20,23 @@ get_header();
 	aria-label="<?php echo esc_attr( $title ); ?>"
 >
 	<div class="snf-page__canvas snf-container" data-figma-slot="<?php echo esc_attr( $slug ); ?>">
-		<span class="screen-reader-text"><?php echo esc_html( $title ); ?></span>
+		<?php if ( have_posts() ) : ?>
+			<?php
+			while ( have_posts() ) :
+				the_post();
+				$content = trim( (string) get_the_content() );
+				if ( '' !== $content ) :
+					?>
+					<div class="snf-page__plugin-content snf-page__plugin-content--<?php echo esc_attr( $slug ); ?>">
+						<?php the_content(); ?>
+					</div>
+				<?php else : ?>
+					<span class="screen-reader-text"><?php echo esc_html( $title ); ?></span>
+				<?php endif; ?>
+			<?php endwhile; ?>
+		<?php else : ?>
+			<span class="screen-reader-text"><?php echo esc_html( $title ); ?></span>
+		<?php endif; ?>
 	</div>
 </main>
 <?php
