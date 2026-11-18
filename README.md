@@ -216,6 +216,13 @@ Theme-owned media stack (`inc/media-library.php`):
 
 After deploy, visit **Settings → Permalinks** and Save once so media rewrite rules flush.
 
+### Video Newsletter
+
+`/newsletter/` is a dedicated landing (`templates/newsletter.html` → `page-templates/newsletter.php`) with a working subscribe form and a "Latest videos" grid from the `snf_video` library. YouTube fallback: `https://www.youtube.com/@williamslist`.
+
+- Signups are stored in WP Admin → **SNF Club → Newsletter Subscribers** (`snf_subscriber` CPT) and emailed to the site admin. Override the notify address with the `snf_newsletter_notify_email` filter; override the channel with `snf_newsletter_youtube_url`.
+- The form uses a nonce, a honeypot, and duplicate-email detection. Published videos appear automatically; if none exist, the page links to the YouTube channel.
+
 ### Auto-managed pages
 
 On `init`, the theme creates/updates: Home, About, Apply, Under Consideration, Member Login, Messages, Billing Details, Select Events (members/non-members), Expo (`/expo/`), Videos & Audio hub, service inquiry landings, and the Reciprocal hub. Reciprocal clubs themselves are WooCommerce products.
