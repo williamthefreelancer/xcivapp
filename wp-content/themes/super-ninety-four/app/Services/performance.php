@@ -41,7 +41,7 @@ function snf_needs_woocommerce_assets() {
 		return true;
 	}
 
-	if ( is_page_template( 'page-templates/select-events.php' )
+	if ( snf_is_page_template( 'page-templates/select-events.php' )
 		|| is_page( 'select-events-by-members' )
 		|| is_page( 'select-events-by-non-members' )
 	) {
@@ -87,7 +87,7 @@ function snf_needs_marketplace_assets() {
 		|| ( function_exists( 'is_shop' ) && is_shop() )
 		|| ( function_exists( 'is_product_taxonomy' ) && is_product_taxonomy() )
 		|| is_post_type_archive( 'event' )
-		|| is_page_template( 'page-templates/select-events.php' )
+		|| snf_is_page_template( 'page-templates/select-events.php' )
 		|| is_page( 'select-events-by-members' )
 		|| is_page( 'select-events-by-non-members' );
 

@@ -1,6 +1,10 @@
 <?php
 /**
  * Club roles + Content Control sync for Super Ninety Four.
+ *
+ * Hook contract:
+ * - Listen: init / admin_init for role + Content Control sync.
+ * - Emit/filter: snf_protected_page_slugs, snf_protected_page_templates, snf_user_can_access_member_areas.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -95,6 +99,9 @@ function snf_get_protected_page_slugs() {
  */
 function snf_get_protected_page_templates() {
 	$templates = array(
+		'messages',
+		'billing-details',
+		'woocommerce-account',
 		'page-templates/messages.php',
 		'page-templates/billing-details.php',
 		'page-templates/woocommerce-account.php',
@@ -177,23 +184,32 @@ function snf_resolve_page_ids( $slugs, $include_bp_pages = false ) {
 
 /**
  * Whether the current user may access member/account pages.
+ *
+ * @return bool
  */
 function snf_user_can_access_member_areas() {
-	if ( ! is_user_logged_in() ) {
-		return false;
-	}
+	$allowed = false;
 
-	if ( current_user_can( 'manage_options' ) ) {
-		return true;
-	}
-
-	foreach ( snf_get_member_access_roles() as $role ) {
-		if ( current_user_can( $role ) ) {
-			return true;
+	if ( is_user_logged_in() ) {
+		if ( current_user_can( 'manage_options' ) ) {
+			$allowed = true;
+		} else {
+			foreach ( snf_get_member_access_roles() as $role ) {
+				if ( current_user_can( $role ) ) {
+					$allowed = true;
+					break;
+				}
+			}
 		}
 	}
 
-	return false;
+	/**
+	 * Filter member-area access for the current user.
+	 *
+	 * @param bool $allowed Whether access is allowed.
+	 * @param int  $user_id Current user ID.
+	 */
+	return (bool) apply_filters( 'snf_user_can_access_member_areas', $allowed, get_current_user_id() );
 }
 
 /**

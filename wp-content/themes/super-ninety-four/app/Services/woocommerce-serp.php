@@ -40,7 +40,7 @@ function snf_woocommerce_ensure_account_template() {
 		return;
 	}
 
-	$desired = 'page-templates/woocommerce-account.php';
+	$desired = 'woocommerce-account';
 	if ( get_page_template_slug( $page_id ) !== $desired ) {
 		update_post_meta( $page_id, '_wp_page_template', $desired );
 	}

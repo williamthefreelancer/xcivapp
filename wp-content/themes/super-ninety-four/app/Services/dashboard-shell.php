@@ -186,7 +186,7 @@ function snf_get_account_nav_current_slug() {
 		}
 	}
 
-	if ( is_page( 'apply' ) || is_page_template( 'page-templates/apply.php' ) ) {
+	if ( is_page( 'apply' ) || snf_is_page_template( 'page-templates/apply.php' ) ) {
 		return 'apply';
 	}
 
@@ -359,7 +359,7 @@ function snf_redirect_obsolete_account_hubs() {
 	}
 
 	// Legacy Community Dashboard page → My Account home.
-	if ( is_page( 'dashboard' ) || is_page_template( 'page-templates/dashboard.php' ) ) {
+	if ( is_page( 'dashboard' ) || snf_is_page_template( 'page-templates/dashboard.php' ) ) {
 		$target = snf_get_dashboard_url();
 		if ( $target ) {
 			wp_safe_redirect( $target, 301 );

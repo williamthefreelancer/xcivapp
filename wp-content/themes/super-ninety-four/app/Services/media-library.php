@@ -1632,7 +1632,7 @@ function snf_get_media_js_bootstrap() {
  */
 function snf_is_media_library_request() {
 	return is_page( 'videos-audio' )
-		|| is_page_template( 'page-templates/videos-audio.php' )
+		|| snf_is_page_template( 'page-templates/videos-audio.php' )
 		|| is_singular( array( 'snf_video', 'snf_audio' ) )
 		|| is_post_type_archive( array( 'snf_video', 'snf_audio' ) )
 		|| is_tax( array( 'snf_media_topic', 'snf_media_series', 'snf_audio_channel', 'snf_broadcast_format' ) );

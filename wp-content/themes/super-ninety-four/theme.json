@@ -77,5 +77,99 @@
         }
       }
     }
-  }
+  },
+  "templateParts": [
+    {
+      "name": "header",
+      "title": "Header",
+      "area": "header"
+    },
+    {
+      "name": "footer",
+      "title": "Footer",
+      "area": "footer"
+    }
+  ],
+  "customTemplates": [
+    {
+      "name": "apply-hub",
+      "title": "Apply Hub",
+      "postTypes": ["page"]
+    },
+    {
+      "name": "about",
+      "title": "About",
+      "postTypes": ["page"]
+    },
+    {
+      "name": "billing-details",
+      "title": "Billing Details Hub",
+      "postTypes": ["page"]
+    },
+    {
+      "name": "blank-canvas",
+      "title": "Blank Canvas",
+      "postTypes": ["page"]
+    },
+    {
+      "name": "expo-marketplace",
+      "title": "Expo Marketplace",
+      "postTypes": ["page"]
+    },
+    {
+      "name": "home-page",
+      "title": "Home",
+      "postTypes": ["page"]
+    },
+    {
+      "name": "legal",
+      "title": "Legal",
+      "postTypes": ["page"]
+    },
+    {
+      "name": "member-login",
+      "title": "Member Login Hub",
+      "postTypes": ["page"]
+    },
+    {
+      "name": "messages",
+      "title": "Messages Hub",
+      "postTypes": ["page"]
+    },
+    {
+      "name": "public-content",
+      "title": "Public Content",
+      "postTypes": ["page"]
+    },
+    {
+      "name": "reciprocal-club",
+      "title": "Reciprocal Club",
+      "postTypes": ["page"]
+    },
+    {
+      "name": "reciprocal-hub",
+      "title": "Reciprocal Hub",
+      "postTypes": ["page"]
+    },
+    {
+      "name": "select-events",
+      "title": "Select Events Listings",
+      "postTypes": ["page"]
+    },
+    {
+      "name": "under-consideration",
+      "title": "Under Consideration",
+      "postTypes": ["page"]
+    },
+    {
+      "name": "videos-audio",
+      "title": "Videos & Audio",
+      "postTypes": ["page"]
+    },
+    {
+      "name": "woocommerce-account",
+      "title": "WooCommerce Account Shell",
+      "postTypes": ["page"]
+    }
+  ]
 }

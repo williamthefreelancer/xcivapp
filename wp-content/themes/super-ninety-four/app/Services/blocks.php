@@ -15,7 +15,15 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return string[]
  */
 function snf_get_theme_block_slugs() {
-	return array( 'page-hero', 'cta-button', 'listing-grid', 'form-slot' );
+	return array(
+		'page-hero',
+		'cta-button',
+		'listing-grid',
+		'form-slot',
+		'site-header',
+		'site-footer',
+		'php-view',
+	);
 }
 
 /**
@@ -253,4 +261,40 @@ function snf_render_block_form_slot( $attrs, $content = '' ) {
 	</section>
 	<?php
 	return (string) ob_get_clean();
+}
+
+/**
+ * Render snf/site-header.
+ *
+ * @return string
+ */
+function snf_render_block_site_header() {
+	ob_start();
+	get_template_part( 'template-parts/site', 'header' );
+	return (string) ob_get_clean();
+}
+
+/**
+ * Render snf/site-footer.
+ *
+ * @return string
+ */
+function snf_render_block_site_footer() {
+	ob_start();
+	get_template_part( 'template-parts/site', 'footer' );
+	return (string) ob_get_clean();
+}
+
+/**
+ * Render snf/php-view — embeds a legacy PHP template without document chrome.
+ *
+ * @param array<string, mixed> $attrs Attributes.
+ * @return string
+ */
+function snf_render_block_php_view( $attrs ) {
+	$slug = isset( $attrs['view'] ) ? sanitize_title( (string) $attrs['view'] ) : '';
+	if ( ! $slug || ! function_exists( 'snf_fse_render_php_view' ) ) {
+		return '';
+	}
+	return snf_fse_render_php_view( $slug );
 }

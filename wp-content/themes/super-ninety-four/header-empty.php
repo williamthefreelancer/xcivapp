@@ -1,3 +1,18 @@
+<?php
+/**
+ * Minimal document open (no site header chrome).
+ *
+ * @package Super_Ninety_Four
+ */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+if ( ! empty( $GLOBALS['snf_fse_embed'] ) ) {
+	return;
+}
+?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
 <head>

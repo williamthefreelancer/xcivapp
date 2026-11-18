@@ -1,0 +1,19 @@
+{
+  "apiVersion": 3,
+  "name": "snf/php-view",
+  "title": "SNF PHP View",
+  "category": "snf",
+  "icon": "shortcode",
+  "description": "Embeds a legacy PHP theme template (without document chrome) inside a block template.",
+  "textdomain": "super-ninety-four",
+  "attributes": {
+    "view": {
+      "type": "string",
+      "default": "page"
+    }
+  },
+  "supports": {
+    "html": false,
+    "align": ["wide", "full"]
+  }
+}

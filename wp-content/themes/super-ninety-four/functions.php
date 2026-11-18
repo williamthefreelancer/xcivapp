@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'SNF_VERSION', '2.28.1' );
+define( 'SNF_VERSION', '2.30.0' );
 
 $snf_autoload = get_template_directory() . '/vendor/autoload.php';
 if ( file_exists( $snf_autoload ) ) {
@@ -80,75 +80,75 @@ function snf_get_site_pages() {
 	return array(
 		'home' => array(
 			'title'    => 'Home',
-			'template' => 'page-templates/home.php',
+			'template' => 'home-page',
 		),
 		'about' => array(
 			'title'    => 'About',
-			'template' => 'page-templates/about.php',
+			'template' => 'about',
 		),
 		'inquiries' => array(
 			'title'    => 'Service Inquiries',
-			'template' => 'page-templates/public-content.php',
+			'template' => 'public-content',
 		),
 		'videos-audio' => array(
 			'title'    => 'Videos & Audio',
-			'template' => 'page-templates/videos-audio.php',
+			'template' => 'videos-audio',
 		),
 		'contact' => array(
 			'title'    => 'Contact',
-			'template' => 'page-templates/blank-canvas.php',
+			'template' => 'blank-canvas',
 		),
 		'newsletter' => array(
 			'title'    => 'Newsletter',
-			'template' => 'page-templates/blank-canvas.php',
+			'template' => 'blank-canvas',
 		),
 		'find-other-reciprocal-programs' => array(
 			'title'    => 'Find Other Reciprocal Programs',
-			'template' => 'page-templates/reciprocal-hub.php',
+			'template' => 'reciprocal-hub',
 		),
 		'messages' => array(
 			'title'    => 'Messages',
-			'template' => 'page-templates/messages.php',
+			'template' => 'messages',
 		),
 		'billing-details' => array(
 			'title'    => 'Billing Details',
-			'template' => 'page-templates/billing-details.php',
+			'template' => 'billing-details',
 		),
 		'member-login' => array(
 			'title'    => 'Member Login',
-			'template' => 'page-templates/member-login.php',
+			'template' => 'member-login',
 		),
 		'apply' => array(
 			'title'    => 'Apply',
-			'template' => 'page-templates/apply.php',
+			'template' => 'apply-hub',
 		),
 		'under-consideration' => array(
 			'title'    => 'Under Consideration',
-			'template' => 'page-templates/under-consideration.php',
+			'template' => 'under-consideration',
 		),
 		'select-events-by-members' => array(
 			'title'    => 'Select Events (Members)',
-			'template' => 'page-templates/select-events.php',
+			'template' => 'select-events',
 		),
 		'select-events-by-non-members' => array(
 			'title'    => 'Select Events (Non-Members)',
-			'template' => 'page-templates/select-events.php',
+			'template' => 'select-events',
 		),
 		'expo' => array(
 			'title'    => 'Expo',
-			'template' => 'page-templates/expo-marketplace.php',
+			'template' => 'expo-marketplace',
 		),
 		'privacy-policy' => array(
 			'title'    => 'Privacy Policy',
-			'template' => 'page-templates/legal.php',
+			'template' => 'legal',
 		),
 		'terms-of-service' => array(
 			'title'    => 'Terms of Service',
-			'template' => 'page-templates/legal.php',
+			'template' => 'legal',
 		),
 		'cookie-policy' => array(
 			'title'    => 'Cookie Policy',
-			'template' => 'page-templates/legal.php',
+			'template' => 'legal',
 		),
 	);
 }
@@ -252,7 +252,7 @@ function snf_ensure_legal_page_content() {
 
 	$refund = get_page_by_path( 'refund_returns' );
 	if ( $refund ) {
-		update_post_meta( (int) $refund->ID, '_wp_page_template', 'page-templates/legal.php' );
+		update_post_meta( (int) $refund->ID, '_wp_page_template', 'legal' );
 	}
 }
 
@@ -1489,74 +1489,21 @@ function snf_get_event_action_label( $post_id = null ) {
 }
 
 /**
- * Handle Lifestyle Concierge workshop seat reservations.
+ * Deprecated: legacy workshop reservation admin-post.
+ *
+ * Paid workshop flow is WooCommerce add-to-cart on the workshop product.
+ * Redirects to the product landing; does not create snf_reservation posts.
  */
 function snf_handle_workshop_reserve() {
-	if ( ! isset( $_POST['snf_workshop_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['snf_workshop_nonce'] ) ), 'snf_workshop_reserve' ) ) {
-		wp_safe_redirect( add_query_arg( 'reserved', '0', wp_get_referer() ? wp_get_referer() : home_url( '/' ) ) );
-		exit;
+	if ( function_exists( '_deprecated_function' ) ) {
+		_deprecated_function( __FUNCTION__, '2.29.0', 'WooCommerce add-to-cart on the workshop product' );
 	}
 
-	$event_id  = isset( $_POST['event_id'] ) ? absint( $_POST['event_id'] ) : 0;
-	$full_name = isset( $_POST['full_name'] ) ? sanitize_text_field( wp_unslash( $_POST['full_name'] ) ) : '';
-	$email     = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
-	$phone     = isset( $_POST['phone'] ) ? sanitize_text_field( wp_unslash( $_POST['phone'] ) ) : '';
-	$firm      = isset( $_POST['firm'] ) ? sanitize_text_field( wp_unslash( $_POST['firm'] ) ) : '';
+	$redirect = function_exists( 'snf_get_workshop_landing_url' )
+		? snf_get_workshop_landing_url()
+		: home_url( '/' );
 
-	$redirect = $event_id ? get_permalink( $event_id ) : home_url( '/' );
-
-	if ( ! $full_name || ! is_email( $email ) || ! $phone ) {
-		wp_safe_redirect( add_query_arg( 'reserved', '0', $redirect ) );
-		exit;
-	}
-
-	$event_title = $event_id ? get_the_title( $event_id ) : 'The Lifestyle Concierge Club Workshop';
-	$content     = "Name: {$full_name}\nEmail: {$email}\nPhone: {$phone}\nFirm: {$firm}\nEvent: {$event_title}";
-
-	$reservation_id = wp_insert_post(
-		array(
-			'post_type'    => 'snf_reservation',
-			'post_status'  => 'private',
-			'post_title'   => sprintf( 'Workshop seat — %s', $full_name ),
-			'post_content' => $content,
-		),
-		true
-	);
-
-	if ( is_wp_error( $reservation_id ) ) {
-		wp_safe_redirect( add_query_arg( 'reserved', '0', $redirect ) );
-		exit;
-	}
-
-	update_post_meta( $reservation_id, 'snf_event_id', $event_id );
-	update_post_meta( $reservation_id, 'snf_email', $email );
-	update_post_meta( $reservation_id, 'snf_phone', $phone );
-	update_post_meta( $reservation_id, 'snf_firm', $firm );
-
-	if ( function_exists( 'snf_fire_workshop_reservation_created' ) ) {
-		snf_fire_workshop_reservation_created(
-			(int) $reservation_id,
-			$event_id,
-			$email,
-			array(
-				'full_name' => $full_name,
-				'phone'     => $phone,
-				'firm'      => $firm,
-				'event'     => $event_title,
-			)
-		);
-	}
-
-	$admin_email = get_option( 'admin_email' );
-	if ( $admin_email ) {
-		wp_mail(
-			$admin_email,
-			sprintf( '[SNF] Workshop reservation — %s', $full_name ),
-			$content
-		);
-	}
-
-	wp_safe_redirect( add_query_arg( 'reserved', '1', $redirect ) . '#snf-workshop-reserve' );
+	wp_safe_redirect( add_query_arg( 'snf_workshop_legacy', '1', $redirect ) );
 	exit;
 }
 add_action( 'admin_post_nopriv_snf_workshop_reserve', 'snf_handle_workshop_reserve' );

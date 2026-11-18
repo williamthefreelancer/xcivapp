@@ -19,6 +19,7 @@ final class Bootstrap {
 	 */
 	private static $services = array(
 		'account-hub.php',
+		'fse.php',
 		'blocks.php',
 		'memberships.php',
 		'dashboard-shell.php',
@@ -49,6 +50,9 @@ final class Bootstrap {
 	 * Boot theme services and assets.
 	 */
 	public static function init(): void {
+		// Ensure shared Support helpers resolve before procedural services.
+		class_exists( Scheduling::class );
+
 		$services_dir = get_template_directory() . '/app/Services/';
 		foreach ( self::$services as $file ) {
 			$path = $services_dir . $file;

@@ -261,7 +261,7 @@ function snf_is_sureforms_host_page() {
 			return true;
 		}
 	}
-	return is_page_template( 'page-templates/blank-canvas.php' );
+	return snf_is_page_template( 'page-templates/blank-canvas.php' );
 }
 
 /**

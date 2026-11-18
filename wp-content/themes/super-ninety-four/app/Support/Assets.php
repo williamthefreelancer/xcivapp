@@ -146,7 +146,7 @@ final class Assets {
 		);
 		$is_hub        = false;
 		foreach ( $hub_templates as $hub_template ) {
-			if ( is_page_template( $hub_template ) ) {
+			if ( snf_is_page_template( $hub_template ) ) {
 				$is_hub = true;
 				break;
 			}
@@ -169,7 +169,7 @@ final class Assets {
 			);
 		}
 
-		$is_messages = is_page_template( 'page-templates/messages.php' ) || is_page( 'messages' );
+		$is_messages = snf_is_page_template( 'page-templates/messages.php' ) || is_page( 'messages' );
 		if ( $is_messages && function_exists( 'snf_messages_get_bootstrap' ) ) {
 			wp_localize_script( 'snf-main', 'snfMessages', snf_messages_get_bootstrap() );
 		}
@@ -205,9 +205,9 @@ final class Assets {
 			)
 		);
 
-		$uses_dashboard_script = is_page_template( 'page-templates/woocommerce-account.php' )
-			|| is_page_template( 'page-templates/select-events.php' )
-			|| is_page_template( 'page-templates/expo-marketplace.php' )
+		$uses_dashboard_script = snf_is_page_template( 'page-templates/woocommerce-account.php' )
+			|| snf_is_page_template( 'page-templates/select-events.php' )
+			|| snf_is_page_template( 'page-templates/expo-marketplace.php' )
 			|| is_page( 'select-events-by-members' )
 			|| is_page( 'select-events-by-non-members' )
 			|| is_page( 'expo' )
@@ -278,7 +278,7 @@ final class Assets {
 		);
 		$is_hub        = false;
 		foreach ( $hub_templates as $hub_template ) {
-			if ( is_page_template( $hub_template ) ) {
+			if ( snf_is_page_template( $hub_template ) ) {
 				$is_hub = true;
 				break;
 			}
@@ -305,7 +305,7 @@ final class Assets {
 			}
 		}
 
-		if ( is_page_template( 'page-templates/messages.php' ) || is_page( 'messages' ) ) {
+		if ( snf_is_page_template( 'page-templates/messages.php' ) || is_page( 'messages' ) ) {
 			wp_enqueue_script(
 				'snf-messages',
 				$theme_uri . '/assets/js/messages.js',

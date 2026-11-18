@@ -23,7 +23,7 @@ function snf_is_expo_members_audience() {
  */
 function snf_is_expo_marketplace_page() {
 	return is_page( 'expo' )
-		|| is_page_template( 'page-templates/expo-marketplace.php' );
+		|| snf_is_page_template( 'page-templates/expo-marketplace.php' );
 }
 
 /**

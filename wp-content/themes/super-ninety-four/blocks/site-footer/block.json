@@ -1,0 +1,14 @@
+{
+  "apiVersion": 3,
+  "name": "snf/site-footer",
+  "title": "SNF Site Footer",
+  "category": "snf",
+  "icon": "editor-insertmore",
+  "description": "Legal links and brand footer for Super Ninety Four.",
+  "textdomain": "super-ninety-four",
+  "supports": {
+    "html": false,
+    "multiple": false,
+    "reusable": false
+  }
+}
