@@ -375,35 +375,53 @@ function snf_get_event_single_data( $post = null ) {
 	$rendered    = $content ? apply_filters( 'the_content', $content ) : '';
 	$logo        = snf_get_event_brand_logo( $slug );
 	$logo_url    = get_template_directory_uri() . '/assets/icons/' . ltrim( (string) $logo['file'], '/' );
+	$commerce    = function_exists( 'snf_get_ticket_commerce_payload' )
+		? snf_get_ticket_commerce_payload( $post )
+		: array();
+	$product_id   = ! empty( $commerce['product_id'] )
+		? (int) $commerce['product_id']
+		: ( $is_product ? $post_id : 0 );
+	$wc_product   = ( $product_id && function_exists( 'wc_get_product' ) )
+		? wc_get_product( $product_id )
+		: null;
+	$can_purchase = $product_id
+		&& ! empty( $commerce['enabled'] )
+		&& $wc_product
+		&& $wc_product->is_purchasable();
 
 	return array(
-		'id'           => $post_id,
-		'slug'         => $slug,
-		'title'        => get_the_title( $post ),
-		'category'     => $category,
-		'location'     => $location,
-		'timing'       => $timing,
-		'organizer'    => $organizer,
-		'price'        => $price,
-		'description'  => $description,
-		'content'      => $rendered,
-		'image'        => $image,
-		'video'        => $video,
-		'broadcast'    => $broadcast,
-		'logo'         => array(
+		'id'            => $post_id,
+		'slug'          => $slug,
+		'title'         => get_the_title( $post ),
+		'category'      => $category,
+		'location'      => $location,
+		'timing'        => $timing,
+		'organizer'     => $organizer,
+		'price'         => $price,
+		'description'   => $description,
+		'content'       => $rendered,
+		'image'         => $image,
+		'video'         => $video,
+		'broadcast'     => $broadcast,
+		'logo'          => array(
 			'url'     => $logo_url,
 			'width'   => (int) $logo['width'],
 			'height'  => (int) $logo['height'],
 			'variant' => (string) $logo['variant'],
 		),
-		'countdown'    => snf_event_countdown_parts( $starts_at ),
-		'action_url'   => snf_get_event_action_url( $post_id ),
-		'action_label' => snf_get_event_action_label( $post_id ),
-		'is_workshop'  => $is_workshop,
-		'audience'     => $audience,
-		'member'       => $member,
-		'plans'        => $plans,
-		'apply_url'    => function_exists( 'snf_get_page_url' ) ? snf_get_page_url( 'apply' ) : home_url( '/apply/' ),
-		'figma_node'   => snf_get_event_figma_node( $slug ),
+		'countdown'     => snf_event_countdown_parts( $starts_at ),
+		'action_url'    => snf_get_event_action_url( $post_id ),
+		'action_label'  => snf_get_event_action_label( $post_id ),
+		'is_workshop'   => $is_workshop,
+		'audience'      => $audience,
+		'member'        => $member,
+		'plans'         => $plans,
+		'apply_url'     => function_exists( 'snf_get_page_url' ) ? snf_get_page_url( 'apply' ) : home_url( '/apply/' ),
+		'figma_node'    => snf_get_event_figma_node( $slug ),
+		'ticket'        => $commerce,
+		'product_id'    => $product_id,
+		'can_purchase'  => (bool) $can_purchase,
+		'cart_url'      => function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : home_url( '/cart/' ),
+		'permalink'     => get_permalink( $product_id ? $product_id : $post_id ),
 	);
 }

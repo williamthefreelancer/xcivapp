@@ -1,5 +1,7 @@
+import { initTicketCommerce } from "../lib/ticket-commerce.js";
+
 export function initEventSingle() {
-const root = document.querySelector(".snf-event");
+  const root = document.querySelector(".snf-event");
   if (!root) return;
 
   // Countdown
@@ -35,10 +37,13 @@ const root = document.querySelector(".snf-event");
     }
   }
 
+  initTicketCommerce(root);
+
   // Multi-step admissions
   const form = root.querySelector("[data-snf-event-steps]");
   if (!form) return;
 
+  const canPurchase = form.getAttribute("data-ticket-purchase") === "1";
   const tabs = [...form.querySelectorAll(".snf-event__step-tab")];
   const panels = [...form.querySelectorAll("[data-step-panel]")];
   const statusEl = form.querySelector("[data-snf-form-status]");
@@ -79,7 +84,11 @@ const root = document.querySelector(".snf-event");
     const panel = form.querySelector(`[data-step-panel="${step}"]`);
     if (!panel) return [];
     return [...panel.querySelectorAll("input, select, textarea")].filter(
-      (el) => el.type !== "hidden" && !el.disabled
+      (el) =>
+        el.type !== "hidden" &&
+        !el.disabled &&
+        !el.closest("[hidden]") &&
+        !el.closest(".is-locked")
     );
   };
 
@@ -123,12 +132,26 @@ const root = document.querySelector(".snf-event");
   });
 
   form.addEventListener("submit", (event) => {
-    event.preventDefault();
     for (let step = 1; step <= maxStep; step += 1) {
       if (!validateStep(step)) {
+        event.preventDefault();
         showStep(step);
         return;
       }
+    }
+
+    // WooCommerce ticket purchase — allow native POST / add-to-cart.
+    if (canPurchase) {
+      showStatus("Adding tickets to your cart…");
+      return;
+    }
+
+    // Non-purchase admissions path (legacy soft submit).
+    event.preventDefault();
+    const applyLink = form.querySelector("[data-snf-apply-redirect]");
+    if (applyLink?.href) {
+      window.location.href = applyLink.href;
+      return;
     }
 
     showStatus("Admissions request received. The desk will follow up shortly.");

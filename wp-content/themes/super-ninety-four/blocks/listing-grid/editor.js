@@ -12,6 +12,9 @@
     { label: __("Member events", "super-ninety-four"), value: "member-events" },
     { label: __("Non-member events (workshop)", "super-ninety-four"), value: "non-member-events" },
     { label: __("Reciprocal programs", "super-ninety-four"), value: "reciprocal" },
+    { label: __("Expo scenic drives", "super-ninety-four"), value: "expo-scenic-drives" },
+    { label: __("Expo gatherings", "super-ninety-four"), value: "expo-gatherings" },
+    { label: __("Expo live & hybrid", "super-ninety-four"), value: "expo-live" },
   ];
 
   registerBlockType("snf/listing-grid", {

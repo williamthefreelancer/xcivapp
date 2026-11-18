@@ -38,12 +38,24 @@ $logo_url     = ! empty( $logo['url'] )
 $logo_width   = ! empty( $logo['width'] ) ? (int) $logo['width'] : 28;
 $logo_height  = ! empty( $logo['height'] ) ? (int) $logo['height'] : 42;
 $logo_variant = ( ! empty( $logo['variant'] ) && 'wordmark' === $logo['variant'] ) ? 'wordmark' : 'icon';
+$commerce     = isset( $event['ticket'] ) && is_array( $event['ticket'] ) ? $event['ticket'] : array();
+$can_purchase = ! empty( $event['can_purchase'] );
+$product_id   = ! empty( $event['product_id'] ) ? (int) $event['product_id'] : 0;
+$form_action  = '#';
+$form_class   = 'snf-event__steps';
+if ( $can_purchase && $is_member && $product_id ) {
+	$form_action = ! empty( $event['permalink'] )
+		? (string) $event['permalink']
+		: get_permalink( $product_id );
+	$form_class .= ' cart';
+}
 ?>
 <main
 	class="snf-page snf-event"
 	data-figma-ready="true"
 	data-figma-node="<?php echo esc_attr( $figma_node ); ?>"
 	data-admission-audience="<?php echo esc_attr( $audience ); ?>"
+	data-ticket-purchase="<?php echo $can_purchase && $is_member ? '1' : '0'; ?>"
 >
 	<section class="snf-event__shell snf-container" aria-label="<?php echo esc_attr( $event['title'] ); ?>">
 		<article class="snf-event__frame">
@@ -140,18 +152,30 @@ $logo_variant = ( ! empty( $logo['variant'] ) && 'wordmark' === $logo['variant']
 				</div>
 
 				<aside class="snf-event__apply" aria-label="<?php esc_attr_e( 'Event admissions', 'super-ninety-four' ); ?>">
-					<h2 class="snf-event__apply-title"><?php esc_html_e( 'Apply to attend this upcoming event', 'super-ninety-four' ); ?></h2>
+					<h2 class="snf-event__apply-title">
+						<?php
+						echo $can_purchase && $is_member
+							? esc_html__( 'Reserve tickets for this event', 'super-ninety-four' )
+							: esc_html__( 'Apply to attend this upcoming event', 'super-ninety-four' );
+						?>
+					</h2>
 
 					<form
-						class="snf-event__steps"
+						class="<?php echo esc_attr( $form_class ); ?>"
 						data-snf-event-steps
 						data-admission-audience="<?php echo esc_attr( $audience ); ?>"
-						action="#"
+						data-ticket-purchase="<?php echo $can_purchase && $is_member ? '1' : '0'; ?>"
+						action="<?php echo esc_url( $form_action ); ?>"
 						method="post"
+						enctype="multipart/form-data"
 						novalidate
 					>
 						<input type="hidden" name="snf_event_id" value="<?php echo esc_attr( (string) ( $event['id'] ?? '' ) ); ?>">
 						<input type="hidden" name="snf_event_audience" value="<?php echo esc_attr( $audience ); ?>">
+						<?php if ( $can_purchase && $is_member && $product_id ) : ?>
+							<input type="hidden" name="add-to-cart" value="<?php echo esc_attr( (string) $product_id ); ?>">
+							<input type="hidden" name="quantity" value="1">
+						<?php endif; ?>
 
 						<?php if ( $is_member ) : ?>
 							<div class="snf-event__step-tabs" role="tablist" aria-label="<?php esc_attr_e( 'Member admissions steps', 'super-ninety-four' ); ?>">
@@ -164,6 +188,11 @@ $logo_variant = ( ! empty( $logo['variant'] ) && 'wordmark' === $logo['variant']
 								<button type="button" class="snf-event__step-tab" role="tab" aria-selected="false" data-step="3">
 									<?php esc_html_e( 'Intent', 'super-ninety-four' ); ?>
 								</button>
+								<?php if ( $can_purchase && ! empty( $commerce['enabled'] ) ) : ?>
+									<button type="button" class="snf-event__step-tab" role="tab" aria-selected="false" data-step="4">
+										<?php esc_html_e( 'Tickets', 'super-ninety-four' ); ?>
+									</button>
+								<?php endif; ?>
 							</div>
 
 							<div class="snf-event__step-panel is-active" data-step-panel="1" role="tabpanel">
@@ -236,11 +265,46 @@ $logo_variant = ( ! empty( $logo['variant'] ) && 'wordmark' === $logo['variant']
 									<button type="button" class="snf-event__step-back" data-snf-prev-step>
 										<?php esc_html_e( 'Back', 'super-ninety-four' ); ?>
 									</button>
-									<button type="submit" class="snf-event__cta" id="snf-event-cta">
-										<?php esc_html_e( 'Submit admissions request', 'super-ninety-four' ); ?>
-									</button>
+									<?php if ( $can_purchase && ! empty( $commerce['enabled'] ) ) : ?>
+										<button type="button" class="snf-event__step-next" data-snf-next-step>
+											<?php esc_html_e( 'Continue to tickets', 'super-ninety-four' ); ?>
+										</button>
+									<?php else : ?>
+										<button type="submit" class="snf-event__cta" id="snf-event-cta">
+											<?php esc_html_e( 'Submit admissions request', 'super-ninety-four' ); ?>
+										</button>
+									<?php endif; ?>
 								</div>
 							</div>
+
+							<?php if ( $can_purchase && ! empty( $commerce['enabled'] ) ) : ?>
+								<div class="snf-event__step-panel" data-step-panel="4" role="tabpanel" hidden>
+									<p class="snf-event__step-copy"><?php esc_html_e( 'Step 4 — Tickets. Select your tier, add-ons, upsells, and immerse interactivities.', 'super-ninety-four' ); ?></p>
+									<?php
+									get_template_part(
+										'template-parts/ticket',
+										'commerce-fields',
+										array(
+											'commerce' => $commerce,
+											'context'  => 'event',
+										)
+									);
+									?>
+									<div class="snf-event__step-actions">
+										<button type="button" class="snf-event__step-back" data-snf-prev-step>
+											<?php esc_html_e( 'Back', 'super-ninety-four' ); ?>
+										</button>
+										<button type="submit" class="snf-event__cta single_add_to_cart_button" id="snf-event-cta" name="add-to-cart" value="<?php echo esc_attr( (string) $product_id ); ?>">
+											<?php esc_html_e( 'Add tickets to cart', 'super-ninety-four' ); ?>
+										</button>
+									</div>
+									<?php if ( ! empty( $event['cart_url'] ) ) : ?>
+										<p class="snf-event__cart-note">
+											<a href="<?php echo esc_url( (string) $event['cart_url'] ); ?>"><?php esc_html_e( 'View cart', 'super-ninety-four' ); ?></a>
+										</p>
+									<?php endif; ?>
+								</div>
+							<?php endif; ?>
 						<?php else : ?>
 							<div class="snf-event__step-tabs" role="tablist" aria-label="<?php esc_attr_e( 'Non-member admissions steps', 'super-ninety-four' ); ?>">
 								<button type="button" class="snf-event__step-tab is-active" role="tab" aria-selected="true" data-step="1">
@@ -287,6 +351,24 @@ $logo_variant = ( ! empty( $logo['variant'] ) && 'wordmark' === $logo['variant']
 										?>
 									</p>
 								<?php endif; ?>
+								<?php if ( ! empty( $commerce['enabled'] ) ) : ?>
+									<div class="snf-event__ticket-preview">
+										<?php
+										get_template_part(
+											'template-parts/ticket',
+											'commerce-fields',
+											array(
+												'commerce'      => $commerce,
+												'context'       => 'event',
+												'show_heading'  => true,
+											)
+										);
+										?>
+										<p class="snf-event__step-meta">
+											<?php esc_html_e( 'Ticket options unlock after membership is approved. Your selections below are saved with the application.', 'super-ninety-four' ); ?>
+										</p>
+									</div>
+								<?php endif; ?>
 								<fieldset class="snf-event__plans">
 									<legend class="snf-event__field-label"><?php esc_html_e( 'Membership plan', 'super-ninety-four' ); ?></legend>
 									<?php foreach ( $plan_list as $index => $plan ) : ?>
@@ -321,9 +403,20 @@ $logo_variant = ( ! empty( $logo['variant'] ) && 'wordmark' === $logo['variant']
 									<button type="button" class="snf-event__step-back" data-snf-prev-step>
 										<?php esc_html_e( 'Back', 'super-ninety-four' ); ?>
 									</button>
-									<button type="submit" class="snf-event__cta" id="snf-event-cta">
-										<?php esc_html_e( 'Submit admissions request', 'super-ninety-four' ); ?>
-									</button>
+									<?php if ( ! empty( $event['apply_url'] ) ) : ?>
+										<a
+											class="snf-event__cta"
+											id="snf-event-cta"
+											href="<?php echo esc_url( add_query_arg( 'snf_event', (string) ( $event['id'] ?? '' ), (string) $event['apply_url'] ) ); ?>"
+											data-snf-apply-redirect
+										>
+											<?php esc_html_e( 'Continue to membership apply', 'super-ninety-four' ); ?>
+										</a>
+									<?php else : ?>
+										<button type="submit" class="snf-event__cta" id="snf-event-cta">
+											<?php esc_html_e( 'Submit admissions request', 'super-ninety-four' ); ?>
+										</button>
+									<?php endif; ?>
 								</div>
 							</div>
 						<?php endif; ?>

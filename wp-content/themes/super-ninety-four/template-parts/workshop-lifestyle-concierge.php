@@ -43,6 +43,9 @@ if ( ! $starts_at ) {
 }
 
 $countdown     = function_exists( 'snf_event_countdown_parts' ) ? snf_event_countdown_parts( $starts_at ) : array();
+$commerce      = ( $event_id && function_exists( 'snf_get_ticket_commerce_payload' ) )
+	? snf_get_ticket_commerce_payload( $event_id )
+	: array();
 $date_display  = __( 'Tuesday, January 5th @ 11:00 AM EST', 'super-ninety-four' );
 $tz            = wp_timezone();
 $starts_dt     = date_create( $starts_at, $tz );
@@ -292,6 +295,18 @@ $cart_url = function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : home_url(
 							>
 						</label>
 					</div>
+					<?php if ( ! empty( $commerce['enabled'] ) ) : ?>
+						<?php
+						get_template_part(
+							'template-parts/ticket',
+							'commerce-fields',
+							array(
+								'commerce' => $commerce,
+								'context'  => 'workshop',
+							)
+						);
+						?>
+					<?php endif; ?>
 					<div class="snf-workshop__panel-actions">
 						<button class="snf-workshop__button snf-workshop__button--ghost" type="button" data-snf-prev-step>
 							<?php esc_html_e( 'Back', 'super-ninety-four' ); ?>

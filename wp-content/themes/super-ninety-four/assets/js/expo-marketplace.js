@@ -26,7 +26,10 @@
   let localStream = null;
   let talking = false;
   let lastSignalId = 0;
-  let iceServers = [{ urls: "stun:stun.l.google.com:19302" }];
+  let iceServers =
+    Array.isArray(cfg.ice) && cfg.ice.length
+      ? cfg.ice
+      : [{ urls: "stun:stun.l.google.com:19302" }];
 
   function headers() {
     return {

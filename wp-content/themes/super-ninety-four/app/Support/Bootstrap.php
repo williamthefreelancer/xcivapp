@@ -33,6 +33,7 @@ final class Bootstrap {
 		'stripe.php',
 		'home.php',
 		'events.php',
+		'ticket-commerce.php',
 		'media-library.php',
 		'expo-marketplace.php',
 		'lead-rider.php',

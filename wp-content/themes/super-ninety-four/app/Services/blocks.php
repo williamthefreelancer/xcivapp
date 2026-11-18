@@ -118,6 +118,12 @@ function snf_block_listing_cards_for_source( $source ) {
 			return function_exists( 'snf_get_dashboard_reciprocal_cards' ) ? snf_get_dashboard_reciprocal_cards() : array();
 		case 'service-inquiries':
 			return function_exists( 'snf_get_dashboard_service_inquiry_cards' ) ? snf_get_dashboard_service_inquiry_cards() : array();
+		case 'expo-scenic-drives':
+			return function_exists( 'snf_get_expo_scenic_drives' ) ? snf_get_expo_scenic_drives() : array();
+		case 'expo-gatherings':
+			return function_exists( 'snf_get_expo_gathering_cards' ) ? snf_get_expo_gathering_cards() : array();
+		case 'expo-live':
+			return function_exists( 'snf_get_expo_live_broadcast_cards' ) ? snf_get_expo_live_broadcast_cards() : array();
 		default:
 			return array();
 	}

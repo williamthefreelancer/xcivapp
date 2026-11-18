@@ -3,7 +3,7 @@ Contributors: superninetyfour
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.23.0
+Stable tag: 2.26.0
 License: GNU General Public License v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -22,6 +22,13 @@ to be. Marketing canvases use theme Gutenberg blocks plus SureForms; CRM and
 automation stay on SureContact and OttoKit.
 
 == Changelog ==
+
+= 2.26.0 =
+* Expo reuses media ICE settings for walkie WebRTC
+* Expo members rail for live/hybrid broadcasts from media library
+* Listing-grid block sources: expo scenic drives, gatherings, live
+* TicketSpice-style ticket addons/upsells/interactivities on events + Woo forms
+* Strip UTF-8 BOM from functions.php / inc shims (fixes login cookie headers)
 
 = 2.23.0 =
 * Videos & Audio CPT library (snf_video, snf_audio) with topics/series/channels/formats

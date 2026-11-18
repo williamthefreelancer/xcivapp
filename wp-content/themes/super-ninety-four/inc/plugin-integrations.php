@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Deprecated path. Logic lives in app/Services/plugin-integrations.php
  *

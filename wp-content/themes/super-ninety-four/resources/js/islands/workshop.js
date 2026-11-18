@@ -1,8 +1,11 @@
+import { initTicketCommerce } from "../lib/ticket-commerce.js";
+
 export function initWorkshop() {
-const root = document.querySelector(".snf-workshop");
+  const root = document.querySelector(".snf-workshop");
   if (!root) return;
 
   root.classList.add("snf-workshop--ready");
+  initTicketCommerce(root);
 
   const countdownEl = root.querySelector("[data-snf-countdown]");
   if (countdownEl) {

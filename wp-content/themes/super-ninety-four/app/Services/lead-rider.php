@@ -130,6 +130,9 @@ function snf_get_expo_js_bootstrap( $audience = 'members' ) {
 	}
 
 	$is_members = ( 'members' === $audience );
+	$ice        = function_exists( 'snf_media_get_ice_servers' )
+		? snf_media_get_ice_servers()
+		: array( array( 'urls' => 'stun:stun.l.google.com:19302' ) );
 
 	return array(
 		'audience'       => $audience,
@@ -140,6 +143,7 @@ function snf_get_expo_js_bootstrap( $audience = 'members' ) {
 		'applyUrl'       => snf_get_page_url( 'apply' ),
 		'routes'         => $route_payload,
 		'defaultRouteId' => 'charlotte-salem',
+		'ice'            => $ice,
 		'rest'           => array(
 			'position' => esc_url_raw( rest_url( 'snf/v1/lead-rider/position' ) ),
 			'signal'   => esc_url_raw( rest_url( 'snf/v1/lead-rider/signal' ) ),

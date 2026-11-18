@@ -82,6 +82,47 @@ function snf_get_expo_scenic_drives() {
 }
 
 /**
+ * Live / hybrid broadcast cards for Expo (reuses media-library query).
+ *
+ * @param int $limit Max cards.
+ * @return array<int, array<string, string>>
+ */
+function snf_get_expo_live_broadcast_cards( $limit = 6 ) {
+	if ( ! function_exists( 'snf_query_upcoming_broadcasts' ) ) {
+		return array();
+	}
+
+	$cards = array();
+	foreach ( snf_query_upcoming_broadcasts( (int) $limit ) as $item ) {
+		$broadcast = isset( $item['broadcast'] ) && is_array( $item['broadcast'] ) ? $item['broadcast'] : array();
+		$status    = isset( $broadcast['status_label'] ) ? (string) $broadcast['status_label'] : '';
+		$mode      = isset( $broadcast['mode_label'] ) ? (string) $broadcast['mode_label'] : '';
+		$when      = isset( $item['when'] ) ? (string) $item['when'] : '';
+		$meta_bits = array_filter( array( $mode, $status, $when ) );
+
+		$image = isset( $item['image'] ) ? (string) $item['image'] : '';
+		if ( ! $image ) {
+			$image = get_template_directory_uri() . '/assets/images/events/eight-hundred-journeys-event.jpg';
+		}
+
+		$cards[] = array(
+			'title' => isset( $item['title'] ) ? (string) $item['title'] : '',
+			'meta'  => $meta_bits ? implode( ' · ', $meta_bits ) : __( 'Live / hybrid', 'super-ninety-four' ),
+			'image' => $image,
+			'url'   => isset( $item['url'] ) ? (string) $item['url'] : '',
+			'kind'  => 'live',
+		);
+	}
+
+	/**
+	 * Filter Expo live/hybrid broadcast cards.
+	 *
+	 * @param array $cards Broadcast listing cards.
+	 */
+	return apply_filters( 'snf_expo_live_broadcast_cards', $cards );
+}
+
+/**
  * Gathering cards (not networking) for members Expo.
  *
  * @return array<int, array<string, string>>
@@ -211,6 +252,13 @@ function snf_get_expo_catalog_rails( $audience = 'members' ) {
 				'bp'         => 'events',
 				'empty_text' => __( 'No gatherings are listed yet.', 'super-ninety-four' ),
 				'cards'      => snf_get_expo_gathering_cards(),
+			),
+			array(
+				'id'         => 'live-hybrid',
+				'title'      => __( 'Live & hybrid broadcasts', 'super-ninety-four' ),
+				'bp'         => 'activity',
+				'empty_text' => __( 'No live or hybrid events are scheduled yet.', 'super-ninety-four' ),
+				'cards'      => snf_get_expo_live_broadcast_cards(),
 			),
 		);
 	}

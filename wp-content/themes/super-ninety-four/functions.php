@@ -1,4 +1,4 @@
-ï»¿<?php
+<?php
 /**
  * Super Ninety Four theme functions.
  */
@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'SNF_VERSION', '2.24.0' );
+define( 'SNF_VERSION', '2.26.0' );
 
 $snf_autoload = get_template_directory() . '/vendor/autoload.php';
 if ( file_exists( $snf_autoload ) ) {
@@ -358,7 +358,7 @@ function snf_get_dashboard_event_card_by_slug( $slug, $image_file = '', $fallbac
 
 		return array(
 			'title' => $product ? $product->get_name() : __( 'The Lifestyle Concierge Club Workshop', 'super-ninety-four' ),
-			'meta'  => trim( implode( ' Â· ', array_filter( array( $location, $timing ) ) ) ),
+			'meta'  => trim( implode( ' · ', array_filter( array( $location, $timing ) ) ) ),
 			'url'   => snf_get_workshop_landing_url(),
 			'image' => $image,
 		);
@@ -386,7 +386,7 @@ function snf_get_dashboard_event_card_by_slug( $slug, $image_file = '', $fallbac
 
 			return array(
 				'title' => $product->get_name(),
-				'meta'  => trim( implode( ' Â· ', array_filter( array( $location, $timing ) ) ) ),
+				'meta'  => trim( implode( ' · ', array_filter( array( $location, $timing ) ) ) ),
 				'url'   => get_permalink( $product_post->ID ),
 				'image' => $image,
 			);
@@ -423,7 +423,7 @@ function snf_get_dashboard_event_card_by_slug( $slug, $image_file = '', $fallbac
 
 	return array(
 		'title' => get_the_title( $event ),
-		'meta'  => trim( implode( ' Â· ', array_filter( array( $location, $timing ) ) ) ),
+		'meta'  => trim( implode( ' · ', array_filter( array( $location, $timing ) ) ) ),
 		'url'   => snf_get_event_action_url( $event->ID ),
 		'image' => $image,
 	);
@@ -454,7 +454,7 @@ function snf_get_dashboard_member_event_cards() {
 }
 
 /**
- * Events (non-members) cards â€” Lifestyle Concierge Club Workshop only.
+ * Events (non-members) cards — Lifestyle Concierge Club Workshop only.
  *
  * @return array<int, array<string, string>>
  */
@@ -538,19 +538,19 @@ function snf_get_dashboard_service_inquiry_cards() {
 	$cards    = array(
 		array(
 			'title' => __( 'Litter Pickup Service', 'super-ninety-four' ),
-			'meta'  => __( 'Parking lots Â· Commercial grounds', 'super-ninety-four' ),
+			'meta'  => __( 'Parking lots · Commercial grounds', 'super-ninety-four' ),
 			'url'   => call_user_func( $url_for, 'litter-pickup-service' ),
 			'image' => $img_base . 'litter-pickup-service-image-2.png',
 		),
 		array(
 			'title' => __( 'Professional Line Sitting & Courier Service', 'super-ninety-four' ),
-			'meta'  => __( 'Busy lines Â· Shopping runs Â· Handoffs', 'super-ninety-four' ),
+			'meta'  => __( 'Busy lines · Shopping runs · Handoffs', 'super-ninety-four' ),
 			'url'   => call_user_func( $url_for, 'professional-line-sitting-courier-service' ),
 			'image' => $img_base . 'lifestyle-service-image-1.png',
 		),
 		array(
 			'title' => __( 'Janitorial Cleaning Service', 'super-ninety-four' ),
-			'meta'  => __( 'Suites Â· Bars Â· Overnight reset', 'super-ninety-four' ),
+			'meta'  => __( 'Suites · Bars · Overnight reset', 'super-ninety-four' ),
 			'url'   => call_user_func( $url_for, 'janitorial-cleaning-service' ),
 			'image' => $img_base . 'commercial-janitor-cleaning.jpg',
 		),
@@ -632,7 +632,7 @@ function snf_delete_duplicate_event_and_inquiry_pages() {
 		'the-lifestyle-concierge-club-workshop',
 	);
 
-	// Only remove index/alias inquiry pages â€” canonical service landings are auto-created.
+	// Only remove index/alias inquiry pages — canonical service landings are auto-created.
 	$inquiry_slugs = array(
 		'service-inquiries',
 		'parking-lot-commercial-grounds-cleaning',
@@ -711,7 +711,7 @@ function snf_redirect_legacy_workshop_landing() {
 add_action( 'template_redirect', 'snf_redirect_legacy_workshop_landing', 15 );
 
 /**
- * Legacy alias â€” service inquiry pages now redirect to quote products.
+ * Legacy alias — service inquiry pages now redirect to quote products.
  *
  * @param string $slug Legacy page slug or product slug.
  * @return array<string, mixed>|null
@@ -1334,7 +1334,7 @@ function snf_get_service_inquiry_search_results( $query = '' ) {
 }
 
 /**
- * Event result URL â€” logged-out non-members apply, workshop goes direct.
+ * Event result URL — logged-out non-members apply, workshop goes direct.
  *
  * @param int|null $post_id Event post ID.
  * @return string
@@ -1363,7 +1363,7 @@ function snf_get_event_action_url( $post_id = null ) {
 		'snf_event' => $post_id,
 	);
 
-	// Non-member select events hand off to Apply (contact â†’ billing).
+	// Non-member select events hand off to Apply (contact ? billing).
 	return add_query_arg( $args, snf_get_page_url( 'apply' ) );
 }
 
@@ -1422,7 +1422,7 @@ function snf_remap_legacy_event_query_arg() {
 
 	unset( $_GET['event'], $_REQUEST['event'] );
 }
-// Theme loads after plugins_loaded â€” run immediately, then again on init.
+// Theme loads after plugins_loaded — run immediately, then again on init.
 snf_remap_legacy_event_query_arg();
 add_action( 'init', 'snf_remap_legacy_event_query_arg', 0 );
 
@@ -1503,7 +1503,7 @@ function snf_handle_workshop_reserve() {
 		array(
 			'post_type'    => 'snf_reservation',
 			'post_status'  => 'private',
-			'post_title'   => sprintf( 'Workshop seat â€” %s', $full_name ),
+			'post_title'   => sprintf( 'Workshop seat — %s', $full_name ),
 			'post_content' => $content,
 		),
 		true
@@ -1537,7 +1537,7 @@ function snf_handle_workshop_reserve() {
 	if ( $admin_email ) {
 		wp_mail(
 			$admin_email,
-			sprintf( '[SNF] Workshop reservation â€” %s', $full_name ),
+			sprintf( '[SNF] Workshop reservation — %s', $full_name ),
 			$content
 		);
 	}

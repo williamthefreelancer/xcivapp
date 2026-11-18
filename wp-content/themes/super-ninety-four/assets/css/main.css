@@ -5778,6 +5778,149 @@ body.snf-no-header .snf-event {
 	color: #ffb4b4;
 }
 
+.snf-event__cart-note {
+	margin: 0.35rem 0 0;
+	font-size: 0.82rem;
+	text-align: center;
+}
+
+.snf-event__cart-note a {
+	color: rgba(255, 255, 255, 0.85);
+	text-decoration: underline;
+	text-underline-offset: 0.16em;
+}
+
+.snf-ticket-commerce {
+	display: grid;
+	gap: 0.85rem;
+	margin: 0.15rem 0 0.35rem;
+}
+
+.snf-ticket-commerce__intro {
+	display: grid;
+	gap: 0.25rem;
+	text-align: center;
+}
+
+.snf-ticket-commerce__title {
+	margin: 0;
+	font-size: 0.92rem;
+	font-weight: 600;
+	color: #fff;
+}
+
+.snf-ticket-commerce__experiences,
+.snf-ticket-commerce__lede {
+	margin: 0;
+	font-size: 0.78rem;
+	line-height: 1.45;
+	color: var(--snf-ink-muted);
+}
+
+.snf-ticket-commerce__group {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	display: grid;
+	gap: 0.5rem;
+}
+
+.snf-ticket-commerce__legend {
+	margin-bottom: 0.15rem;
+}
+
+.snf-ticket-commerce__option {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	gap: 0.65rem;
+	align-items: start;
+	padding: 0.7rem 0.8rem;
+	border: 1px solid rgba(243, 235, 232, 0.14);
+	border-radius: 12px;
+	background: rgba(27, 19, 19, 0.35);
+	cursor: pointer;
+}
+
+.snf-ticket-commerce__option--qty {
+	grid-template-columns: 1fr auto;
+	align-items: center;
+}
+
+.snf-ticket-commerce__option.is-locked,
+.snf-ticket-commerce__option[hidden] {
+	display: none;
+}
+
+.snf-ticket-commerce__option input[type="radio"] {
+	margin-top: 0.25rem;
+}
+
+.snf-ticket-commerce__option-body {
+	display: grid;
+	gap: 0.2rem;
+}
+
+.snf-ticket-commerce__option-name {
+	font-size: 0.9rem;
+	font-weight: 600;
+	color: #fff;
+}
+
+.snf-ticket-commerce__option-price,
+.snf-ticket-commerce__option-desc {
+	font-size: 0.78rem;
+	font-weight: 500;
+	line-height: 1.4;
+	color: var(--snf-ink-muted);
+}
+
+.snf-ticket-commerce__required {
+	margin-left: 0.35rem;
+	font-size: 0.68rem;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: rgba(243, 235, 232, 0.62);
+}
+
+.snf-ticket-commerce__qty-input {
+	width: 4.25rem;
+	min-height: 40px;
+	padding: 0.45rem 0.55rem;
+	border: 1px solid var(--snf-surface-border);
+	border-radius: 10px;
+	background: rgba(27, 19, 19, 0.55);
+	color: var(--snf-ink);
+	font: inherit;
+	text-align: center;
+}
+
+.snf-ticket-commerce__total {
+	display: flex;
+	justify-content: space-between;
+	gap: 0.75rem;
+	margin: 0.15rem 0 0;
+	padding: 0.7rem 0.85rem;
+	border: 1px solid rgba(243, 235, 232, 0.16);
+	border-radius: 12px;
+	background: rgba(27, 19, 19, 0.48);
+	font-size: 0.86rem;
+	color: var(--snf-ink-muted);
+}
+
+.snf-ticket-commerce__total strong {
+	color: #fff;
+	font-size: 1rem;
+}
+
+.snf-workshop .snf-ticket-commerce {
+	text-align: left;
+}
+
+.snf-workshop .snf-ticket-commerce__intro {
+	text-align: left;
+}
+
 @media (max-width: 820px) {
 	.snf-event__body {
 		grid-template-columns: 1fr;
