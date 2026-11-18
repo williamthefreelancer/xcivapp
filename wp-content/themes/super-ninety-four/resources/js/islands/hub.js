@@ -3,7 +3,7 @@ const root = document.querySelector(".snf-hub");
   if (!root) return;
 
   const motionItems = root.querySelectorAll(
-    ".snf-hub__hero, .snf-hub__panel, .snf-hub__metrics, .snf-hub__identity, .snf-hub__auth, .snf-apply"
+    ".snf-hub__hero, .snf-hub__panel, .snf-hub__metrics, .snf-hub__identity, .snf-hub__auth, .snf-apply, .snf-connect"
   );
 
   motionItems.forEach((el, index) => {
@@ -134,6 +134,121 @@ const root = document.querySelector(".snf-hub");
       if (submit) submit.disabled = true;
       // Native POST → admin-post.php?action=snf_apply_membership
       // Prefers Stripe Checkout sku=application (Supabase Sync), else Woo checkout.
+    });
+
+    showStep(1);
+  }
+
+  // Contact / Let's Connect: Contact Details → Day & Times → Intent & Confirm
+  const connectForm = root.querySelector("[data-snf-connect-steps]");
+  if (connectForm) {
+    const stepButtons = [...root.querySelectorAll(".snf-apply__step-btn")];
+    const stepItems = [...root.querySelectorAll("[data-step-indicator]")];
+    const panels = [...connectForm.querySelectorAll("[data-step-panel]")];
+    const titleEl = root.querySelector("[data-snf-connect-title]");
+    const ledeEl = root.querySelector("[data-snf-connect-lede]");
+    const statusEl = connectForm.querySelector("[data-snf-connect-status]");
+    const baseTitle = titleEl ? titleEl.textContent : "";
+    const baseLede = ledeEl ? ledeEl.textContent : "";
+    const copy = {
+      1: {
+        title: baseTitle,
+        lede: baseLede,
+      },
+      2: {
+        title: "Select Day & Times",
+        lede: "William’s schedule is Sun–Wed — come first, come serve.",
+      },
+      3: {
+        title: "Intent & Confirm",
+        lede: "Tell the desk what this call should cover, then confirm.",
+      },
+    };
+    let currentStep = 1;
+    const maxStep = 3;
+
+    const showStatus = (message) => {
+      if (!statusEl) return;
+      statusEl.hidden = !message;
+      statusEl.textContent = message || "";
+    };
+
+    const showStep = (step) => {
+      currentStep = Math.min(maxStep, Math.max(1, Number(step) || 1));
+      stepButtons.forEach((btn) => {
+        const active = String(btn.dataset.step) === String(currentStep);
+        if (active) {
+          btn.setAttribute("aria-current", "step");
+        } else {
+          btn.removeAttribute("aria-current");
+        }
+      });
+      stepItems.forEach((item) => {
+        const n = Number(item.dataset.stepIndicator) || 0;
+        item.classList.toggle("is-active", n === currentStep);
+        item.classList.toggle("is-complete", n < currentStep);
+      });
+      panels.forEach((panel) => {
+        const active = String(panel.dataset.stepPanel) === String(currentStep);
+        panel.classList.toggle("is-active", active);
+        panel.hidden = !active;
+      });
+      const meta = copy[currentStep] || copy[1];
+      if (titleEl) titleEl.textContent = meta.title;
+      if (ledeEl) ledeEl.textContent = meta.lede;
+      showStatus("");
+    };
+
+    const validateStep = (step) => {
+      const panel = connectForm.querySelector(`[data-step-panel="${step}"]`);
+      if (!panel) return true;
+      const fields = [...panel.querySelectorAll("input, select, textarea")].filter(
+        (el) => el.type !== "hidden" && !el.disabled
+      );
+      for (const field of fields) {
+        if (typeof field.checkValidity === "function" && !field.checkValidity()) {
+          field.reportValidity?.();
+          field.focus();
+          return false;
+        }
+      }
+      return true;
+    };
+
+    stepButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const target = Number(btn.dataset.step) || 1;
+        if (target > currentStep) {
+          for (let s = currentStep; s < target; s += 1) {
+            if (!validateStep(s)) return;
+          }
+        }
+        showStep(target);
+      });
+    });
+
+    connectForm.querySelectorAll("[data-snf-next-step]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        if (!validateStep(currentStep)) return;
+        showStep(currentStep + 1);
+      });
+    });
+
+    connectForm.querySelectorAll("[data-snf-prev-step]").forEach((btn) => {
+      btn.addEventListener("click", () => showStep(currentStep - 1));
+    });
+
+    connectForm.addEventListener("submit", (event) => {
+      for (let s = 1; s <= maxStep; s += 1) {
+        if (!validateStep(s)) {
+          event.preventDefault();
+          showStep(s);
+          return;
+        }
+      }
+      showStatus("Sending your request…");
+      const submit = connectForm.querySelector('button[type="submit"]');
+      if (submit) submit.disabled = true;
     });
 
     showStep(1);

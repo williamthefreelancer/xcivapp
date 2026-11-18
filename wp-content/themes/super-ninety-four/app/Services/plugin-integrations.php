@@ -2,7 +2,7 @@
 /**
  * Marketing page helpers and theme action relays for Super Ninety Four.
  *
- * Blank-canvas Contact / Newsletter stay public. Transactional Apply /
+ * Contact (Let's Connect) / Newsletter / Videos stay public. Transactional Apply /
  * workshop / quote / reciprocal flows stay theme PHP + WooCommerce.
  *
  * Club roles and member-area access live in access-control.php.

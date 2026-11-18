@@ -34,6 +34,7 @@ function snf_fse_view_map() {
 		'buddypress'            => 'buddypress.php',
 		'apply-hub'             => 'page-templates/apply.php',
 		'about'                 => 'page-templates/about.php',
+		'contact'               => 'page-templates/contact.php',
 		'billing-details'       => 'page-templates/billing-details.php',
 		'blank-canvas'          => 'page-templates/blank-canvas.php',
 		'funnel-offer'          => 'page-templates/funnel-offer.php',
@@ -66,6 +67,7 @@ function snf_fse_classic_page_template_map() {
 	return array(
 		'page-templates/apply.php'                 => 'apply-hub',
 		'page-templates/about.php'                 => 'about',
+		'page-templates/contact.php'               => 'contact',
 		'page-templates/billing-details.php'       => 'billing-details',
 		'page-templates/blank-canvas.php'          => 'blank-canvas',
 		'page-templates/funnel-offer.php'          => 'funnel-offer',

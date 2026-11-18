@@ -36,6 +36,7 @@ final class Bootstrap {
 		'supabase-payments.php',
 		'stripe.php',
 		'home.php',
+		'contact.php',
 		'events.php',
 		'ticket-commerce.php',
 		'funnels.php',

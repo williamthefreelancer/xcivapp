@@ -98,7 +98,7 @@ function snf_get_site_pages() {
 		),
 		'contact' => array(
 			'title'    => 'Contact',
-			'template' => 'blank-canvas',
+			'template' => 'contact',
 		),
 		'newsletter' => array(
 			'title'    => 'Newsletter',
@@ -340,7 +340,7 @@ function snf_ensure_legal_page_content() {
 }
 
 /**
- * Starter Gutenberg markup for blank-canvas marketing pages (Contact / Newsletter).
+ * Starter Gutenberg markup for blank-canvas marketing pages (Newsletter).
  * Only applied when the page body is empty so editor edits are kept.
  *
  * @param string $slug Page slug.
@@ -348,20 +348,6 @@ function snf_ensure_legal_page_content() {
  */
 function snf_get_blank_canvas_starter_content( $slug ) {
 	$slug = sanitize_title( (string) $slug );
-
-	if ( 'contact' === $slug ) {
-		return <<<'HTML'
-<!-- wp:snf/page-hero {"title":"Contact","lede":"Reach SUPER NINETY FOUR - membership, events, and concierge questions."} /-->
-
-<!-- wp:snf/form-slot {"heading":"Send a message","hint":"Add a form or shortcode block here."} -->
-<!-- wp:paragraph -->
-<p></p>
-<!-- /wp:paragraph -->
-<!-- /wp:snf/form-slot -->
-
-<!-- wp:snf/cta-button {"label":"Apply for membership","target":"apply"} /-->
-HTML;
-	}
 
 	if ( 'newsletter' === $slug ) {
 		return <<<'HTML'
@@ -384,7 +370,7 @@ HTML;
  * Seed empty blank-canvas pages with hero + form-slot + CTA blocks.
  */
 function snf_ensure_blank_canvas_page_content() {
-	foreach ( array( 'contact', 'newsletter' ) as $slug ) {
+	foreach ( array( 'newsletter' ) as $slug ) {
 		$page = get_page_by_path( $slug );
 		if ( ! ( $page instanceof WP_Post ) ) {
 			continue;

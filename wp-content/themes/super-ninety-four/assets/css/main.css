@@ -27,6 +27,11 @@
 	--snf-pad-x: clamp(1rem, 4vw, 3rem);
 	--snf-pad-y: clamp(0.95rem, 2.6vw, 2rem);
 	--snf-header-offset: clamp(5.75rem, 11vw, 7.5rem);
+	--snf-section-gap: clamp(1.35rem, 2.8vw, 2rem);
+	--snf-section-pad-y: clamp(1.25rem, 3vw, 2.5rem);
+	--snf-title-display: clamp(2rem, 5vw, 3.25rem);
+	--snf-title-hub: clamp(1.75rem, 3.2vw, 2.35rem);
+	--snf-title-section: clamp(1.25rem, 2.2vw, 1.65rem);
 	--snf-touch-min: 44px;
 	--snf-bp-nav: 1280px;
 	--snf-bp-wide: 1100px;
@@ -368,7 +373,8 @@ body.snf-nav-open {
 }
 
 .snf-page__canvas {
-	min-height: min(70vh, 70dvh, 720px);
+	min-height: auto;
+	padding-block: var(--snf-section-pad-y);
 }
 
 @media (max-width: 1280px) {
@@ -708,9 +714,10 @@ body.snf-nav-open {
 	flex-direction: column;
 	align-items: center;
 	justify-content: flex-start;
-	gap: clamp(1.25rem, 3vw, 1.85rem);
+	gap: clamp(1.15rem, 2.6vw, 1.65rem);
 	position: relative;
-	padding-block: clamp(6.5rem, 12vw, 8.5rem) clamp(1.5rem, 4vw, 2.5rem);
+	padding-block: calc(var(--snf-header-offset) + clamp(1rem, 2.5vw, 1.75rem))
+		clamp(1.5rem, 4vw, 2.5rem);
 }
 
 .snf-hero__brand {
@@ -806,7 +813,7 @@ body.snf-nav-open {
 /* Home — Figma sections (2100:86 … 2100:135) */
 .snf-home-section {
 	width: 100%;
-	padding-block: clamp(2rem, 5vw, 3.5rem);
+	padding-block: var(--snf-section-pad-y);
 }
 
 .snf-home-icons {
@@ -903,8 +910,13 @@ body.snf-nav-open {
 .snf-home-spotlight__title,
 .snf-home-section__title {
 	margin: 0;
-	font: 600 clamp(1.35rem, 2.6vw, 1.85rem) / 1.25 var(--snf-font-body);
-	letter-spacing: 0.01em;
+	font-family: var(--snf-font-display);
+	font-weight: 400;
+	font-style: normal;
+	font-size: var(--snf-title-section);
+	line-height: 1.2;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
 	color: #fff;
 }
 
@@ -1575,11 +1587,16 @@ body.snf-nav-open {
 }
 
 .snf-page__frame {
-	min-height: min(calc(var(--snf-frame-h) - 3rem), 100dvh);
+	min-height: auto;
+	padding-block: clamp(1.5rem, 4vw, 2.75rem);
+}
+
+.snf-page__frame:has(.snf-canvas--message) {
+	min-height: min(50vh, 28rem);
 }
 
 .snf-canvas {
-	min-height: min(560px, 70dvh);
+	min-height: auto;
 	width: 100%;
 }
 
@@ -1588,11 +1605,12 @@ body.snf-nav-open {
 	flex-direction: column;
 	justify-content: center;
 	gap: 1rem;
+	min-height: min(40vh, 22rem);
 }
 
 .snf-canvas--content {
 	min-height: auto;
-	padding: 3rem 0 4rem;
+	padding: var(--snf-section-pad-y) 0 clamp(2rem, 5vw, 3.25rem);
 }
 
 .snf-canvas__title {
@@ -2416,13 +2434,13 @@ body.snf-no-header.admin-bar {
 	width: min(100%, var(--snf-frame-w));
 	margin-inline: auto;
 	display: grid;
-	gap: clamp(1.5rem, 3vw, 2.25rem);
+	gap: var(--snf-section-gap);
 	padding-bottom: 2.75rem;
 }
 
 .snf-dashboard-shell__main {
 	display: grid;
-	gap: clamp(1.5rem, 3vw, 2.25rem);
+	gap: var(--snf-section-gap);
 	min-width: 0;
 	width: 100%;
 }
@@ -2430,7 +2448,7 @@ body.snf-no-header.admin-bar {
 .snf-dashboard__shell {
 	width: min(100%, 999px);
 	display: grid;
-	gap: clamp(1.5rem, 3vw, 2.25rem);
+	gap: var(--snf-section-gap);
 	padding-bottom: 2.5rem;
 }
 
@@ -3013,11 +3031,18 @@ a.snf-panel-card:focus-visible {
 
 .snf-dashboard__row-title {
 	margin: 0;
-	font-family: var(--snf-font-body);
-	font-size: clamp(1.05rem, 1.6vw, 1.25rem);
-	font-weight: 500;
-	letter-spacing: -0.01em;
+	font-family: var(--snf-font-display);
+	font-size: var(--snf-title-section);
+	font-weight: 400;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
 	color: #fff;
+}
+
+.snf-dashboard--select-events .snf-dashboard__row-title {
+	font-size: var(--snf-title-hub);
+	letter-spacing: 0.02em;
+	line-height: 1.15;
 }
 
 .snf-dashboard__row-title a:hover,
@@ -3164,8 +3189,8 @@ a.snf-panel-card:focus-visible {
 .snf-hub__shell {
 	width: min(100%, 1080px);
 	display: grid;
-	gap: clamp(1.35rem, 2.8vw, 2rem);
-	padding-bottom: 2.75rem;
+	gap: var(--snf-section-gap);
+	padding-block: 0 var(--snf-section-pad-y);
 }
 
 .snf-hub__shell--narrow {
@@ -3190,10 +3215,10 @@ a.snf-panel-card:focus-visible {
 .snf-hub__title {
 	margin: 0;
 	font-family: var(--snf-font-display);
-	font-style: italic;
-	font-weight: 500;
-	font-size: clamp(1.7rem, 3.4vw, 2.35rem);
-	letter-spacing: -0.02em;
+	font-style: normal;
+	font-weight: 400;
+	font-size: var(--snf-title-hub);
+	letter-spacing: 0.02em;
 	line-height: 1.15;
 	color: #fff;
 }
@@ -3204,6 +3229,34 @@ a.snf-panel-card:focus-visible {
 	font-size: 0.98rem;
 	line-height: 1.55;
 	color: var(--snf-ink-muted);
+}
+
+.snf-hub__rich {
+	display: grid;
+	gap: 0.85rem;
+	max-width: none;
+	font-size: 1rem;
+	line-height: 1.6;
+	color: var(--snf-ink-muted);
+}
+
+.snf-hub__rich :where(h2, h3) {
+	margin-block: 1.1rem 0.35rem;
+	font-family: var(--snf-font-display);
+	font-weight: 400;
+	font-size: var(--snf-title-section);
+	letter-spacing: 0.02em;
+	line-height: 1.2;
+	color: #fff;
+}
+
+.snf-hub__rich :where(p) {
+	margin: 0;
+}
+
+.snf-hub__panel .snf-hub__rich,
+.snf-hub__auth .snf-hub__rich {
+	max-width: none;
 }
 
 .snf-hub__actions {
@@ -3251,7 +3304,7 @@ a.snf-panel-card:focus-visible {
 
 .snf-hub__aside {
 	position: sticky;
-	top: 5.5rem;
+	top: calc(var(--snf-header-offset) + 0.75rem);
 }
 
 .snf-hub__nav-list {
@@ -3724,15 +3777,16 @@ body:has(.snf-hub--apply) .snf-header__apply {
 	min-height: calc(100vh - 2rem);
 	display: grid;
 	align-items: stretch;
+	padding-top: 0;
 }
 
 .snf-apply {
 	width: min(100%, 720px);
 	margin-inline: auto;
-	padding: clamp(5.5rem, 12vh, 7.5rem) var(--snf-pad-x) clamp(2rem, 5vh, 3.5rem);
+	padding: calc(var(--snf-header-offset) + clamp(1.25rem, 3vw, 2rem)) var(--snf-pad-x) clamp(2rem, 5vh, 3.5rem);
 	display: grid;
 	justify-items: center;
-	gap: clamp(1.5rem, 3.5vh, 2.4rem);
+	gap: var(--snf-section-gap);
 	text-align: center;
 }
 
@@ -3744,11 +3798,12 @@ body:has(.snf-hub--apply) .snf-header__apply {
 
 .snf-apply__title {
 	margin: 0;
-	font-family: var(--snf-font-body);
-	font-weight: 600;
-	font-size: clamp(2.1rem, 5vw, 3rem);
-	letter-spacing: -0.03em;
-	line-height: 1.1;
+	font-family: var(--snf-font-display);
+	font-weight: 400;
+	font-style: normal;
+	font-size: var(--snf-title-display);
+	letter-spacing: 0.02em;
+	line-height: 1.05;
 	color: #fff;
 }
 
@@ -4026,6 +4081,10 @@ body:has(.snf-hub--apply) .snf-header__apply {
 	background: rgba(27, 19, 19, 0.48);
 }
 
+.snf-hub__auth .snf-hub__rows {
+	margin-block: 1.35rem;
+}
+
 .snf-hub__auth-foot {
 	margin: 1rem 0 0;
 	font-size: 0.88rem;
@@ -4123,7 +4182,7 @@ body:has(.snf-hub--apply) .snf-header__apply {
 
 .snf-hub__main--messages {
 	min-width: 0;
-	min-height: min(72vh, 720px);
+	min-height: min(56vh, 36rem);
 }
 
 .snf-msg {
@@ -4132,7 +4191,7 @@ body:has(.snf-hub--apply) .snf-header__apply {
 	width: 100%;
 	max-width: 100%;
 	min-width: 0;
-	min-height: min(72vh, 720px);
+	min-height: min(56vh, 36rem);
 	border: 1px solid var(--snf-surface-border);
 	border-radius: 20px;
 	overflow: hidden;
@@ -4874,7 +4933,7 @@ body:has(.snf-hub--apply) .snf-header__apply {
 
 .snf-reciprocal__hero-media {
 	position: relative;
-	min-height: 567px;
+	min-height: min(52vh, 28rem);
 	overflow: hidden;
 	background: #151515;
 }
@@ -4894,7 +4953,7 @@ body:has(.snf-hub--apply) .snf-header__apply {
 	z-index: 1;
 	width: min(100% - 2rem, 1100px);
 	margin: 0 auto;
-	min-height: 567px;
+	min-height: min(52vh, 28rem);
 	padding: clamp(2rem, 5vw, 3.25rem) 0;
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) minmax(16rem, 19rem);
@@ -5198,8 +5257,10 @@ body:has(.snf-hub--apply) .snf-header__apply {
 .snf-reciprocal__why-item-title {
 	margin: 0;
 	font-family: var(--snf-reciprocal-display);
-	font-size: clamp(1.5rem, 2.8vw, 2.2rem);
-	line-height: 1.15;
+	font-size: var(--snf-title-section);
+	line-height: 1.2;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
 	color: #fff;
 }
 
@@ -5219,13 +5280,15 @@ body:has(.snf-hub--apply) .snf-header__apply {
 }
 
 .snf-reciprocal__hub-hero {
-	padding-top: 0.5rem;
-	padding-bottom: 1.25rem;
+	padding-top: 0;
+	padding-bottom: var(--snf-section-gap);
 	max-width: 40rem;
+	display: grid;
+	gap: 0.55rem;
 }
 
 .snf-reciprocal__eyebrow {
-	margin: 0 0 0.45rem;
+	margin: 0;
 	font-size: 0.72rem;
 	font-weight: 600;
 	letter-spacing: 0.14em;
@@ -5234,11 +5297,13 @@ body:has(.snf-hub--apply) .snf-header__apply {
 }
 
 .snf-reciprocal__hub-title {
-	margin: 0 0 0.55rem;
+	margin: 0;
 	font-family: var(--snf-font-display);
-	font-style: italic;
-	font-weight: 500;
-	font-size: clamp(1.7rem, 3.4vw, 2.35rem);
+	font-style: normal;
+	font-weight: 400;
+	font-size: var(--snf-title-hub);
+	letter-spacing: 0.02em;
+	line-height: 1.15;
 	color: #fff;
 }
 
@@ -6428,8 +6493,16 @@ table {
 
 	.snf-hub__title,
 	.snf-apply__title,
-	.snf-expo__lead-title {
-		font-size: clamp(1.55rem, 7vw, 2.1rem);
+	.snf-expo__lead-title,
+	.snf-reciprocal__hub-title,
+	.snf-dashboard--select-events .snf-dashboard__row-title {
+		font-size: clamp(1.55rem, 6.5vw, 2.1rem);
+	}
+
+	.snf-expo--directory .snf-expo__title,
+	.snf-block-page-hero__title,
+	.snf-media-hub__title {
+		font-size: clamp(1.85rem, 8vw, 2.75rem);
 	}
 
 	.snf-hub__lede,
@@ -6613,8 +6686,8 @@ table {
 
 .snf-expo__shell {
 	display: grid;
-	gap: clamp(1.75rem, 3.5vw, 2.75rem);
-	padding-block: clamp(1.75rem, 4vw, 3rem);
+	gap: var(--snf-section-gap);
+	padding-block: var(--snf-section-pad-y);
 }
 
 .snf-expo__hero {
@@ -6636,8 +6709,8 @@ table {
 
 .snf-expo--directory .snf-expo__title {
 	margin: 0;
-	font-size: clamp(2.6rem, 8vw, 4.4rem);
-	line-height: 0.92;
+	font-size: var(--snf-title-display);
+	line-height: 1;
 	letter-spacing: 0.02em;
 	text-transform: uppercase;
 	color: #fff;
@@ -6659,7 +6732,7 @@ table {
 .snf-expo__row-title {
 	margin: 0;
 	font-family: var(--snf-font-display);
-	font-size: clamp(1.45rem, 2.8vw, 2rem);
+	font-size: var(--snf-title-section);
 	font-weight: 400;
 	letter-spacing: 0.02em;
 	text-transform: uppercase;
@@ -7012,8 +7085,13 @@ table {
 
 /* SureForms embeds on blank-canvas public pages (Contact / Newsletter) */
 .snf-page__plugin-content {
-	padding-block: clamp(1.5rem, 4vw, 3rem);
+	padding-block: var(--snf-section-pad-y);
 	max-width: min(720px, 100%);
+}
+
+.snf-page.snf-funnel-offer {
+	padding-top: 0;
+	padding-bottom: 0;
 }
 
 .snf-page__plugin-content .srfm-form-container,
@@ -7050,10 +7128,10 @@ table {
 
 .snf-block-page-hero__title {
 	font-family: var(--snf-font-display);
-	font-size: clamp(2.5rem, 7vw, 4.5rem);
+	font-size: var(--snf-title-display);
 	font-weight: 400;
 	letter-spacing: 0.02em;
-	line-height: 0.95;
+	line-height: 1;
 	margin: 0 0 0.65rem;
 	color: #fff;
 }
@@ -7183,11 +7261,13 @@ table {
 }
 
 .snf-media-hub__hero {
-	margin-bottom: clamp(1.75rem, 4vw, 3rem);
+	margin-bottom: var(--snf-section-gap);
+	display: grid;
+	gap: 0.45rem;
 }
 
 .snf-media-hub__brand {
-	margin: 0 0 0.35rem;
+	margin: 0;
 	font-family: var(--snf-font-nav);
 	font-size: 0.78rem;
 	font-weight: 600;
@@ -7197,16 +7277,16 @@ table {
 }
 
 .snf-media-hub__title {
-	margin: 0 0 0.65rem;
+	margin: 0;
 	font-family: var(--snf-font-display);
-	font-size: clamp(2.6rem, 8vw, 4.5rem);
+	font-size: var(--snf-title-display);
 	font-weight: 400;
 	letter-spacing: 0.02em;
-	line-height: 0.95;
+	line-height: 1;
 }
 
 .snf-media-hub__intro {
-	margin: 0;
+	margin: 0.2rem 0 0;
 	max-width: 38rem;
 	color: var(--snf-ink-muted);
 	font-size: 1.05rem;
@@ -7555,7 +7635,7 @@ body.snf-no-header.snf-is-product .snf-header {
 	margin: 0;
 	font-family: var(--snf-font-display);
 	font-weight: 400;
-	font-size: clamp(1.75rem, 4vw, 2.5rem);
+	font-size: var(--snf-title-hub);
 	letter-spacing: 0.02em;
 	color: #fff;
 }
@@ -7926,4 +8006,233 @@ body.snf-no-header.snf-is-product .snf-header {
 	background: transparent;
 	color: #fff;
 	font-weight: 600;
+}
+
+/* About — Figma XCIV Social 2176:39 */
+.snf-about {
+	min-height: 100vh;
+	min-height: 100dvh;
+	padding-top: var(--snf-header-offset);
+	padding-bottom: clamp(2.5rem, 6vh, 4rem);
+	background: linear-gradient(180deg, var(--snf-grad-top) 0%, var(--snf-grad-bottom) 100%);
+}
+
+.snf-about__inner {
+	display: grid;
+	gap: clamp(2.5rem, 6vh, 4rem);
+	justify-items: center;
+	text-align: center;
+	padding-block: clamp(1.5rem, 4vw, 2.75rem);
+}
+
+.snf-about__who,
+.snf-about__founder {
+	display: grid;
+	gap: clamp(1rem, 2.5vw, 1.5rem);
+	justify-items: center;
+	width: min(100%, 36rem);
+}
+
+.snf-about__title {
+	margin: 0;
+	font-family: var(--snf-font-display);
+	font-weight: 400;
+	font-size: clamp(2.25rem, 5.5vw, 3rem);
+	letter-spacing: 0.02em;
+	line-height: 1.05;
+	text-transform: uppercase;
+	color: #fff;
+}
+
+.snf-about__title--section {
+	font-size: clamp(2rem, 5vw, 3rem);
+}
+
+.snf-about__body {
+	margin: 0;
+	max-width: 32.7rem;
+	font-family: var(--snf-font-body);
+	font-size: 0.875rem;
+	font-weight: 700;
+	line-height: 1.45;
+	color: #fff;
+}
+
+.snf-about__portrait {
+	margin: 0;
+	width: min(100%, 22rem);
+	aspect-ratio: 352 / 310;
+	overflow: hidden;
+	background: #0b0b0b;
+}
+
+.snf-about__portrait-img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: center top;
+}
+
+.snf-about__name {
+	margin: 0;
+	font-family: var(--snf-font-display);
+	font-weight: 400;
+	font-size: clamp(1.75rem, 4.5vw, 3rem);
+	letter-spacing: 0.02em;
+	line-height: 1.05;
+	text-transform: uppercase;
+	color: #fff;
+}
+
+/* Contact / Let's Connect — Figma XCIV Social 2176:55 */
+body:has(.snf-hub--connect) .snf-header__meta,
+body:has(.snf-hub--connect) .snf-header__apply {
+	display: none;
+}
+
+.snf-hub--connect {
+	min-height: calc(100vh - 2rem);
+	display: grid;
+	align-items: stretch;
+	padding-top: 0;
+	background: linear-gradient(180deg, var(--snf-grad-top) 0%, var(--snf-grad-bottom) 100%);
+}
+
+.snf-connect {
+	width: min(100%, 720px);
+	margin-inline: auto;
+	padding: calc(var(--snf-header-offset) + clamp(1.25rem, 3vw, 2rem)) var(--snf-pad-x) clamp(2rem, 5vh, 3.5rem);
+	display: grid;
+	justify-items: center;
+	gap: var(--snf-section-gap);
+	text-align: center;
+}
+
+.snf-connect__intro {
+	display: grid;
+	gap: 0.65rem;
+	justify-items: center;
+	width: min(100%, 36.5rem);
+}
+
+.snf-connect__title {
+	margin: 0;
+	font-family: var(--snf-font-display);
+	font-weight: 400;
+	font-size: clamp(1.85rem, 4.5vw, 3rem);
+	letter-spacing: 0.02em;
+	line-height: 1.08;
+	text-transform: uppercase;
+	color: #fff;
+}
+
+.snf-connect__lede {
+	margin: 0;
+	max-width: 32.7rem;
+	font-family: var(--snf-font-body);
+	font-size: 0.875rem;
+	font-weight: 700;
+	line-height: 1.4;
+	color: #fff;
+}
+
+.snf-connect__flash {
+	margin: 0;
+	width: min(100%, 32rem);
+	padding: 0.85rem 1rem;
+	border-radius: 12px;
+	font-size: 0.9rem;
+	line-height: 1.4;
+}
+
+.snf-connect__flash--ok {
+	border: 1px solid rgba(255, 255, 255, 0.28);
+	background: rgba(255, 255, 255, 0.1);
+	color: #fff;
+}
+
+.snf-connect__flash--err {
+	border: 1px solid rgba(255, 120, 120, 0.45);
+	background: rgba(80, 18, 18, 0.55);
+	color: #ffe8e8;
+}
+
+.snf-connect__form {
+	width: min(100%, 520px);
+	text-align: left;
+}
+
+.snf-connect__status {
+	margin: 0 0 0.5rem;
+	font-size: 0.88rem;
+	color: var(--snf-ink-muted);
+}
+
+.snf-connect__fieldset {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	display: grid;
+	gap: 0.65rem;
+}
+
+.snf-connect__fieldset legend {
+	padding: 0;
+	margin-bottom: 0.35rem;
+	font-size: 0.82rem;
+	color: var(--snf-ink-muted);
+}
+
+.snf-connect__chips {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 0.55rem;
+}
+
+.snf-connect__chip {
+	display: grid;
+	cursor: pointer;
+}
+
+.snf-connect__chip input {
+	position: absolute;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.snf-connect__chip span {
+	display: grid;
+	place-items: center;
+	min-height: var(--snf-touch-min);
+	padding: 0.65rem 0.75rem;
+	border: 1px solid var(--snf-surface-border);
+	border-radius: 12px;
+	background: rgba(27, 19, 19, 0.55);
+	color: #fff;
+	font-size: 0.88rem;
+	font-weight: 600;
+	transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.snf-connect__chip input:checked + span {
+	background: #fff;
+	border-color: #fff;
+	color: #1b1313;
+}
+
+.snf-connect__chip input:focus-visible + span {
+	outline: 2px solid rgba(243, 235, 232, 0.45);
+	outline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+	.snf-connect__chips {
+		grid-template-columns: 1fr 1fr;
+	}
+
+	.snf-about__body,
+	.snf-connect__lede {
+		font-size: 0.8125rem;
+	}
 }
