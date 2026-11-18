@@ -262,18 +262,67 @@ function snf_admin_collect_notices() {
 			'message' => __( 'Mapbox token is present.', 'super-ninety-four' ),
 		);
 	}
+	if ( isset( $_GET['lookup'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$lookup = sanitize_key( wp_unslash( (string) $_GET['lookup'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( 'ok' === $lookup ) {
+			$notices[] = array(
+				'type'    => 'success',
+				'message' => __( 'Subscription lookup completed — results below.', 'super-ninety-four' ),
+			);
+		} elseif ( 'empty' === $lookup ) {
+			$notices[] = array(
+				'type'    => 'warn',
+				'message' => __( 'No Stripe subscriptions found for that email.', 'super-ninety-four' ),
+			);
+		} elseif ( 'fail' === $lookup ) {
+			$err = get_transient( 'snf_admin_lookup_error_' . get_current_user_id() );
+			$notices[] = array(
+				'type'    => 'error',
+				'message' => ( is_string( $err ) && $err ) ? $err : __( 'Subscription lookup failed.', 'super-ninety-four' ),
+			);
+		}
+	}
 
 	return $notices;
 }
 
 /**
- * Nav items for Vue shells.
+ * Whether the built Vue admin bundle is available.
  *
+ * @return bool
+ */
+function snf_admin_vue_bundle_ready() {
+	return file_exists( get_template_directory() . '/dist/admin.js' );
+}
+
+/**
+ * Current Club / Stripe admin page slug (empty when not a Club surface).
+ *
+ * @return string
+ */
+function snf_admin_current_page_slug() {
+	$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	if ( $page && ( isset( snf_admin_dashboard_pages()[ $page ] ) || 'snf-stripe' === $page ) ) {
+		return $page;
+	}
+	if ( snf_admin_is_overview_screen() ) {
+		return 'snf-club';
+	}
+	return '';
+}
+
+/**
+ * Build Vue nav items from a pages map.
+ *
+ * @param array<string, array<string, string>> $pages Page registry.
  * @return array<int, array{slug:string,label:string,href:string}>
  */
-function snf_admin_vue_nav_items() {
+function snf_admin_vue_nav_from_pages( $pages ) {
 	$items = array();
-	foreach ( snf_admin_club_nav_pages() as $slug => $page ) {
+	if ( ! is_array( $pages ) ) {
+		return $items;
+	}
+	foreach ( $pages as $slug => $page ) {
 		if ( 'snf-club-settings' === $slug && ! current_user_can( 'manage_options' ) ) {
 			continue;
 		}
@@ -282,11 +331,21 @@ function snf_admin_vue_nav_items() {
 		}
 		$items[] = array(
 			'slug'  => $slug,
-			'label' => $page['label'],
+			'label' => isset( $page['label'] ) ? (string) $page['label'] : (string) $slug,
 			'href'  => ( 'snf-club' === $slug ) ? admin_url( 'index.php' ) : admin_url( 'admin.php?page=' . $slug ),
 		);
 	}
 	return $items;
+}
+
+/**
+ * Nav items for Vue shells.
+ *
+ * @param array<string, array<string, string>>|null $pages Optional page map (null = Club nav).
+ * @return array<int, array{slug:string,label:string,href:string}>
+ */
+function snf_admin_vue_nav_items( $pages = null ) {
+	return snf_admin_vue_nav_from_pages( null === $pages ? snf_admin_club_nav_pages() : $pages );
 }
 
 /**
@@ -394,18 +453,28 @@ function snf_admin_vue_pulse_rows( $context = 'overview' ) {
 /**
  * Bootstrap payload for the Vue admin island.
  *
- * @param string $page overview|settings.
+ * @param string $page overview|settings|chrome.
  * @return array<string, mixed>
  */
 function snf_admin_vue_bootstrap( $page = 'overview' ) {
+	$slug = snf_admin_current_page_slug();
+	if ( ! $slug ) {
+		$slug = ( 'settings' === $page ) ? 'snf-club-settings' : 'snf-club';
+	}
+
 	$payload = array(
-		'page'   => $page,
-		'brand'  => __( 'Super Ninety Four', 'super-ninety-four' ),
-		'nav'    => snf_admin_vue_nav_items(),
-		'active' => ( 'settings' === $page ) ? 'snf-club-settings' : 'snf-club',
+		'page'    => $page,
+		'brand'   => __( 'Super Ninety Four', 'super-ninety-four' ),
+		'nav'     => snf_admin_vue_nav_items( 'snf-stripe' === $slug ? snf_admin_payments_nav_pages() : null ),
+		'active'  => $slug,
+		'notices' => snf_admin_collect_notices(),
 	);
 
-	if ( 'settings' === $page ) {
+	if ( 'settings' === $page || 'snf-club-settings' === $slug ) {
+		$payload['page']       = 'settings';
+		$payload['title']      = __( 'Critical settings', 'super-ninety-four' );
+		$payload['lede']       = __( 'Integrations, commerce seeds, and maintenance tools the Club and Stripe stacks rely on.', 'super-ninety-four' );
+		$payload['active']     = 'snf-club-settings';
 		$payload['pulse']      = snf_admin_vue_pulse_rows( 'critical' );
 		$payload['pageHealth'] = snf_admin_page_health_rows();
 		$payload['stripeHref'] = current_user_can( 'manage_woocommerce' )
@@ -414,12 +483,16 @@ function snf_admin_vue_bootstrap( $page = 'overview' ) {
 		return $payload;
 	}
 
+	if ( 'chrome' === $page ) {
+		return $payload;
+	}
+
 	$rfq_count = snf_admin_count_posts( 'snf_rfq', 'private' ) + snf_admin_count_posts( 'snf_rfq', 'publish' );
 
 	$payload['title'] = __( 'Club operations', 'super-ninety-four' );
 	$payload['lede']  = __( 'Dashboards for Events, Circles, Videos & Audio, Marketplace RFQs, Ticket Addons & Upgrades, plus the settings those surfaces depend on.', 'super-ninety-four' );
-	$payload['notices'] = snf_admin_collect_notices();
-	$payload['stats']   = array(
+	$payload['active'] = 'snf-club';
+	$payload['stats']  = array(
 		array(
 			'value' => (string) snf_admin_count_posts( 'event' ),
 			'label' => __( 'Published events', 'super-ninety-four' ),
@@ -534,11 +607,17 @@ function snf_admin_dashboard_enqueue( $hook_suffix ) {
 		file_exists( $css ) ? (string) filemtime( $css ) : ( defined( 'SNF_VERSION' ) ? SNF_VERSION : '1.0' )
 	);
 
+	if ( ! snf_admin_vue_bundle_ready() ) {
+		return;
+	}
+
 	$vue_page = '';
 	if ( snf_admin_is_overview_screen() ) {
 		$vue_page = 'overview';
 	} elseif ( snf_admin_is_settings_screen() ) {
 		$vue_page = 'settings';
+	} elseif ( snf_admin_is_club_screen() || ( isset( $_GET['page'] ) && 'snf-stripe' === sanitize_key( wp_unslash( $_GET['page'] ) ) ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$vue_page = 'chrome';
 	}
 
 	if ( ! $vue_page ) {
@@ -559,23 +638,21 @@ function snf_admin_dashboard_enqueue( $hook_suffix ) {
 		$deps[] = 'snf-admin-vue';
 	}
 
-	if ( file_exists( $admin_js ) ) {
-		wp_enqueue_script(
-			'snf-admin-vue',
-			$theme_uri . '/dist/admin.js',
-			array(),
-			(string) filemtime( $admin_js ),
-			array(
-				'in_footer' => true,
-				'strategy'  => 'defer',
-			)
-		);
-		wp_localize_script(
-			'snf-admin-vue',
-			'snfAdminDashboard',
-			snf_admin_vue_bootstrap( $vue_page )
-		);
-	}
+	wp_enqueue_script(
+		'snf-admin-vue',
+		$theme_uri . '/dist/admin.js',
+		array(),
+		(string) filemtime( $admin_js ),
+		array(
+			'in_footer' => true,
+			'strategy'  => 'defer',
+		)
+	);
+	wp_localize_script(
+		'snf-admin-vue',
+		'snfAdminDashboard',
+		snf_admin_vue_bootstrap( $vue_page )
+	);
 }
 add_action( 'admin_enqueue_scripts', 'snf_admin_dashboard_enqueue' );
 
@@ -828,7 +905,7 @@ function snf_admin_club_nav_pages() {
 }
 
 /**
- * Shared dashboard chrome.
+ * Shared dashboard chrome (Vue AdminShell when dist/admin.js exists).
  *
  * @param string                                    $active    Active page slug.
  * @param string                                    $title     Page title.
@@ -837,6 +914,30 @@ function snf_admin_club_nav_pages() {
  */
 function snf_admin_render_shell_start( $active, $title, $lede, $nav_pages = null ) {
 	$pages = null === $nav_pages ? snf_admin_club_nav_pages() : $nav_pages;
+
+	if ( snf_admin_vue_bundle_ready() ) {
+		$chrome = array(
+			'brand'   => __( 'Super Ninety Four', 'super-ninety-four' ),
+			'title'   => $title,
+			'lede'    => $lede,
+			'active'  => $active,
+			'nav'     => snf_admin_vue_nav_from_pages( is_array( $pages ) ? $pages : array() ),
+			'notices' => snf_admin_collect_notices(),
+		);
+		?>
+		<div class="wrap snf-admin snf-admin--vue">
+			<script type="application/json" id="snf-admin-chrome-data"><?php echo wp_json_encode( $chrome, JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE ); ?></script>
+			<div id="snf-admin-chrome"></div>
+			<noscript>
+				<header class="snf-admin__hero">
+					<p class="snf-admin__eyebrow"><?php esc_html_e( 'Super Ninety Four', 'super-ninety-four' ); ?></p>
+					<h1><?php echo esc_html( $title ); ?></h1>
+					<p class="snf-admin__lede"><?php echo esc_html( $lede ); ?></p>
+				</header>
+			</noscript>
+		<?php
+		return;
+	}
 	?>
 	<div class="wrap snf-admin">
 		<header class="snf-admin__hero">
@@ -854,7 +955,6 @@ function snf_admin_render_shell_start( $active, $title, $lede, $nav_pages = null
 				if ( 'snf-stripe' === $slug && ! current_user_can( 'manage_woocommerce' ) ) {
 					continue;
 				}
-				// Overview lives on Dashboard Home (index.php); keep that the canonical URL.
 				$href = ( 'snf-club' === $slug )
 					? admin_url( 'index.php' )
 					: admin_url( 'admin.php?page=' . $slug );
@@ -865,91 +965,15 @@ function snf_admin_render_shell_start( $active, $title, $lede, $nav_pages = null
 			<?php endforeach; ?>
 		</nav>
 		<?php endif; ?>
-		<?php if ( isset( $_GET['updated'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
-			<div class="snf-admin__notice snf-admin__notice--success">
-				<?php esc_html_e( 'Settings saved.', 'super-ninety-four' ); ?>
-			</div>
-		<?php endif; ?>
-		<?php if ( isset( $_GET['flushed'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
-			<div class="snf-admin__notice snf-admin__notice--success">
-				<?php esc_html_e( 'Permalinks flushed.', 'super-ninety-four' ); ?>
-			</div>
-		<?php endif; ?>
-		<?php if ( isset( $_GET['styles_reset'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
-			<div class="snf-admin__notice snf-admin__notice--success">
-				<?php esc_html_e( 'Global Styles reset to theme.json defaults.', 'super-ninety-four' ); ?>
-			</div>
-		<?php endif; ?>
-		<?php if ( isset( $_GET['seeded'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
-			<div class="snf-admin__notice snf-admin__notice--success">
-				<?php esc_html_e( 'Default ticket addon kinds / experiences checked and missing terms inserted.', 'super-ninety-four' ); ?>
-			</div>
-		<?php endif; ?>
-		<?php if ( isset( $_GET['bootstrapped'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
-			<div class="snf-admin__notice snf-admin__notice--success">
-				<?php esc_html_e( 'Club bootstrap finished (roles, tables, circles, pages, menus).', 'super-ninety-four' ); ?>
-			</div>
-		<?php endif; ?>
-		<?php if ( isset( $_GET['products_ok'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
-			<div class="snf-admin__notice snf-admin__notice--success">
-				<?php
-				$kind = sanitize_key( wp_unslash( (string) $_GET['products_ok'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-				if ( 'reciprocal' === $kind ) {
-					esc_html_e( 'Reciprocal program products checked; missing products created.', 'super-ninety-four' );
-				} else {
-					esc_html_e( 'Membership catalog products checked; missing products created.', 'super-ninety-four' );
-				}
-				?>
-			</div>
-		<?php endif; ?>
-		<?php if ( isset( $_GET['lookup'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
+		<?php foreach ( snf_admin_collect_notices() as $notice ) : ?>
 			<?php
-			$lookup = sanitize_key( wp_unslash( (string) $_GET['lookup'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			if ( 'ok' === $lookup ) :
-				?>
-			<div class="snf-admin__notice snf-admin__notice--success">
-				<?php esc_html_e( 'Subscription lookup completed — results below.', 'super-ninety-four' ); ?>
+			$type = isset( $notice['type'] ) ? (string) $notice['type'] : 'success';
+			$mod  = 'error' === $type ? 'error' : ( 'warn' === $type ? 'warn' : 'success' );
+			?>
+			<div class="snf-admin__notice snf-admin__notice--<?php echo esc_attr( $mod ); ?>">
+				<?php echo esc_html( (string) $notice['message'] ); ?>
 			</div>
-			<?php elseif ( 'empty' === $lookup ) : ?>
-			<div class="snf-admin__notice snf-admin__notice--warn">
-				<?php esc_html_e( 'No Stripe subscriptions found for that email.', 'super-ninety-four' ); ?>
-			</div>
-			<?php elseif ( 'fail' === $lookup ) : ?>
-			<div class="snf-admin__notice snf-admin__notice--error">
-				<?php
-				$err = get_transient( 'snf_admin_lookup_error_' . get_current_user_id() );
-				echo esc_html( is_string( $err ) && $err ? $err : __( 'Subscription lookup failed.', 'super-ninety-four' ) );
-				?>
-			</div>
-			<?php endif; ?>
-		<?php endif; ?>
-		<?php if ( isset( $_GET['stripe_probe'] ) && 'ok' === $_GET['stripe_probe'] ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
-			<div class="snf-admin__notice snf-admin__notice--success">
-				<?php esc_html_e( 'Connected: Stripe API key accepted.', 'super-ninety-four' ); ?>
-			</div>
-		<?php elseif ( isset( $_GET['stripe_probe'] ) && 'fail' === $_GET['stripe_probe'] ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
-			<div class="snf-admin__notice snf-admin__notice--error">
-				<?php esc_html_e( 'Stripe API probe failed — check the secret key for the selected mode.', 'super-ninety-four' ); ?>
-			</div>
-		<?php endif; ?>
-		<?php if ( isset( $_GET['supabase_probe'] ) && 'ok' === $_GET['supabase_probe'] ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
-			<div class="snf-admin__notice snf-admin__notice--success">
-				<?php esc_html_e( 'Supabase catalog probe succeeded.', 'super-ninety-four' ); ?>
-			</div>
-		<?php elseif ( isset( $_GET['supabase_probe'] ) && 'fail' === $_GET['supabase_probe'] ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
-			<div class="snf-admin__notice snf-admin__notice--warn">
-				<?php esc_html_e( 'Supabase catalog probe failed — check project URL and anon key.', 'super-ninety-four' ); ?>
-			</div>
-		<?php endif; ?>
-		<?php if ( isset( $_GET['mapbox_probe'] ) && 'missing' === $_GET['mapbox_probe'] ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
-			<div class="snf-admin__notice snf-admin__notice--warn">
-				<?php esc_html_e( 'Mapbox token is not set — Expo lead-rider map will stay inactive.', 'super-ninety-four' ); ?>
-			</div>
-		<?php elseif ( isset( $_GET['mapbox_probe'] ) && 'ok' === $_GET['mapbox_probe'] ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
-			<div class="snf-admin__notice snf-admin__notice--success">
-				<?php esc_html_e( 'Mapbox token is present.', 'super-ninety-four' ); ?>
-			</div>
-		<?php endif; ?>
+		<?php endforeach; ?>
 	<?php
 }
 
@@ -1064,8 +1088,7 @@ function snf_admin_render_overview() {
 		return;
 	}
 
-	$admin_js = get_template_directory() . '/dist/admin.js';
-	if ( file_exists( $admin_js ) ) {
+	if ( snf_admin_vue_bundle_ready() ) {
 		?>
 		<div class="wrap snf-admin snf-admin--vue">
 			<div id="snf-admin-overview"></div>
@@ -2392,8 +2415,7 @@ function snf_admin_render_critical_settings() {
 		__( 'Integrations, commerce seeds, and maintenance tools the Club and Stripe stacks rely on.', 'super-ninety-four' )
 	);
 
-	$admin_js = get_template_directory() . '/dist/admin.js';
-	if ( file_exists( $admin_js ) ) {
+	if ( snf_admin_vue_bundle_ready() ) {
 		echo '<div id="snf-admin-settings-pulse"></div>';
 	}
 	?>

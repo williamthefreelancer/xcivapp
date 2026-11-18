@@ -33,6 +33,7 @@
 @layer base {
   .snf-admin--vue,
   #snf-admin-overview,
+  #snf-admin-chrome,
   #snf-admin-settings-pulse {
     --background: 20 33% 95%;
     --foreground: 0 16% 9%;
@@ -58,12 +59,14 @@
 
   .snf-admin--vue *,
   #snf-admin-overview *,
+  #snf-admin-chrome *,
   #snf-admin-settings-pulse * {
     border-color: var(--color-border);
   }
 }
 
 #snf-admin-overview,
+#snf-admin-chrome,
 #snf-admin-settings-pulse {
   max-width: 1180px;
 }
