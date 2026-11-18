@@ -138,39 +138,49 @@ jobs:
             "${DREAMHOST_USERNAME}@${DREAMHOST_HOST}:${remote_plugin}/"
 
       - name: Activate snf-payments on DreamHost
+        # Hard ceiling: plain `timeout ssh` can still hang if SSH ignores SIGTERM.
+        timeout-minutes: 2
+        continue-on-error: true
         env:
           DREAMHOST_HOST: ${{ secrets.DREAMHOST_HOST }}
           DREAMHOST_USERNAME: ${{ secrets.DREAMHOST_USERNAME }}
           DREAMHOST_THEME_PATH: ${{ secrets.DREAMHOST_THEME_PATH }}
         run: |
-          set -euo pipefail
           remote_theme="${DREAMHOST_THEME_PATH%/}"
           remote_wp="${remote_theme%/wp-content/themes/super-ninety-four}"
 
-          # Theme/plugin files are already synced above. Cap WP-CLI so a slow host
-          # cannot hang the whole workflow (style reset lives in SNF Club Critical settings).
+          # Rsync already shipped theme + plugin. This step is best-effort only.
+          # -k 10 = SIGKILL if SIGTERM does not stop SSH within 10s.
           set +e
-          timeout 90 ssh -i "${HOME}/.ssh/dreamhost_deploy" \
+          timeout --foreground -k 10 60 ssh \
+            -i "${HOME}/.ssh/dreamhost_deploy" \
             -o IdentitiesOnly=yes \
             -o BatchMode=yes \
-            -o ConnectTimeout=20 \
-            -o ServerAliveInterval=10 \
-            -o ServerAliveCountMax=3 \
+            -o ConnectTimeout=15 \
+            -o ConnectionAttempts=1 \
+            -o ServerAliveInterval=5 \
+            -o ServerAliveCountMax=2 \
             "${DREAMHOST_USERNAME}@${DREAMHOST_HOST}" \
-            "cd '${remote_wp}' && \
-             if command -v wp >/dev/null 2>&1; then \
-               wp plugin activate snf-payments --quiet || true; \
-               wp theme activate super-ninety-four --quiet || true; \
-               wp rewrite flush --quiet || true; \
-               wp eval-file wp-content/themes/super-ninety-four/bin/snf-production-bootstrap.php || true; \
-               echo 'wp-cli: activate/bootstrap finished'; \
-             else \
-               echo 'wp-cli not found; activate snf-payments manually in WP Admin'; \
-             fi"
+            "set +e; cd '${remote_wp}' || exit 0; \
+             command -v wp >/dev/null 2>&1 || { echo 'wp-cli not found'; exit 0; }; \
+             wp plugin activate snf-payments --quiet; \
+             wp theme activate super-ninety-four --quiet; \
+             wp rewrite flush --quiet; \
+             wp eval-file wp-content/themes/super-ninety-four/bin/snf-production-bootstrap.php; \
+             echo 'wp-cli: activate/bootstrap finished'; \
+             exit 0"
           ssh_rc=$?
-          set -euo pipefail
-          if [ "${ssh_rc}" -eq 124 ]; then
-            echo "WP-CLI activate timed out after 90s; theme/plugin rsync already completed."
-          elif [ "${ssh_rc}" -ne 0 ]; then
-            echo "WP-CLI activate exited ${ssh_rc}; theme/plugin rsync already completed."
-          fi
+          set -e
+
+          case "${ssh_rc}" in
+            0)
+              echo "WP-CLI activate completed."
+              ;;
+            124|137)
+              echo "::warning::WP-CLI activate timed out (rc=${ssh_rc}); theme/plugin rsync already completed."
+              ;;
+            *)
+              echo "::warning::WP-CLI activate exited ${ssh_rc}; theme/plugin rsync already completed."
+              ;;
+          esac
+          exit 0
