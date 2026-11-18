@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'SNF_VERSION', '2.38.0' );
+define( 'SNF_VERSION', '2.38.1' );
 
 $snf_autoload = get_template_directory() . '/vendor/autoload.php';
 if ( file_exists( $snf_autoload ) ) {

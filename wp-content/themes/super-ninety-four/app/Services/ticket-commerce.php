@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 const SNF_TICKET_ADDON_SETTINGS_OPTION = 'snf_ticket_addon_settings';
 
 /**
- * Default Ticket Addon Kind / commerce desk settings.
+ * Default Ticket Addons & Upgrades / commerce desk settings.
  *
  * @return array<string, mixed>
  */
@@ -102,15 +102,15 @@ function snf_register_ticket_commerce_taxonomies() {
 		$types,
 		array(
 			'labels'            => array(
-				'name'          => __( 'Ticket Addon Kinds', 'super-ninety-four' ),
-				'singular_name' => __( 'Ticket Addon Kind', 'super-ninety-four' ),
-				'search_items'  => __( 'Search Addon Kinds', 'super-ninety-four' ),
-				'all_items'     => __( 'All Addon Kinds', 'super-ninety-four' ),
-				'edit_item'     => __( 'Edit Addon Kind', 'super-ninety-four' ),
-				'update_item'   => __( 'Update Addon Kind', 'super-ninety-four' ),
-				'add_new_item'  => __( 'Add New Addon Kind', 'super-ninety-four' ),
-				'new_item_name' => __( 'New Addon Kind Name', 'super-ninety-four' ),
-				'menu_name'     => __( 'Addon Kinds', 'super-ninety-four' ),
+				'name'          => __( 'Ticket Addons & Upgrades', 'super-ninety-four' ),
+				'singular_name' => __( 'Ticket Addon / Upgrade', 'super-ninety-four' ),
+				'search_items'  => __( 'Search Addons & Upgrades', 'super-ninety-four' ),
+				'all_items'     => __( 'All Addons & Upgrades', 'super-ninety-four' ),
+				'edit_item'     => __( 'Edit Addon / Upgrade', 'super-ninety-four' ),
+				'update_item'   => __( 'Update Addon / Upgrade', 'super-ninety-four' ),
+				'add_new_item'  => __( 'Add New Addon / Upgrade', 'super-ninety-four' ),
+				'new_item_name' => __( 'New Addon / Upgrade Name', 'super-ninety-four' ),
+				'menu_name'     => __( 'Addons & Upgrades', 'super-ninety-four' ),
 			),
 			'public'            => true,
 			'hierarchical'      => true,
