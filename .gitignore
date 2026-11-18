@@ -36,3 +36,10 @@ Thumbs.db
 
 # Local SSH authorized keys (do not commit)
 .ssh/
+
+# Local debug / render dumps
+scripts/_err-*
+scripts/_out-*
+scripts/_home-fatal.php
+scripts/_siteurl.php
+scripts/_snf-*.php

@@ -246,17 +246,165 @@ function snf_get_footer_legal_links() {
 }
 
 /**
- * Keep legal pages blank for manual writing; assign privacy + refund template.
+ * Starter legal copy ? only applied when the page body is empty.
+ *
+ * @param string $slug Page slug.
+ * @return string Block markup or empty.
+ */
+function snf_get_legal_starter_content( $slug ) {
+	$slug = sanitize_title( (string) $slug );
+
+	if ( 'privacy-policy' === $slug ) {
+		return <<<'HTML'
+<!-- wp:paragraph -->
+<p>SUPER NINETY FOUR ("we", "us") collects account, membership, order, and communications data needed to run the club, Expo marketplace, events, and related services. This may include name, email, billing details processed by Stripe, and content you submit through forms or member tools.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>We use this information to provide membership access, process payments, send transactional notices, improve the site, and meet legal obligations. Payment card data is handled by Stripe; we do not store full card numbers on our servers.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>We share data with service providers that help us operate (hosting, payments, email/CRM, analytics) and when required by law. We retain records as long as needed for membership, accounting, and security. Contact us to request access, correction, or deletion where applicable.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p><em>This is a starter policy for launch. Have counsel review and replace it with your final privacy policy.</em></p>
+<!-- /wp:paragraph -->
+HTML;
+	}
+
+	if ( 'refund_returns' === $slug ) {
+		return <<<'HTML'
+<!-- wp:paragraph -->
+<p>Membership dues, event tickets, and digital or scheduled services are generally non-refundable once purchase is complete, except where required by law or when SUPER NINETY FOUR cancels an offering.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>If an event is postponed or cancelled, we will offer a transfer, credit, or refund according to the notice we send for that event. Chargebacks should be a last resort ? email us first so we can resolve the issue.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Physical merchandise (if offered) that arrives damaged or incorrect may be eligible for return within 14 days of delivery when unused and in original packaging. Contact us with your order number to start a return.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p><em>This is a starter refund policy for launch. Update it to match your final commerce terms.</em></p>
+<!-- /wp:paragraph -->
+HTML;
+	}
+
+	return '';
+}
+
+/**
+ * Assign privacy + refund templates; seed empty legal bodies with starter copy.
  */
 function snf_ensure_legal_page_content() {
 	$privacy = get_page_by_path( 'privacy-policy' );
 	if ( $privacy ) {
 		update_option( 'wp_page_for_privacy_policy', (int) $privacy->ID );
+		update_post_meta( (int) $privacy->ID, '_wp_page_template', 'legal' );
+
+		if ( '' === trim( (string) $privacy->post_content ) ) {
+			$starter = snf_get_legal_starter_content( 'privacy-policy' );
+			if ( '' !== $starter ) {
+				wp_update_post(
+					array(
+						'ID'           => (int) $privacy->ID,
+						'post_content' => $starter,
+					)
+				);
+			}
+		}
 	}
 
 	$refund = get_page_by_path( 'refund_returns' );
 	if ( $refund ) {
 		update_post_meta( (int) $refund->ID, '_wp_page_template', 'legal' );
+
+		if ( '' === trim( (string) $refund->post_content ) ) {
+			$starter = snf_get_legal_starter_content( 'refund_returns' );
+			if ( '' !== $starter ) {
+				wp_update_post(
+					array(
+						'ID'           => (int) $refund->ID,
+						'post_content' => $starter,
+					)
+				);
+			}
+		}
+	}
+}
+
+/**
+ * Starter Gutenberg markup for blank-canvas marketing pages (Contact / Newsletter).
+ * Only applied when the page body is empty so editor edits are kept.
+ *
+ * @param string $slug Page slug.
+ * @return string Block markup or empty.
+ */
+function snf_get_blank_canvas_starter_content( $slug ) {
+	$slug = sanitize_title( (string) $slug );
+
+	if ( 'contact' === $slug ) {
+		return <<<'HTML'
+<!-- wp:snf/page-hero {"title":"Contact","lede":"Reach SUPER NINETY FOUR - membership, events, and concierge questions."} /-->
+
+<!-- wp:snf/form-slot {"heading":"Send a message","hint":"Insert a SureForms form block here."} -->
+<!-- wp:paragraph -->
+<p></p>
+<!-- /wp:paragraph -->
+<!-- /wp:snf/form-slot -->
+
+<!-- wp:snf/cta-button {"label":"Apply for membership","target":"apply"} /-->
+HTML;
+	}
+
+	if ( 'newsletter' === $slug ) {
+		return <<<'HTML'
+<!-- wp:snf/page-hero {"title":"Newsletter","lede":"Updates on Expo gatherings, reciprocal clubs, and member events."} /-->
+
+<!-- wp:snf/form-slot {"heading":"Subscribe","hint":"Insert a SureForms form block here."} -->
+<!-- wp:paragraph -->
+<p></p>
+<!-- /wp:paragraph -->
+<!-- /wp:snf/form-slot -->
+
+<!-- wp:snf/cta-button {"label":"Explore Expo","target":"expo"} /-->
+HTML;
+	}
+
+	return '';
+}
+
+/**
+ * Seed empty blank-canvas pages with hero + form-slot + CTA blocks.
+ */
+function snf_ensure_blank_canvas_page_content() {
+	foreach ( array( 'contact', 'newsletter' ) as $slug ) {
+		$page = get_page_by_path( $slug );
+		if ( ! ( $page instanceof WP_Post ) ) {
+			continue;
+		}
+
+		update_post_meta( (int) $page->ID, '_wp_page_template', 'blank-canvas' );
+
+		if ( '' !== trim( (string) $page->post_content ) ) {
+			continue;
+		}
+
+		$starter = snf_get_blank_canvas_starter_content( $slug );
+		if ( '' === $starter ) {
+			continue;
+		}
+
+		wp_update_post(
+			array(
+				'ID'           => (int) $page->ID,
+				'post_content' => $starter,
+			)
+		);
 	}
 }
 
@@ -290,11 +438,11 @@ function snf_ensure_site_pages() {
 
 		$page_id = wp_insert_post(
 			array(
-				'post_title'  => $config['title'],
-				'post_name'   => $slug,
-				'post_status' => 'publish',
-				'post_type'   => 'page',
-				'post_content'=> '',
+				'post_title'   => $config['title'],
+				'post_name'    => $slug,
+				'post_status'  => 'publish',
+				'post_type'    => 'page',
+				'post_content' => '',
 			),
 			true
 		);
@@ -306,6 +454,11 @@ function snf_ensure_site_pages() {
 
 	snf_ensure_home_is_front_page();
 	snf_ensure_legal_page_content();
+	snf_ensure_blank_canvas_page_content();
+
+	if ( function_exists( 'snf_wc_ensure_store_pages' ) ) {
+		snf_wc_ensure_store_pages();
+	}
 }
 
 /**

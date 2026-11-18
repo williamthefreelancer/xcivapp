@@ -38,17 +38,43 @@ function snf_wc_find_page_id_by_slug( $slug ) {
 }
 
 /**
- * Link WooCommerce page options to existing pages and force classic shortcodes.
+ * Classic shortcode + FSE page template for each store page (except shop).
+ *
+ * @return array<string, array{template:string,shortcode:string,content:string}>
+ */
+function snf_wc_store_page_shells() {
+	return array(
+		'myaccount' => array(
+			'template'  => 'woocommerce-account',
+			'shortcode' => 'woocommerce_my_account',
+			'content'   => "<!-- wp:shortcode -->\n[woocommerce_my_account]\n<!-- /wp:shortcode -->",
+		),
+		'cart'      => array(
+			'template'  => 'woocommerce-cart',
+			'shortcode' => 'woocommerce_cart',
+			'content'   => "<!-- wp:shortcode -->\n[woocommerce_cart]\n<!-- /wp:shortcode -->",
+		),
+		'checkout'  => array(
+			'template'  => 'woocommerce-checkout',
+			'shortcode' => 'woocommerce_checkout',
+			'content'   => "<!-- wp:shortcode -->\n[woocommerce_checkout]\n<!-- /wp:shortcode -->",
+		),
+	);
+}
+
+/**
+ * Link WooCommerce page options to existing pages and keep classic shortcodes.
  *
  * Cart/checkout Blocks conflict with snf-payments Elements + theme form-checkout.
+ * Templates are re-applied every request; body shortcodes only when missing.
  */
 function snf_wc_ensure_store_pages() {
 	if ( ! class_exists( 'WooCommerce' ) ) {
 		return;
 	}
 
-	$version = '2.31.0-wc-fse-store';
-	$force   = ( get_option( 'snf_wc_store_pages_version' ) !== $version );
+	$version = '2.32.0-wc-fse-store';
+	$shells  = snf_wc_store_page_shells();
 
 	foreach ( snf_wc_store_page_slugs() as $key => $slug ) {
 		$option  = 'woocommerce_' . $key . '_page_id';
@@ -64,54 +90,42 @@ function snf_wc_ensure_store_pages() {
 		}
 
 		if ( 'shop' === $key ) {
-			// Shop is a product archive driven by templates/archive-product.html.
-			$shop_tpl = (string) get_post_meta( $page_id, '_wp_page_template', true );
-			if ( '' !== $shop_tpl && 'default' !== $shop_tpl ) {
-				delete_post_meta( $page_id, '_wp_page_template' );
-			}
+			// Shop uses FSE templates/archive-product.html via Woo's ProductCatalogTemplate
+			// get_post_metadata filter (virtual archive-product slug). Leave it alone.
 			continue;
 		}
 
-		if ( ! $force ) {
+		if ( ! isset( $shells[ $key ] ) ) {
 			continue;
 		}
 
-		if ( 'myaccount' === $key ) {
-			update_post_meta( $page_id, '_wp_page_template', 'woocommerce-account' );
+		$shell = $shells[ $key ];
+		if ( get_page_template_slug( $page_id ) !== $shell['template'] ) {
+			update_post_meta( $page_id, '_wp_page_template', $shell['template'] );
+		}
+
+		$page = get_post( $page_id );
+		if ( ! ( $page instanceof WP_Post ) ) {
+			continue;
+		}
+
+		$content = (string) $page->post_content;
+		$has_sc  = has_shortcode( $content, $shell['shortcode'] )
+			|| false !== strpos( $content, '[' . $shell['shortcode'] );
+
+		if ( ! $has_sc ) {
 			wp_update_post(
 				array(
 					'ID'           => $page_id,
-					'post_content' => "<!-- wp:shortcode -->\n[woocommerce_my_account]\n<!-- /wp:shortcode -->",
-				)
-			);
-			continue;
-		}
-
-		if ( 'cart' === $key ) {
-			update_post_meta( $page_id, '_wp_page_template', 'woocommerce-cart' );
-			wp_update_post(
-				array(
-					'ID'           => $page_id,
-					'post_content' => "<!-- SNF: classic cart for themed shop_table + snf-payments -->\n[woocommerce_cart]",
-				)
-			);
-			continue;
-		}
-
-		if ( 'checkout' === $key ) {
-			update_post_meta( $page_id, '_wp_page_template', 'woocommerce-checkout' );
-			wp_update_post(
-				array(
-					'ID'           => $page_id,
-					'post_content' => "<!-- SNF Payments: classic checkout required for Stripe Elements gateway -->\n[woocommerce_checkout]",
+					'post_content' => $shell['content'],
 				)
 			);
 		}
 	}
 
-	if ( $force ) {
-		// Prefer classic shortcode checkout over Cart/Checkout Blocks.
-		update_option( 'woocommerce_cart_checkout_blocks_enabled', 'no' );
+	// Prefer classic shortcode checkout over Cart/Checkout Blocks.
+	update_option( 'woocommerce_cart_checkout_blocks_enabled', 'no' );
+	if ( get_option( 'snf_wc_store_pages_version' ) !== $version ) {
 		update_option( 'snf_wc_store_pages_version', $version, false );
 	}
 }
