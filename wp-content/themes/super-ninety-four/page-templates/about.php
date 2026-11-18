@@ -40,10 +40,10 @@ get_header();
 			<figure class="snf-about__portrait" data-figma-node="2176:50">
 				<img
 					class="snf-about__portrait-img"
-					src="<?php echo esc_url( $assets . '/founder-avatar.png' ); ?>"
+					src="<?php echo esc_url( $assets . '/waj-image.jpg' ); ?>"
 					alt="<?php echo esc_attr( isset( $founder['name'] ) ? $founder['name'] : __( 'William Antwine Johnson', 'super-ninety-four' ) ); ?>"
-					width="352"
-					height="310"
+					width="512"
+					height="512"
 					loading="lazy"
 					decoding="async"
 				>
