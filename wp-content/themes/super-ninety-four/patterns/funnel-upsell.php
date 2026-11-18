@@ -2,7 +2,7 @@
 /**
  * Title: Funnel Upsell
  * slug: super-ninety-four/funnel-upsell
- * categories: snf-funnel
+ * categories: snf, snf-funnel
  * keywords: upsell, oto, funnel, woocommerce
  * viewportWidth: 720
  * Description: Post-purchase upsell layout for Funnel Offer / Blank Canvas pages. Keep [snf_funnel_actions] for accept/decline.

@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'SNF_VERSION', '2.34.0' );
+define( 'SNF_VERSION', '2.35.0' );
 
 $snf_autoload = get_template_directory() . '/vendor/autoload.php';
 if ( file_exists( $snf_autoload ) ) {
@@ -31,12 +31,13 @@ if ( class_exists( '\SNF\Support\Bootstrap' ) ) {
 }
 
 function snf_setup() {
-	add_theme_support( 'title-tag' );
+	// Block theme: core provides title-tag / html5. Keep media + nav locations
+	// used by snf/site-header and snf/site-footer dynamic blocks.
 	add_theme_support( 'post-thumbnails' );
-	add_theme_support(
-		'html5',
-		array( 'search-form', 'comment-form', 'comment-list', 'gallery', 'caption', 'style', 'script' )
-	);
+	add_theme_support( 'responsive-embeds' );
+	add_theme_support( 'align-wide' );
+	add_theme_support( 'editor-styles' );
+	add_theme_support( 'wp-block-styles' );
 
 	register_nav_menus(
 		array(

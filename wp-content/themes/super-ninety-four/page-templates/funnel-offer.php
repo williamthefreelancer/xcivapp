@@ -1,6 +1,6 @@
 <?php
 /**
- * Template Name: Funnel Offer
+ * FSE php-view: loaded by Site Editor templates via snf/php-view (not a classic page template).
  * Description: Minimal chrome for post-purchase upsell / downsell pages. Build content with SNF Funnel patterns and [snf_funnel_actions].
  */
 

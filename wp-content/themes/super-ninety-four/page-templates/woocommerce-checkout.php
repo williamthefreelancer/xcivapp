@@ -1,6 +1,6 @@
 <?php
 /**
- * Template Name: WooCommerce Checkout Shell
+ * FSE php-view: loaded by Site Editor templates via snf/php-view (not a classic page template).
  * Description: Branded classic checkout host for [woocommerce_checkout] + snf-payments.
  *
  * @package Super_Ninety_Four

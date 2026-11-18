@@ -2,7 +2,7 @@
 
 JSON-LD templates and notes so search engines and answer engines understand the brand, site, events, and FAQs.
 
-Pair with [`../technical-seo/`](../technical-seo/) on every public update.
+Pair with [`../seo/`](../seo/) on every public update.
 
 ## Contents
 
@@ -22,7 +22,7 @@ Pair with [`../technical-seo/`](../technical-seo/) on every public update.
 1. **Visible truth only** — schema must match on-page content.
 2. **One canonical URL** per entity — same as ads and calendar listings.
 3. **Validate** after edits: [Rich Results Test](https://search.google.com/test/rich-results).
-4. **Log** URL + template used in `technical-seo/CRITICAL-CHANGES-LOG.md`.
+4. **Log** URL + template used in [`../seo/CRITICAL-CHANGES-LOG.md`](../seo/CRITICAL-CHANGES-LOG.md).
 
 ## Replace placeholders
 

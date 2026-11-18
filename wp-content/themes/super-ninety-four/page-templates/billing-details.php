@@ -1,6 +1,6 @@
 <?php
 /**
- * Template Name: Billing Details Hub
+ * FSE php-view: loaded by Site Editor templates via snf/php-view (not a classic page template).
  * Description: Membership dues, house account, and invoice boilerplates.
  */
 

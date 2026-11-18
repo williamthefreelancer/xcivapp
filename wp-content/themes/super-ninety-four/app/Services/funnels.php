@@ -810,14 +810,5 @@ function snf_is_funnel_offer_page() {
 }
 
 /**
- * Register funnel pattern category.
+ * Funnel pattern category is registered in editor.php (snf-funnel).
  */
-function snf_funnel_register_pattern_category() {
-	register_block_pattern_category(
-		'snf-funnel',
-		array(
-			'label' => __( 'SNF Funnels', 'super-ninety-four' ),
-		)
-	);
-}
-add_action( 'init', 'snf_funnel_register_pattern_category', 9 );

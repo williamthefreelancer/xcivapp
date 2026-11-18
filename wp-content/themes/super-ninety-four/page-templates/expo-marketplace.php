@@ -1,6 +1,6 @@
 <?php
 /**
- * Template Name: Expo Marketplace
+ * FSE php-view: loaded by Site Editor templates via snf/php-view (not a classic page template).
  * Description: Select events, scenic drives, and gatherings with Mapbox lead rider + walkie.
  */
 

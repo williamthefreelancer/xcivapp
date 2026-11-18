@@ -1,0 +1,19 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/theme.json",
+  "version": 3,
+  "title": "Ghost",
+  "slug": "ghost",
+  "blockTypes": ["core/button"],
+  "styles": {
+    "color": {
+      "background": "transparent",
+      "text": "var(--wp--preset--color--ink-muted)"
+    },
+    "border": {
+      "color": "var(--wp--preset--color--ink-soft)",
+      "width": "1px",
+      "style": "solid",
+      "radius": "2px"
+    }
+  }
+}

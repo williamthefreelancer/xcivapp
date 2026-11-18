@@ -3,7 +3,7 @@
  * JSON-LD structured data for AEO / search indexing.
  *
  * Emits Organization + WebSite sitewide on public views, plus Event / Product /
- * BreadcrumbList when the current request matches. Templates live in /schema/.
+ * BreadcrumbList when the current request matches. Templates live in docs/schema/.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

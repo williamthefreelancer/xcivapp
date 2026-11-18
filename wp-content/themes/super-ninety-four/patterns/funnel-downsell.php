@@ -2,7 +2,7 @@
 /**
  * Title: Funnel Downsell
  * slug: super-ninety-four/funnel-downsell
- * categories: snf-funnel
+ * categories: snf, snf-funnel
  * keywords: downsell, oto, funnel, woocommerce
  * viewportWidth: 720
  * Description: Decline-path downsell for Funnel Offer pages. Keep [snf_funnel_actions] so accept/decline stay wired.

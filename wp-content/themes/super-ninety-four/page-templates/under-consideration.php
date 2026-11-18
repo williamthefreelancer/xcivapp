@@ -1,6 +1,6 @@
 <?php
 /**
- * Template Name: Under Consideration
+ * FSE php-view: loaded by Site Editor templates via snf/php-view (not a classic page template).
  * Description: Post-application holding page for snf_applicant Soft-guard redirects.
  */
 

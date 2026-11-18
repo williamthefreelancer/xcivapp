@@ -1,6 +1,6 @@
 <?php
 /**
- * Template Name: Videos & Audio
+ * FSE php-view: loaded by Site Editor templates via snf/php-view (not a classic page template).
  * Description: YouTube library, audio channels, and live/hybrid event hub.
  *
  * @package Super_Ninety_Four

@@ -1,6 +1,6 @@
 <?php
 /**
- * Template Name: Reciprocal Club
+ * FSE php-view: loaded by Site Editor templates via snf/php-view (not a classic page template).
  * Description: Figma inquiries-single-page reciprocal club landing.
  */
 

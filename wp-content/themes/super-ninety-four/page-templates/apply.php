@@ -1,6 +1,6 @@
 <?php
 /**
- * Template Name: Apply Hub
+ * FSE php-view: loaded by Site Editor templates via snf/php-view (not a classic page template).
  * Description: Non-member admissions — Basics, Profile, then Intent (billing).
  */
 

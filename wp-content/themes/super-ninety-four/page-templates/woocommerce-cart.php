@@ -1,6 +1,6 @@
 <?php
 /**
- * Template Name: WooCommerce Cart Shell
+ * FSE php-view: loaded by Site Editor templates via snf/php-view (not a classic page template).
  * Description: Branded classic cart surface (shortcode), matching SNF account/checkout chrome.
  *
  * @package Super_Ninety_Four

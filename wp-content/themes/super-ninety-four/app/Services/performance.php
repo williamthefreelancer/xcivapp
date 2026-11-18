@@ -184,16 +184,26 @@ function snf_trim_front_assets() {
 		return;
 	}
 
-	$keep_block_styles = ( function_exists( 'snf_is_marketing_host_page' ) && snf_is_marketing_host_page() )
+	$keep_block_styles = ( function_exists( 'wp_is_block_theme' ) && wp_is_block_theme() )
+		|| ( function_exists( 'snf_is_marketing_host_page' ) && snf_is_marketing_host_page() )
 		|| ( function_exists( 'snf_is_funnel_offer_page' ) && snf_is_funnel_offer_page() )
-		|| ( function_exists( 'snf_is_page_template' ) && snf_is_page_template( array( 'page-templates/blank-canvas.php', 'blank-canvas', 'page-templates/funnel-offer.php', 'funnel-offer' ) ) );
+		|| ( function_exists( 'snf_is_page_template' ) && snf_is_page_template( array( 'blank-canvas', 'funnel-offer' ) ) );
+
+	/**
+	 * Filter whether block library + global styles stay enqueued.
+	 *
+	 * @param bool $keep_block_styles Keep styles.
+	 */
+	$keep_block_styles = (bool) apply_filters( 'snf_keep_block_styles', $keep_block_styles );
 
 	if ( ! $keep_block_styles ) {
 		wp_dequeue_style( 'wp-block-library' );
 		wp_dequeue_style( 'wp-block-library-theme' );
-		wp_dequeue_style( 'classic-theme-styles' );
 		wp_dequeue_style( 'global-styles' );
 	}
+
+	// Block themes never use classic-theme-styles.
+	wp_dequeue_style( 'classic-theme-styles' );
 
 	wp_dequeue_style( 'wc-blocks-style' );
 	wp_dequeue_style( 'wc-blocks-vendors-style' );

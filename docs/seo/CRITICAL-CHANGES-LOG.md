@@ -24,7 +24,7 @@ Record site, schema, ads, and calendar changes that can break discovery or paid 
 ### 2026-11-17 — Theme JSON-LD wired + ops folders
 - Owner: William / ops
 - Pages / URLs: all public theme views via `wp_head`
-- What changed: Added `inc/schema.php` (Organization, WebSite, Event, BreadcrumbList, Product); ops folders `technical-seo/` + `schema/`; theme version 2.18.0
+- What changed: Added `inc/schema.php` (Organization, WebSite, Event, BreadcrumbList, Product); ops folders now `docs/seo/` + `docs/schema/`; theme version 2.18.0
 - Why: Keep indexing, AEO, SEM, X Ads, event calendars, and mobile optimization consistent on every update; emit structured data automatically
 - Schema updated?: live emitter + templates under `schema/templates/`
 - Ads updated?: n/a

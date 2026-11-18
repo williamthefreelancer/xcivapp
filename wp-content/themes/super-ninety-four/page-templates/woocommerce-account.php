@@ -1,6 +1,6 @@
 <?php
 /**
- * Template Name: WooCommerce Account Shell
+ * FSE php-view: loaded by Site Editor templates via snf/php-view (not a classic page template).
  * Description: Full-bleed account layout for My Account (sidebar + Figma panels).
  */
 

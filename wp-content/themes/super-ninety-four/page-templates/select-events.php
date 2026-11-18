@@ -1,6 +1,6 @@
 <?php
 /**
- * Template Name: Select Events Listings
+ * FSE php-view: loaded by Site Editor templates via snf/php-view (not a classic page template).
  * Description: Member / non-member event listing pages using dashboard cards.
  */
 

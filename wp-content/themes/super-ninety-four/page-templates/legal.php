@@ -1,6 +1,6 @@
 <?php
 /**
- * Template Name: Legal
+ * FSE php-view: loaded by Site Editor templates via snf/php-view (not a classic page template).
  * Description: Privacy, terms, cookies, and other policy pages.
  */
 

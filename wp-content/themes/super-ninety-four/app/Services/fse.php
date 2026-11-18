@@ -1,6 +1,6 @@
 <?php
 /**
- * Full Site Editing helpers: legacy PHP view embed + page template migration.
+ * Full Site Editing helpers: php-view embeds + classic page-template migration.
  *
  * @package Super_Ninety_Four
  */

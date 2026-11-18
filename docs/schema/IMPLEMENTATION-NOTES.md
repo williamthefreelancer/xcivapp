@@ -46,7 +46,7 @@ Pull live values from existing helpers where possible:
 1. Update template or PHP emitter.
 2. View page source → confirm JSON-LD.
 3. Rich Results Test on production URL.
-4. Log in `technical-seo/CRITICAL-CHANGES-LOG.md`.
+4. Log in `docs/seo/CRITICAL-CHANGES-LOG.md`.
 5. If event dates/URLs changed → update paid calendars + ads the same day.
 
 ## Do not

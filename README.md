@@ -2,6 +2,19 @@
 
 Local WordPress site backed by MySQL 8.4. Custom theme: `wp-content/themes/super-ninety-four`.
 
+## Repo layout
+
+| Path | Role |
+|------|------|
+| `wp-content/themes/super-ninety-four/` | Custom theme (app code + Vite front-end) |
+| `wp-content/plugins/snf-payments/` | Stripe / Woo payments plugin |
+| `docs/seo/` | Technical SEO / AEO / ads playbooks |
+| `docs/schema/` | JSON-LD reference templates |
+| `scripts/` | Local MySQL + PHP server helpers |
+| `.github/workflows/` | DreamHost theme deploy |
+
+WordPress core (`wp-admin/`, `wp-includes/`, root `wp-*.php`) stays at the document root for XAMPP.
+
 ## Theme architecture (MVC-style)
 
 WordPress stays the CMS/runtime. The custom theme is organized as:

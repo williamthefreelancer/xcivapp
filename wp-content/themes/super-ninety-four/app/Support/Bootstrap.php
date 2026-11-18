@@ -20,6 +20,7 @@ final class Bootstrap {
 	private static $services = array(
 		'account-hub.php',
 		'fse.php',
+		'editor.php',
 		'blocks.php',
 		'memberships.php',
 		'dashboard-shell.php',

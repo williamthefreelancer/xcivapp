@@ -1,0 +1,15 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/theme.json",
+  "version": 3,
+  "title": "Muted",
+  "slug": "muted",
+  "blockTypes": ["core/paragraph"],
+  "styles": {
+    "color": {
+      "text": "var(--wp--preset--color--ink-soft)"
+    },
+    "typography": {
+      "fontSize": "var(--wp--preset--font-size--small)"
+    }
+  }
+}

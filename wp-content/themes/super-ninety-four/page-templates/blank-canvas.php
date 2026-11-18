@@ -1,6 +1,6 @@
 <?php
 /**
- * Template Name: Blank Canvas
+ * FSE php-view: loaded by Site Editor templates via snf/php-view (not a classic page template).
  * Description: Public pages with header/footer; renders Gutenberg/plugin blocks when content exists.
  */
 

@@ -1,6 +1,6 @@
 <?php
 /**
- * Template Name: Member Login Hub
+ * FSE php-view: loaded by Site Editor templates via snf/php-view (not a classic page template).
  * Description: Private club member authentication boilerplate.
  */
 
