@@ -16,6 +16,10 @@ const props = defineProps({
     type: String,
     default: 'button',
   },
+  href: {
+    type: String,
+    default: '',
+  },
   disabled: {
     type: Boolean,
     default: false,
@@ -27,7 +31,7 @@ const props = defineProps({
 });
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 no-underline',
   {
     variants: {
       variant: {
@@ -57,7 +61,10 @@ const classes = computed(() =>
 </script>
 
 <template>
-  <button :type="type" :disabled="disabled" :class="classes">
+  <a v-if="href" :href="href" :class="classes" :aria-disabled="disabled || undefined">
+    <slot />
+  </a>
+  <button v-else :type="type" :disabled="disabled" :class="classes">
     <slot />
   </button>
 </template>

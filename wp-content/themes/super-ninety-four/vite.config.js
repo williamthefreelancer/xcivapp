@@ -47,17 +47,24 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
     manifest: true,
-    cssCodeSplit: false,
+    cssCodeSplit: true,
     rollupOptions: {
-      input: path.resolve(themeRoot, 'resources/js/main.js'),
+      input: {
+        main: path.resolve(themeRoot, 'resources/js/main.js'),
+        admin: path.resolve(themeRoot, 'resources/js/admin.js'),
+      },
       external: ['jquery'],
       output: {
         format: 'es',
-        entryFileNames: 'main.js',
+        entryFileNames: '[name].js',
         chunkFileNames: 'chunks/[name]-[hash].js',
         assetFileNames: (assetInfo) => {
           if (assetInfo.name && assetInfo.name.endsWith('.css')) {
-            return 'main.css';
+            const n = assetInfo.name.replace(/\.css$/, '');
+            if (n === 'main' || n === 'admin' || n.includes('main') || n.includes('admin')) {
+              return n.includes('admin') ? 'admin.css' : 'main.css';
+            }
+            return '[name][extname]';
           }
           return 'assets/[name]-[hash][extname]';
         },

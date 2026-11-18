@@ -28,6 +28,11 @@ body.snf-admin-home #screen-meta {
 	line-height: 1.45;
 }
 
+/* Vue overview owns chrome; keep wrap spacing only. */
+.snf-admin.snf-admin--vue {
+	background: transparent;
+}
+
 .snf-admin *,
 .snf-admin *::before,
 .snf-admin *::after {

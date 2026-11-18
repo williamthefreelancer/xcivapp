@@ -286,13 +286,18 @@ add_action( 'wp_enqueue_scripts', 'snf_trim_front_assets', 100 );
  * @return string
  */
 function snf_module_script_loader_tag( $tag, $handle, $src ) {
-	if ( 'snf-main' !== $handle ) {
+	$module_handles = array(
+		'snf-main'      => 'snf-main-js',
+		'snf-admin-vue' => 'snf-admin-vue-js',
+	);
+	if ( ! isset( $module_handles[ $handle ] ) ) {
 		return $tag;
 	}
 
 	return sprintf(
-		'<script type="module" src="%s" id="snf-main-js"></script>' . "\n",
-		esc_url( $src )
+		'<script type="module" src="%s" id="%s"></script>' . "\n",
+		esc_url( $src ),
+		esc_attr( $module_handles[ $handle ] )
 	);
 }
 add_filter( 'script_loader_tag', 'snf_module_script_loader_tag', 10, 3 );

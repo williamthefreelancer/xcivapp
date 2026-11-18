@@ -1,43 +1,66 @@
 {
-  "_runtime-core.esm-bundler-b0Zs5vMb.js": {
-    "file": "chunks/runtime-core.esm-bundler-b0Zs5vMb.js",
+  "_Button-B2oDQaX1.js": {
+    "file": "chunks/Button-B2oDQaX1.js",
+    "name": "Button",
+    "isDynamicEntry": true,
+    "imports": [
+      "_utils-BLSKlp9E.js",
+      "_runtime-core.esm-bundler-BscDEp8V.js"
+    ]
+  },
+  "_runtime-core.esm-bundler-BscDEp8V.js": {
+    "file": "chunks/runtime-core.esm-bundler-BscDEp8V.js",
     "name": "runtime-core.esm-bundler"
+  },
+  "_runtime-dom.esm-bundler-gYhsrXwr.js": {
+    "file": "chunks/runtime-dom.esm-bundler-gYhsrXwr.js",
+    "name": "runtime-dom.esm-bundler",
+    "imports": [
+      "_runtime-core.esm-bundler-BscDEp8V.js"
+    ]
   },
   "_ticket-commerce-DzH-mtDC.js": {
     "file": "chunks/ticket-commerce-DzH-mtDC.js",
     "name": "ticket-commerce"
   },
-  "_utils-BEhiKRD9.js": {
-    "file": "chunks/utils-BEhiKRD9.js",
+  "_utils-BLSKlp9E.js": {
+    "file": "chunks/utils-BLSKlp9E.js",
     "name": "utils"
   },
   "node_modules/vue/dist/vue.runtime.esm-bundler.js": {
-    "file": "chunks/vue.runtime.esm-bundler-DKq5rCzx.js",
+    "file": "chunks/vue.runtime.esm-bundler-CZyBmL3L.js",
     "name": "vue.runtime.esm-bundler",
     "src": "node_modules/vue/dist/vue.runtime.esm-bundler.js",
     "isDynamicEntry": true,
     "imports": [
-      "_runtime-core.esm-bundler-b0Zs5vMb.js"
+      "_runtime-dom.esm-bundler-gYhsrXwr.js",
+      "_runtime-core.esm-bundler-BscDEp8V.js"
     ]
   },
-  "resources/js/components/ui/Button.vue": {
-    "file": "chunks/Button-DUOWjaj-.js",
-    "name": "Button",
-    "src": "resources/js/components/ui/Button.vue",
-    "isDynamicEntry": true,
+  "resources/js/admin.js": {
+    "file": "admin.js",
+    "name": "admin",
+    "src": "resources/js/admin.js",
+    "isEntry": true,
     "imports": [
-      "_utils-BEhiKRD9.js",
-      "_runtime-core.esm-bundler-b0Zs5vMb.js"
+      "_runtime-dom.esm-bundler-gYhsrXwr.js",
+      "_utils-BLSKlp9E.js",
+      "_runtime-core.esm-bundler-BscDEp8V.js",
+      "_Button-B2oDQaX1.js",
+      "resources/js/components/ui/Card.vue"
+    ],
+    "css": [
+      "admin.css"
     ]
   },
   "resources/js/components/ui/Card.vue": {
-    "file": "chunks/Card-Ci_3AI78.js",
+    "file": "chunks/Card-Dx068Xv2.js",
     "name": "Card",
     "src": "resources/js/components/ui/Card.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_utils-BEhiKRD9.js",
-      "_runtime-core.esm-bundler-b0Zs5vMb.js"
+      "_utils-BLSKlp9E.js",
+      "_runtime-core.esm-bundler-BscDEp8V.js"
     ]
   },
   "resources/js/islands/community.js": {
@@ -119,7 +142,7 @@
     "isEntry": true,
     "dynamicImports": [
       "node_modules/vue/dist/vue.runtime.esm-bundler.js",
-      "resources/js/components/ui/Button.vue",
+      "_Button-B2oDQaX1.js",
       "resources/js/components/ui/Card.vue",
       "resources/js/islands/marketplace.js",
       "resources/js/islands/media-library.js",
@@ -132,10 +155,9 @@
       "resources/js/islands/service-quote.js",
       "resources/js/islands/workshop.js",
       "resources/js/islands/event-single.js"
+    ],
+    "css": [
+      "main.css"
     ]
-  },
-  "style.css": {
-    "file": "main.css",
-    "src": "style.css"
   }
 }

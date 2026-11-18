@@ -1,0 +1,1 @@
+import{c as e}from"./utils-BLSKlp9E.js";import{o as s,c as a,d as o,n as t,u as d}from"./runtime-core.esm-bundler-BscDEp8V.js";const u={__name:"Card",props:{class:{type:String,default:""}},setup(n){return(r,c)=>(s(),a("div",{class:t(d(e)("rounded-lg border border-border bg-card text-card-foreground shadow-sm",r.$props.class))},[o(r.$slots,"default")],2))}};export{u as default};

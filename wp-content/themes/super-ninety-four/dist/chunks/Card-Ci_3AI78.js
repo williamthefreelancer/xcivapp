@@ -1,1 +1,0 @@
-import{a}from"./utils-BEhiKRD9.js";import{b2 as e,ad as s,bc as o,aR as t,u as d}from"./runtime-core.esm-bundler-b0Zs5vMb.js";const u={__name:"Card",props:{class:{type:String,default:""}},setup(l){return(r,n)=>(e(),s("div",{class:t(d(a)("rounded-lg border border-border bg-card text-card-foreground shadow-sm",r.$props.class))},[o(r.$slots,"default")],2))}};export{u as default};
