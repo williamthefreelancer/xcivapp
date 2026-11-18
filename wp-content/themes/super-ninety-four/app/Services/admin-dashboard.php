@@ -131,6 +131,28 @@ function snf_admin_is_club_screen() {
 }
 
 /**
+ * Whether the current screen is the core wp-admin Dashboard (index.php).
+ *
+ * @return bool
+ */
+function snf_admin_is_core_dashboard() {
+	if ( ! is_admin() ) {
+		return false;
+	}
+	$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+	return $screen && 'dashboard' === $screen->id;
+}
+
+/**
+ * Whether the branded Club overview should replace the core Dashboard.
+ *
+ * @return bool
+ */
+function snf_admin_should_brand_core_dashboard() {
+	return snf_admin_is_core_dashboard() && current_user_can( 'edit_posts' );
+}
+
+/**
  * Enqueue admin dashboard assets.
  *
  * @param string $hook_suffix Current admin page hook.
@@ -138,6 +160,7 @@ function snf_admin_is_club_screen() {
 function snf_admin_dashboard_enqueue( $hook_suffix ) {
 	$hook = (string) $hook_suffix;
 	$load = snf_admin_is_club_screen()
+		|| 'index.php' === $hook
 		|| false !== strpos( $hook, 'snf-club' )
 		|| false !== strpos( $hook, 'snf-media-settings' )
 		|| false !== strpos( $hook, 'snf-stripe' );
@@ -160,6 +183,49 @@ function snf_admin_dashboard_enqueue( $hook_suffix ) {
 	);
 }
 add_action( 'admin_enqueue_scripts', 'snf_admin_dashboard_enqueue' );
+
+/**
+ * Mark the core Dashboard body when the branded Club UI is active.
+ *
+ * @param string $classes Space-separated admin body classes.
+ * @return string
+ */
+function snf_admin_core_dashboard_body_class( $classes ) {
+	if ( snf_admin_should_brand_core_dashboard() ) {
+		$classes .= ' snf-admin-home';
+	}
+	return $classes;
+}
+add_filter( 'admin_body_class', 'snf_admin_core_dashboard_body_class' );
+
+/**
+ * Strip default Dashboard widgets / welcome panel so the branded UI can own the screen.
+ */
+function snf_admin_replace_core_dashboard() {
+	if ( ! current_user_can( 'edit_posts' ) ) {
+		return;
+	}
+
+	remove_action( 'welcome_panel', 'wp_welcome_panel' );
+
+	global $wp_meta_boxes;
+	if ( isset( $wp_meta_boxes['dashboard'] ) ) {
+		$wp_meta_boxes['dashboard'] = array();
+	}
+}
+add_action( 'wp_dashboard_setup', 'snf_admin_replace_core_dashboard', 999 );
+
+/**
+ * Render the branded Club overview on wp-admin/index.php.
+ */
+function snf_admin_render_core_dashboard() {
+	if ( ! snf_admin_should_brand_core_dashboard() ) {
+		return;
+	}
+
+	snf_admin_render_overview();
+}
+add_action( 'all_admin_notices', 'snf_admin_render_core_dashboard', 1 );
 
 /**
  * Register top-level SNF Club menu + CPT dashboard shortcuts.

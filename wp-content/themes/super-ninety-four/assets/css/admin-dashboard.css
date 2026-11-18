@@ -2,6 +2,23 @@
  * SNF Club + SNF Stripe admin dashboards — brand tokens for wp-admin screens.
  */
 
+/* Core Dashboard (index.php): hide empty WP chrome when branded overview owns the screen. */
+body.snf-admin-home #wpbody-content > .wrap > h1,
+body.snf-admin-home #wpbody-content > .wrap > .wp-header-end,
+body.snf-admin-home #dashboard-widgets-wrap,
+body.snf-admin-home #screen-meta-links,
+body.snf-admin-home #screen-meta {
+	display: none !important;
+}
+
+body.snf-admin-home #wpbody-content > .wrap {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	box-shadow: none;
+	background: transparent;
+}
+
 .snf-admin {
 	--snf-admin-ink: #1b1313;
 	--snf-admin-cream: #f3ebe8;
