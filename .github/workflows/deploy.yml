@@ -164,8 +164,9 @@ jobs:
                wp theme activate super-ninety-four --quiet || true; \
                wp rewrite flush --quiet || true; \
                wp eval-file wp-content/themes/super-ninety-four/bin/snf-production-bootstrap.php || true; \
+               wp eval-file wp-content/themes/super-ninety-four/bin/snf-reset-global-styles.php || true; \
                wp eval-file wp-content/themes/super-ninety-four/bin/snf-verify-club-stack.php || true; \
-               echo 'wp-cli: snf-payments on; BuddyPress/SureForms/OttoKit removed; club stack bootstrapped'; \
+               echo 'wp-cli: snf-payments on; BuddyPress/SureForms/OttoKit removed; club stack bootstrapped; global styles reset'; \
              else \
                echo 'wp-cli not found; activate snf-payments and remove SureForms/OttoKit manually in WP Admin'; \
              fi"
