@@ -72,6 +72,7 @@ function snf_get_protected_page_slugs() {
 		'billing-details',
 		'messages',
 		'community',
+		'expo',
 		'select-events-by-members',
 		// Legacy BuddyPress directory slugs (if plugin pages still exist).
 		'members',
@@ -106,10 +107,12 @@ function snf_get_protected_page_templates() {
 	$templates = array(
 		'messages',
 		'community',
+		'expo-marketplace',
 		'billing-details',
 		'woocommerce-account',
 		'page-templates/messages.php',
 		'page-templates/community.php',
+		'page-templates/expo-marketplace.php',
 		'page-templates/billing-details.php',
 		'page-templates/woocommerce-account.php',
 	);
@@ -140,7 +143,6 @@ function snf_get_public_page_slugs() {
 		'member-login',
 		'find-other-reciprocal-programs',
 		'select-events-by-non-members',
-		'expo',
 		'privacy-policy',
 		'terms-of-service',
 		'cookie-policy',

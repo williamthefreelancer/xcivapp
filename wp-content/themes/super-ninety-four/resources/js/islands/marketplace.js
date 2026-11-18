@@ -25,6 +25,8 @@ export function initMarketplace() {
   var timer = null;
   var lastXhr = null;
   var fallbackShop = cfg.shopUrl || $form.attr("action") || "/shop/";
+  var surface = cfg.surface || ($root.hasClass("snf-expo--directory") ? "expo" : "shop");
+  var isDirectory = surface === "expo" && $root.hasClass("snf-expo--directory");
 
   function escapeHtml(str) {
     return String(str || "")
@@ -43,6 +45,39 @@ export function initMarketplace() {
     if ($results.length) {
       $results.toggleClass("is-loading", !!busy);
     }
+  }
+
+  function prepareDirectoryMotion() {
+    if (!isDirectory || !$root.length) {
+      return;
+    }
+    $listings.find(".snf-expo-dir__rail").each(function (index) {
+      this.style.setProperty("--snf-rail-delay", Math.min(index * 90, 270) + "ms");
+    });
+    $listings.find(".snf-expo-dir__item").each(function (index) {
+      this.style.setProperty("--snf-card-delay", Math.min(80 + index * 55, 360) + "ms");
+    });
+    window.requestAnimationFrame(function () {
+      $root.addClass("is-ready");
+    });
+  }
+
+  function filterDirectoryRails(cat) {
+    if (!$listings.length) {
+      return;
+    }
+    $listings.find(".snf-expo-dir__rail").each(function () {
+      var track = $(this).attr("data-track") || $(this).attr("data-listing") || "";
+      var show =
+        !cat ||
+        track === cat ||
+        (cat && track === "register");
+      if (show) {
+        this.removeAttribute("hidden");
+      } else {
+        this.setAttribute("hidden", "hidden");
+      }
+    });
   }
 
   function renderChips(facets) {
@@ -236,6 +271,18 @@ export function initMarketplace() {
       lastXhr.abort();
     }
 
+    // Directory chips filter rails locally until a text query is present.
+    if (isDirectory && !q) {
+      syncUrl("", cat);
+      filterDirectoryRails(cat);
+      if ($results.length) {
+        $results.attr("hidden", true).empty();
+      }
+      $listings.removeAttr("hidden");
+      setBusy(false);
+      return;
+    }
+
     setBusy(true);
     syncUrl(q, cat);
 
@@ -246,6 +293,7 @@ export function initMarketplace() {
       data: {
         q: q,
         product_cat: cat,
+        surface: surface,
       },
       beforeSend: function (xhr) {
         if (cfg.nonce) {
@@ -315,6 +363,10 @@ export function initMarketplace() {
   }
 
   renderChips(cfg.facets);
+  prepareDirectoryMotion();
+  if (isDirectory) {
+    filterDirectoryRails(activeCat);
+  }
 
   $chips.on("click", ".snf-marketplace__chip", function (event) {
     event.preventDefault();

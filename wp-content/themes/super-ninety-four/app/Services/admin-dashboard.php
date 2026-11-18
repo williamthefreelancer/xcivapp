@@ -2204,6 +2204,7 @@ function snf_admin_render_critical_ops_panels( $context = 'club' ) {
 	$lookup_rows  = get_transient( 'snf_admin_lookup_rows_' . get_current_user_id() );
 	$lookup_email = (string) get_transient( 'snf_admin_lookup_email_' . get_current_user_id() );
 	$mapbox       = function_exists( 'snf_get_mapbox_token' ) ? (string) snf_get_mapbox_token() : (string) get_option( 'snf_mapbox_token', '' );
+	$x_ads        = function_exists( 'snf_get_x_ads_pixel_settings' ) ? snf_get_x_ads_pixel_settings() : array();
 
 	if ( 'club' === $context ) :
 		?>
@@ -2225,6 +2226,53 @@ function snf_admin_render_critical_ops_panels( $context = 'club' ) {
 					</tr>
 				</table>
 				<?php submit_button( __( 'Save Mapbox token', 'super-ninety-four' ), 'primary', 'submit', false ); ?>
+			</form>
+		</section>
+
+		<section class="snf-admin__panel">
+			<h2><?php esc_html_e( 'X Ads Pixel', 'super-ninety-four' ); ?></h2>
+			<p class="snf-admin__panel-desc"><?php esc_html_e( 'Universal Website Tag from your linked X Ads account. Loads site-wide; fires Purchase on Woo thank-you and Sign up / Complete registration from Apply.', 'super-ninety-four' ); ?></p>
+			<form class="snf-admin__form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+				<input type="hidden" name="action" value="snf_club_save_x_ads_pixel">
+				<?php wp_nonce_field( 'snf_club_x_ads_pixel', 'snf_club_x_ads_pixel_nonce' ); ?>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row"><?php esc_html_e( 'Enable pixel', 'super-ninety-four' ); ?></th>
+						<td>
+							<label>
+								<input type="checkbox" name="snf_x_ads_enabled" value="1" <?php checked( ! empty( $x_ads['enabled'] ) && 'yes' === $x_ads['enabled'] ); ?>>
+								<?php esc_html_e( 'Inject X Ads Universal Website Tag on the front end', 'super-ninety-four' ); ?>
+							</label>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><?php esc_html_e( 'Pixel ID', 'super-ninety-four' ); ?></th>
+						<td><code>pp813</code>
+							<p class="description"><?php esc_html_e( 'Base tag always uses twq(\'config\',\'pp813\'). Set X_PIXEL_TOKEN in the environment or wp-config for Conversion API.', 'super-ninety-four' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="snf-x-ads-purchase"><?php esc_html_e( 'Purchase event ID', 'super-ninety-four' ); ?></label></th>
+						<td>
+							<input type="text" class="regular-text code" id="snf-x-ads-purchase" name="snf_x_ads_purchase_event" value="<?php echo esc_attr( isset( $x_ads['purchase_event'] ) ? (string) $x_ads['purchase_event'] : 'pp814' ); ?>" placeholder="pp814">
+							<p class="description"><?php esc_html_e( 'CAPI event_id for this pixel is the website tag id (e.g. pp814 Purchase Tracker), shared with the browser event + conversion_id for dedupe.', 'super-ninety-four' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="snf-x-ads-signup"><?php esc_html_e( 'Sign up event ID', 'super-ninety-four' ); ?></label></th>
+						<td>
+							<input type="text" class="regular-text code" id="snf-x-ads-signup" name="snf_x_ads_signup_event" value="<?php echo esc_attr( isset( $x_ads['signup_event'] ) ? (string) $x_ads['signup_event'] : 'pp815' ); ?>" placeholder="pp815">
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="snf-x-ads-checkout"><?php esc_html_e( 'Checkout event ID', 'super-ninety-four' ); ?></label></th>
+						<td>
+							<input type="text" class="regular-text code" id="snf-x-ads-checkout" name="snf_x_ads_checkout_event" value="<?php echo esc_attr( isset( $x_ads['checkout_event'] ) ? (string) $x_ads['checkout_event'] : 'rjdo4' ); ?>" placeholder="rjdo4">
+							<p class="description"><?php esc_html_e( 'Fires once per Woo session when the customer opens checkout (browser + CAPI). Default: Checkout Initiated tag rjdo4.', 'super-ninety-four' ); ?></p>
+						</td>
+					</tr>
+				</table>
+				<?php submit_button( __( 'Save X Ads Pixel', 'super-ninety-four' ), 'primary', 'submit', false ); ?>
 			</form>
 		</section>
 
@@ -2651,6 +2699,43 @@ function snf_admin_handle_critical_save() {
 	exit;
 }
 add_action( 'admin_post_snf_club_save_critical', 'snf_admin_handle_critical_save' );
+
+/**
+ * Save X Ads pixel settings.
+ */
+function snf_admin_handle_x_ads_pixel_save() {
+	if ( ! isset( $_POST['snf_club_x_ads_pixel_nonce'] ) ) {
+		return;
+	}
+	check_admin_referer( 'snf_club_x_ads_pixel', 'snf_club_x_ads_pixel_nonce' );
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_die( esc_html__( 'Forbidden.', 'super-ninety-four' ) );
+	}
+
+	$current = function_exists( 'snf_get_x_ads_pixel_settings' )
+		? snf_get_x_ads_pixel_settings()
+		: array();
+
+	$next = array(
+		'enabled'            => ! empty( $_POST['snf_x_ads_enabled'] ) ? 'yes' : 'no',
+		'pixel_id'           => 'pp813',
+		'purchase_event'     => isset( $_POST['snf_x_ads_purchase_event'] ) ? sanitize_text_field( wp_unslash( $_POST['snf_x_ads_purchase_event'] ) ) : ( $current['purchase_event'] ?? '' ),
+		'signup_event'       => isset( $_POST['snf_x_ads_signup_event'] ) ? sanitize_text_field( wp_unslash( $_POST['snf_x_ads_signup_event'] ) ) : ( $current['signup_event'] ?? '' ),
+		'add_to_cart_event'  => isset( $current['add_to_cart_event'] ) ? (string) $current['add_to_cart_event'] : '',
+		'checkout_event'     => isset( $_POST['snf_x_ads_checkout_event'] ) ? sanitize_text_field( wp_unslash( $_POST['snf_x_ads_checkout_event'] ) ) : ( $current['checkout_event'] ?? 'rjdo4' ),
+		'complete_reg_event' => isset( $current['complete_reg_event'] ) ? (string) $current['complete_reg_event'] : '',
+	);
+
+	if ( defined( 'SNF_X_ADS_PIXEL_OPTION' ) ) {
+		update_option( SNF_X_ADS_PIXEL_OPTION, $next, false );
+	} else {
+		update_option( 'snf_x_ads_pixel_settings', $next, false );
+	}
+
+	wp_safe_redirect( admin_url( 'admin.php?page=snf-club-settings&updated=1' ) );
+	exit;
+}
+add_action( 'admin_post_snf_club_save_x_ads_pixel', 'snf_admin_handle_x_ads_pixel_save' );
 
 /**
  * Re-probe Stripe / Supabase / Mapbox health.

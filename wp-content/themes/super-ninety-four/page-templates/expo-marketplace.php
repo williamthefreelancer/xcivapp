@@ -1,51 +1,38 @@
 <?php
 /**
  * FSE php-view: loaded by Site Editor templates via snf/php-view (not a classic page template).
- * Description: Select events, scenic drives, and gatherings with Mapbox lead rider + walkie.
+ * Description: Private members Expo directory — vendors & professionals + register event cards.
  */
 
 $is_members = snf_is_expo_members_audience();
 $audience   = $is_members ? 'members' : 'non-members';
 $rails      = snf_get_expo_catalog_rails( $audience );
-$routes     = snf_get_lead_rider_routes();
 $facets     = function_exists( 'snf_get_marketplace_taxonomy_facets' )
-	? snf_get_marketplace_taxonomy_facets( $audience )
+	? snf_get_marketplace_taxonomy_facets( $audience, 'expo' )
 	: array();
-$shop_url   = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'shop' ) : home_url( '/shop/' );
 $title      = __( 'Expo', 'super-ninety-four' );
-
-if ( $is_members ) {
-	$lede    = __( 'Curated select events, scenic city-to-city drives, and gatherings — not networking. Ride with lead rider William A. Johnson on the road.', 'super-ninety-four' );
-	$eyebrow = __( 'Members only', 'super-ninety-four' );
-} else {
-	$lede    = __( 'Preview open admission, scenic drives, and private gatherings. Membership unlocks live lead rider tracking and walkie-talkie on the road.', 'super-ninety-four' );
-	$eyebrow = __( 'Open preview', 'super-ninety-four' );
-}
+$eyebrow    = __( 'Private members directory', 'super-ninety-four' );
+$lede       = __( 'Vendors and professionals that represent Super Ninety Four — register for the Expo marketplace floor, then browse the private directory.', 'super-ninety-four' );
 
 get_header();
 ?>
-<main class="snf-page snf-dashboard snf-expo" data-figma-ready="true" data-expo-audience="<?php echo esc_attr( $audience ); ?>">
-	<section class="snf-dashboard__shell snf-container" aria-label="<?php echo esc_attr( $title ); ?>">
+<main class="snf-page snf-expo snf-expo--directory" data-figma-ready="true" data-expo-audience="<?php echo esc_attr( $audience ); ?>" data-expo-surface="directory">
+	<section class="snf-expo__shell snf-container" aria-label="<?php echo esc_attr( $title ); ?>">
 
-		<div class="snf-dashboard__intro snf-expo__intro" data-figma-slot="expo-intro">
+		<header class="snf-expo__hero" data-figma-slot="expo-intro">
 			<p class="snf-hub__eyebrow"><?php echo esc_html( $eyebrow ); ?></p>
-			<h1 class="snf-dashboard__intro-title"><?php echo esc_html( $title ); ?></h1>
+			<h1 class="snf-expo__title"><?php echo esc_html( $title ); ?></h1>
 			<p class="snf-hub__lede"><?php echo esc_html( $lede ); ?></p>
-			<?php if ( $shop_url ) : ?>
-				<p class="snf-expo__shop-link">
-					<a class="snf-expo__shop-cta" href="<?php echo esc_url( $shop_url ); ?>">
-						<?php esc_html_e( 'Browse shop', 'super-ninety-four' ); ?>
-					</a>
-				</p>
-			<?php endif; ?>
-			<div class="snf-dashboard__search" data-figma-slot="expo-search">
+
+			<div class="snf-dashboard__search snf-expo__search" data-figma-slot="expo-search">
 				<?php get_template_part( 'template-parts/search', 'events' ); ?>
 			</div>
+
 			<div
 				id="snf-marketplace-chips"
 				class="snf-marketplace__chips"
 				role="group"
-				aria-label="<?php esc_attr_e( 'Filter by category', 'super-ninety-four' ); ?>"
+				aria-label="<?php esc_attr_e( 'Filter directory', 'super-ninety-four' ); ?>"
 				data-figma-slot="expo-taxonomy-chips"
 			>
 				<button
@@ -67,7 +54,7 @@ get_header();
 					</button>
 				<?php endforeach; ?>
 			</div>
-		</div>
+		</header>
 
 		<div
 			id="snf-marketplace-results"
@@ -79,34 +66,38 @@ get_header();
 		<div class="snf-expo__listings" data-figma-slot="expo-listings">
 			<?php foreach ( $rails as $rail ) : ?>
 				<?php
-				$card_count = count( $rail['cards'] );
-				$row_class  = 'snf-dashboard__row snf-expo__row';
-				if ( $card_count >= 4 ) {
-					$row_class .= ' snf-dashboard__row--four';
+				$track      = isset( $rail['track'] ) ? (string) $rail['track'] : (string) $rail['id'];
+				$variant    = ( 'register' === $track ) ? 'register' : 'directory';
+				$row_class  = 'snf-expo__row snf-expo-dir__rail';
+				if ( 'register' === $variant ) {
+					$row_class .= ' snf-expo-dir__rail--register';
 				}
 				?>
 				<section
 					class="<?php echo esc_attr( $row_class ); ?>"
 					data-listing="<?php echo esc_attr( $rail['id'] ); ?>"
-					data-bp-module="<?php echo esc_attr( $rail['bp'] ); ?>"
+					data-track="<?php echo esc_attr( $track ); ?>"
 					aria-labelledby="snf-expo-rail-<?php echo esc_attr( $rail['id'] ); ?>"
 				>
-					<div class="snf-dashboard__row-head">
-						<h2 class="snf-dashboard__row-title" id="snf-expo-rail-<?php echo esc_attr( $rail['id'] ); ?>">
+					<div class="snf-expo__row-head">
+						<h2 class="snf-expo__row-title" id="snf-expo-rail-<?php echo esc_attr( $rail['id'] ); ?>">
 							<?php echo esc_html( $rail['title'] ); ?>
 						</h2>
-						<a class="snf-dashboard__row-all" href="<?php echo esc_url( snf_get_dashboard_url() ); ?>">
-							<?php esc_html_e( 'Back to dashboard', 'super-ninety-four' ); ?>
-						</a>
+						<?php if ( 'register' !== $track ) : ?>
+							<a class="snf-expo__row-all" href="<?php echo esc_url( snf_get_dashboard_url() ); ?>">
+								<?php esc_html_e( 'Back to dashboard', 'super-ninety-four' ); ?>
+							</a>
+						<?php endif; ?>
 					</div>
 
 					<?php
 					get_template_part(
-						'template-parts/dashboard/event-cards',
+						'template-parts/expo/directory-cards',
 						null,
 						array(
 							'cards'      => $rail['cards'],
 							'empty_text' => $rail['empty_text'],
+							'variant'    => $variant,
 						)
 					);
 					?>
@@ -115,91 +106,11 @@ get_header();
 		</div>
 
 		<section
-			id="snf-expo-lead-rider"
-			class="snf-expo__lead"
-			aria-labelledby="snf-expo-lead-heading"
-			data-figma-slot="expo-lead-rider"
-		>
-			<div class="snf-expo__lead-copy">
-				<p class="snf-hub__eyebrow"><?php esc_html_e( 'Lead rider', 'super-ninety-four' ); ?></p>
-				<h2 class="snf-expo__lead-title" id="snf-expo-lead-heading">
-					<?php esc_html_e( 'William A. Johnson on the road', 'super-ninety-four' ); ?>
-				</h2>
-				<p class="snf-hub__lede snf-expo__lead-lede">
-					<?php
-					echo esc_html(
-						$is_members
-							? __( 'Follow the scenic route, track your lead rider, and hold to talk on walkie from iPhone, iPad, or Android.', 'super-ninety-four' )
-							: __( 'Preview scenic city-to-city routes. Live tracking and walkie-talkie unlock with membership.', 'super-ninety-four' )
-					);
-					?>
-				</p>
-
-				<div class="snf-expo__route-chips" role="list" aria-label="<?php esc_attr_e( 'Scenic routes', 'super-ninety-four' ); ?>">
-					<?php foreach ( $routes as $route ) : ?>
-						<button
-							type="button"
-							class="snf-expo__chip"
-							role="listitem"
-							data-route-id="<?php echo esc_attr( $route['id'] ); ?>"
-						>
-							<?php echo esc_html( $route['title'] ); ?>
-						</button>
-					<?php endforeach; ?>
-				</div>
-			</div>
-
-			<div class="snf-expo__map-stage">
-				<div
-					id="snf-expo-map"
-					class="snf-expo__map"
-					role="region"
-					aria-label="<?php esc_attr_e( 'Lead rider map', 'super-ninety-four' ); ?>"
-				></div>
-				<div class="snf-expo__map-fallback" id="snf-expo-map-fallback" hidden>
-					<p class="snf-expo__fallback-text"></p>
-				</div>
-
-				<div class="snf-expo__rider-panel">
-					<div class="snf-expo__rider-meta">
-						<p class="snf-expo__rider-name">William A. Johnson</p>
-						<p class="snf-expo__rider-status" id="snf-expo-status" data-status="standby">
-							<?php esc_html_e( 'Standby', 'super-ninety-four' ); ?>
-						</p>
-					</div>
-
-					<?php if ( $is_members ) : ?>
-						<div class="snf-expo__walkie">
-							<button
-								type="button"
-								class="snf-expo__ptt"
-								id="snf-expo-ptt"
-								aria-pressed="false"
-							>
-								<span class="snf-expo__ptt-label"><?php esc_html_e( 'Hold to talk', 'super-ninety-four' ); ?></span>
-							</button>
-							<p class="snf-expo__walkie-hint">
-								<?php esc_html_e( 'Walkie works on iPhone, iPad, and Android over HTTPS.', 'super-ninety-four' ); ?>
-							</p>
-							<?php if ( snf_user_can_broadcast_lead_rider() ) : ?>
-								<button type="button" class="snf-expo__broadcast" id="snf-expo-broadcast">
-									<?php esc_html_e( 'Broadcast my position as lead rider', 'super-ninety-four' ); ?>
-								</button>
-							<?php endif; ?>
-						</div>
-					<?php else : ?>
-						<div class="snf-expo__gate">
-							<p class="snf-expo__gate-copy">
-								<?php esc_html_e( 'Membership required for live lead rider & walkie.', 'super-ninety-four' ); ?>
-							</p>
-							<a class="snf-expo__gate-cta" href="<?php echo esc_url( snf_get_page_url( 'apply' ) ); ?>">
-								<?php esc_html_e( 'Apply', 'super-ninety-four' ); ?>
-							</a>
-						</div>
-					<?php endif; ?>
-				</div>
-			</div>
-		</section>
+			class="snf-expo__rfq-host"
+			id="snf-expo-rfq-host"
+			aria-label="<?php esc_attr_e( 'Request a quote', 'super-ninety-four' ); ?>"
+			data-figma-slot="expo-rfq"
+		></section>
 
 	</section>
 </main>

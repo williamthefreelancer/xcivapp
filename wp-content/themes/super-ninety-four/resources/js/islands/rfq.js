@@ -15,6 +15,8 @@ export function initMarketplaceRfq() {
   let form = document.getElementById("snf-marketplace-rfq");
   if (!form) {
     const host =
+      document.querySelector(".snf-expo__rfq-host") ||
+      document.querySelector(".snf-expo__hero") ||
       document.querySelector(".snf-expo__intro") ||
       document.querySelector("#snf-marketplace-results") ||
       document.querySelector(".snf-expo");

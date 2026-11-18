@@ -101,6 +101,9 @@ define( 'SNF_SUPABASE_SERVICE_ROLE_KEY', 'eyJ…' ); // server-only; subscriptio
 
 // Expo lead rider map
 define( 'SNF_MAPBOX_TOKEN', 'pk.…' );
+
+// X Ads Conversion API (or set env X_PIXEL_TOKEN — see .env.example)
+define( 'X_PIXEL_TOKEN', '…' );
 ```
 
 Or set Mapbox / Supabase keys in **WP Admin → WooCommerce → SNF Stripe** (includes an **API health** panel for Stripe / Supabase / Mapbox probes).
@@ -151,6 +154,17 @@ Also register:
 Events: `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `payment_intent.succeeded`, `charge.refunded`.
 
 Activations always run through WooCommerce order hooks (`snf_process_membership_order`).
+### X Ads Pixel + Conversion API
+
+Theme service `app/Services/x-ads-pixel.php`:
+
+- **Web:** exact Universal Website Tag with `twq('config','pp813')` on every front-end page via `wp_head`
+- **Server:** `POST https://ads-api.x.com/12/measurement/conversions/pp813` using `X_PIXEL_TOKEN` (env or `define( 'X_PIXEL_TOKEN', … )` in wp-config). See `.env.example`
+- **Dedupe:** Purchase / sign-up share the same `conversion_id` between browser `twq('event')` and CAPI
+- **Event IDs (CAPI):** Purchase `pp814`, Sign up `pp815`, Add to cart `pp817`, Checkout Initiated `rjdo4` (WooCommerce checkout; regenerate `X_PIXEL_TOKEN` if CAPI 403s on new tags). Base web config stays `pp813`.
+
+Captures `twclid` from the landing URL into a cookie for CAPI identifiers; also sends hashed email/phone when available, else IP + User-Agent.
+
 ### Marketing / CRM
 
 - **SureContact** (optional) — CRM inbox if installed on the host
@@ -166,7 +180,7 @@ Transactional Apply / workshop checkout / Woo cart stay theme-owned. Contact / N
 
 | Surface | URL | Gate |
 |---------|-----|------|
-| Expo marketplace + RFQ | `/expo/` | Public; catalog/RFQ audience-aware |
+| Expo marketplace + RFQ | `/expo/` | Members only; Vendor/Professional directory + register cards + RFQ |
 | Select events (members) | `/select-events-by-members/` | Member roles |
 | Select events (public) | `/select-events-by-non-members/` | Public |
 | Community circles | `/community/` | Member roles |
@@ -186,7 +200,7 @@ wp eval-file wp-content/themes/super-ninety-four/bin/snf-verify-club-stack.php
 3. Confirm **SUPER NINETY FOUR Payments** is active and **BuddyPress** is inactive.
 4. Visit **Settings → Permalinks** and Save once (or rely on deploy `wp rewrite flush`).
 5. In Club Critical / SNF Stripe: ensure membership products, sync Stripe catalog for the active mode, confirm both webhook URLs + secrets.
-6. Smoke-test Apply → Checkout, `/expo/` RFQ, `/community/` join, `/messages/`, `/my-account/membership/`, and Select Events.
+6. Smoke-test Apply → Checkout, member `/expo/` directory + RFQ, `/community/` join, `/messages/`, `/my-account/membership/`, and Select Events.
 
 ### Videos & Audio library
 

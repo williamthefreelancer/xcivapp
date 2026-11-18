@@ -50,6 +50,7 @@ final class Bootstrap {
 		'schema.php',
 		'performance.php',
 		'theme-menus.php',
+		'x-ads-pixel.php',
 	);
 
 	/**
