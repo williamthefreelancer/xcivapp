@@ -3,7 +3,7 @@ Contributors: superninetyfour
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.0
-Stable tag: 2.26.0
+Stable tag: 2.28.0
 License: GNU General Public License v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -19,9 +19,16 @@ lead-rider map.
 Build asynchronous behaviors with jQuery and taxonomies while extending the
 WordPress REST API functionality to turn this theme into the web app I want it
 to be. Marketing canvases use theme Gutenberg blocks plus SureForms; CRM and
-automation stay on SureContact and OttoKit.
+automation stay on SureContact and OttoKit. SureForms submissions bridge into
+the WooCommerce sales funnel via the theme funnel API (leads, quote cart,
+workshop interest, reciprocal / apply deep-links).
 
 == Changelog ==
+
+= 2.28.0 =
+* SureForms funnel bridge: form→intent map, embeds on reciprocal/quote, REST webhooks
+* Custom integration API snf/v1/funnel/* + Pro native-action registration
+* Funnel leads CPT; OttoKit actions for SureForms quote/workshop/reciprocal/apply
 
 = 2.26.0 =
 * Expo reuses media ICE settings for walkie WebRTC

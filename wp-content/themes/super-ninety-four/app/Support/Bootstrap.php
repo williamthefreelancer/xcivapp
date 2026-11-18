@@ -26,6 +26,7 @@ final class Bootstrap {
 		'buddypress-profile.php',
 		'access-control.php',
 		'plugin-integrations.php',
+		'sureforms-funnel.php',
 		'messages.php',
 		'reciprocal.php',
 		'membership-subscriptions.php',

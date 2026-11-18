@@ -108,16 +108,27 @@ Events: `checkout.session.completed`, `checkout.session.async_payment_succeeded`
 
 Use the installed plugins — do not rebuild these in the theme:
 
-- **SureForms** — Contact / Newsletter embeds on Blank Canvas pages (Videos & Audio may still host optional forms above the theme library)
+- **SureForms** — Contact / Newsletter embeds on Blank Canvas pages; optional embeds on reciprocal + quote landings
 - **SureContact** — CRM inbox
-- **OttoKit** (`suretriggers`) — automations; theme fires `snf_*` actions for Apply → Stripe, workshop reservations, and Stripe webhooks
+- **OttoKit** (`suretriggers`) — automations; theme fires `snf_*` actions for Apply → Stripe, workshop reservations, Stripe webhooks, and SureForms funnel leads
+
+### SureForms → WooCommerce funnel API
+
+Theme bridge: `app/Services/sureforms-funnel.php` (WP Admin → **WooCommerce → SNF Funnel**).
+
+- Map SureForms form IDs → intents (`contact`, `newsletter`, `service_quote`, `workshop_interest`, `reciprocal_interest`, `apply_lead`)
+- REST webhooks: `POST /wp-json/snf/v1/funnel/lead` (or `/funnel/{intent}`) with header `X-SNF-Funnel-Secret`
+- Optional `SNF_FUNNEL_WEBHOOK_SECRET` in `wp-config.php`
+- SureForms Pro: registers **Super Ninety Four Funnel** native actions when Pro is active
+
+Transactional Apply / workshop checkout / Woo cart stay theme-owned; SureForms feeds leads into the same funnel.
 
 ### After deploy
 
-1. Confirm `SNF_STRIPE_*` (and optional Supabase/Mapbox) exist in DreamHost `wp-config.php`.
+1. Confirm `SNF_STRIPE_*` (and optional Supabase/Mapbox / `SNF_FUNNEL_WEBHOOK_SECRET`) exist in DreamHost `wp-config.php`.
 2. Confirm theme `vendor/autoload.php` exists (or run `composer install` on the theme path).
 3. Visit **Settings → Permalinks** and Save once (or load any page so the theme flushes Woo endpoints).
-4. Smoke-test Apply → Checkout, `/contact/` (SureForms), and a member page (`/messages/`, `/my-account/`).
+4. Smoke-test Apply → Checkout, `/contact/` (SureForms), **WooCommerce → SNF Funnel** mapping, and a member page (`/messages/`, `/my-account/`).
 
 ### Videos & Audio library
 

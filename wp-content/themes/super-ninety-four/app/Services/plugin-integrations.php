@@ -4,7 +4,9 @@
  *
  * SureForms / SureContact / OttoKit (suretriggers): keep Contact + Newsletter
  * public and host marketing forms via blank-canvas the_content(). Do not
- * soft-guard those pages or replace Apply / workshop / quote / reciprocal flows.
+ * soft-guard those pages. Transactional Apply / workshop checkout stay theme
+ * PHP; SureForms feeds the sales funnel via app/Services/sureforms-funnel.php
+ * (submit hooks, REST webhooks, optional Pro native actions, embeds).
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -304,10 +306,16 @@ add_action( 'template_redirect', 'snf_guard_sureforms_host_pages_remain_public',
  */
 function snf_get_ottokit_action_catalog() {
 	return array(
-		'snf_apply_stripe_checkout_started' => 'Fired when Apply hands off to Stripe Checkout for the application SKU.',
-		'snf_workshop_reservation_created'  => 'Fired after a Lifestyle Concierge workshop seat reservation is stored.',
-		'snf_service_quote_added_to_cart'   => 'Fired when a service-quote product is added to the WooCommerce cart.',
-		'snf_stripe_webhook_handled'        => 'Fired after a verified Stripe webhook is processed.',
+		'snf_apply_stripe_checkout_started'   => 'Fired when Apply hands off to Stripe Checkout for the application SKU.',
+		'snf_workshop_reservation_created'    => 'Fired after a Lifestyle Concierge workshop seat reservation is stored.',
+		'snf_service_quote_added_to_cart'     => 'Fired when a service-quote product is added to the WooCommerce cart.',
+		'snf_stripe_webhook_handled'          => 'Fired after a verified Stripe webhook is processed.',
+		'snf_funnel_lead_created'             => 'Fired when SureForms / webhook stores an SNF funnel lead.',
+		'snf_funnel_intent_processed'         => 'Fired after a funnel intent (quote, workshop, reciprocal, apply, marketing) finishes.',
+		'snf_sureforms_service_quote_lead'    => 'Fired when a SureForms service-quote lead is processed.',
+		'snf_sureforms_reciprocal_interest'   => 'Fired when SureForms captures reciprocal club interest.',
+		'snf_sureforms_apply_lead'            => 'Fired when SureForms captures a membership apply lead.',
+		'snf_sureforms_marketing_lead'        => 'Fired when SureForms Contact / Newsletter (or similar) is processed.',
 	);
 }
 
