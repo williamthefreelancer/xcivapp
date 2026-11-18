@@ -61,7 +61,7 @@ function snf_register_ticket_commerce_taxonomies() {
 			'hierarchical'      => true,
 			'show_admin_column' => true,
 			'show_in_rest'      => true,
-			'show_in_menu'      => true,
+			'show_in_menu'      => false,
 			'rewrite'           => array( 'slug' => 'experience' ),
 		)
 	);

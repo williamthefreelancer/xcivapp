@@ -67,7 +67,7 @@ function snf_register_media_cpts() {
 			'has_archive'         => 'library/videos',
 			'rewrite'             => array( 'slug' => 'library/video' ),
 			'menu_icon'           => 'dashicons-video-alt3',
-			'show_in_menu'        => 'snf-club',
+			'show_in_menu'        => false,
 			'show_in_rest'        => true,
 			'supports'            => array( 'title', 'editor', 'thumbnail', 'excerpt' ),
 			'exclude_from_search' => false,
@@ -94,7 +94,7 @@ function snf_register_media_cpts() {
 			'has_archive'         => 'library/audio',
 			'rewrite'             => array( 'slug' => 'library/audio' ),
 			'menu_icon'           => 'dashicons-playlist-audio',
-			'show_in_menu'        => 'snf-club',
+			'show_in_menu'        => false,
 			'show_in_rest'        => true,
 			'supports'            => array( 'title', 'editor', 'thumbnail', 'excerpt' ),
 			'exclude_from_search' => false,
@@ -1445,20 +1445,20 @@ function snf_rest_media_room_signal( WP_REST_Request $request ) {
 }
 
 /**
- * Admin menu: media settings under Videos & Audio.
+ * Redirect bookmarks of the old media settings slug to the Club media desk.
  */
-function snf_media_admin_menu() {
-	// Legacy slug kept for bookmarks; UI lives in SNF Club → Videos & Audio.
-	add_submenu_page(
-		'snf-club',
-		__( 'Media Settings', 'super-ninety-four' ),
-		__( 'Media settings (legacy)', 'super-ninety-four' ),
-		'manage_options',
-		'snf-media-settings',
-		'snf_media_render_settings_page'
-	);
+function snf_media_redirect_legacy_settings_screen() {
+	if ( ! is_admin() ) {
+		return;
+	}
+	$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	if ( 'snf-media-settings' !== $page ) {
+		return;
+	}
+	wp_safe_redirect( admin_url( 'admin.php?page=snf-club-media' ) );
+	exit;
 }
-add_action( 'admin_menu', 'snf_media_admin_menu', 20 );
+add_action( 'admin_init', 'snf_media_redirect_legacy_settings_screen' );
 
 /**
  * Save media settings.

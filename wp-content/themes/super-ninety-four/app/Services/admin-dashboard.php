@@ -209,14 +209,6 @@ function snf_admin_dashboard_menu() {
 add_action( 'admin_menu', 'snf_admin_dashboard_menu', 9 );
 
 /**
- * Hide redundant legacy Media settings link (dashboard already covers it).
- */
-function snf_admin_remove_legacy_media_settings_menu() {
-	remove_submenu_page( 'snf-club', 'snf-media-settings' );
-}
-add_action( 'admin_menu', 'snf_admin_remove_legacy_media_settings_menu', 99 );
-
-/**
  * Count posts by type/status.
  *
  * @param string $post_type Post type.
