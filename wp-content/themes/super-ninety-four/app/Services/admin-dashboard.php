@@ -139,7 +139,8 @@ function snf_admin_dashboard_enqueue( $hook_suffix ) {
 	$hook = (string) $hook_suffix;
 	$load = snf_admin_is_club_screen()
 		|| false !== strpos( $hook, 'snf-club' )
-		|| false !== strpos( $hook, 'snf-media-settings' );
+		|| false !== strpos( $hook, 'snf-media-settings' )
+		|| false !== strpos( $hook, 'snf-stripe' );
 
 	if ( ! $load ) {
 		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
@@ -290,14 +291,62 @@ function snf_admin_page_health_rows() {
 }
 
 /**
+ * Nav pages for Stripe / payments shell (Club desks + Stripe).
+ *
+ * @return array<string, array<string, string>>
+ */
+function snf_admin_payments_nav_pages() {
+	$pages = array(
+		'snf-club'          => array(
+			'title' => __( 'Overview', 'super-ninety-four' ),
+			'label' => __( 'Overview', 'super-ninety-four' ),
+		),
+		'snf-club-settings' => array(
+			'title' => __( 'Critical settings', 'super-ninety-four' ),
+			'label' => __( 'Critical settings', 'super-ninety-four' ),
+		),
+		'snf-stripe'        => array(
+			'title' => __( 'Stripe', 'super-ninety-four' ),
+			'label' => __( 'Stripe', 'super-ninety-four' ),
+		),
+	);
+
+	if ( ! current_user_can( 'manage_options' ) ) {
+		unset( $pages['snf-club-settings'] );
+	}
+	if ( ! current_user_can( 'manage_woocommerce' ) ) {
+		unset( $pages['snf-stripe'] );
+	}
+
+	return $pages;
+}
+
+/**
+ * Club section nav including Stripe for Woo managers.
+ *
+ * @return array<string, array<string, string>>
+ */
+function snf_admin_club_nav_pages() {
+	$pages = snf_admin_dashboard_pages();
+	if ( current_user_can( 'manage_woocommerce' ) ) {
+		$pages['snf-stripe'] = array(
+			'title' => __( 'Stripe', 'super-ninety-four' ),
+			'label' => __( 'Stripe', 'super-ninety-four' ),
+		);
+	}
+	return $pages;
+}
+
+/**
  * Shared dashboard chrome.
  *
- * @param string $active Active page slug.
- * @param string $title  Page title.
- * @param string $lede   Supporting sentence.
+ * @param string                                    $active    Active page slug.
+ * @param string                                    $title     Page title.
+ * @param string                                    $lede      Supporting sentence.
+ * @param array<string, array<string, string>>|null $nav_pages Nav map (null = Club nav; empty array = hero only).
  */
-function snf_admin_render_shell_start( $active, $title, $lede ) {
-	$pages = snf_admin_dashboard_pages();
+function snf_admin_render_shell_start( $active, $title, $lede, $nav_pages = null ) {
+	$pages = null === $nav_pages ? snf_admin_club_nav_pages() : $nav_pages;
 	?>
 	<div class="wrap snf-admin">
 		<header class="snf-admin__hero">
@@ -305,10 +354,14 @@ function snf_admin_render_shell_start( $active, $title, $lede ) {
 			<h1><?php echo esc_html( $title ); ?></h1>
 			<p class="snf-admin__lede"><?php echo esc_html( $lede ); ?></p>
 		</header>
+		<?php if ( is_array( $pages ) && $pages ) : ?>
 		<nav class="snf-admin__nav" aria-label="<?php esc_attr_e( 'SNF Club sections', 'super-ninety-four' ); ?>">
 			<?php foreach ( $pages as $slug => $page ) : ?>
 				<?php
 				if ( 'snf-club-settings' === $slug && ! current_user_can( 'manage_options' ) ) {
+					continue;
+				}
+				if ( 'snf-stripe' === $slug && ! current_user_can( 'manage_woocommerce' ) ) {
 					continue;
 				}
 				?>
@@ -317,6 +370,7 @@ function snf_admin_render_shell_start( $active, $title, $lede ) {
 				</a>
 			<?php endforeach; ?>
 		</nav>
+		<?php endif; ?>
 		<?php if ( isset( $_GET['updated'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
 			<div class="snf-admin__notice snf-admin__notice--success">
 				<?php esc_html_e( 'Settings saved.', 'super-ninety-four' ); ?>
@@ -337,6 +391,129 @@ function snf_admin_render_shell_start( $active, $title, $lede ) {
 				<?php esc_html_e( 'Default ticket addon kinds / experiences checked and missing terms inserted.', 'super-ninety-four' ); ?>
 			</div>
 		<?php endif; ?>
+		<?php if ( isset( $_GET['stripe_probe'] ) && 'ok' === $_GET['stripe_probe'] ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
+			<div class="snf-admin__notice snf-admin__notice--success">
+				<?php esc_html_e( 'Connected: Stripe API key accepted.', 'super-ninety-four' ); ?>
+			</div>
+		<?php elseif ( isset( $_GET['stripe_probe'] ) && 'fail' === $_GET['stripe_probe'] ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
+			<div class="snf-admin__notice snf-admin__notice--error">
+				<?php esc_html_e( 'Stripe API probe failed — check the secret key for the selected mode.', 'super-ninety-four' ); ?>
+			</div>
+		<?php endif; ?>
+		<?php if ( isset( $_GET['supabase_probe'] ) && 'ok' === $_GET['supabase_probe'] ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
+			<div class="snf-admin__notice snf-admin__notice--success">
+				<?php esc_html_e( 'Supabase catalog probe succeeded.', 'super-ninety-four' ); ?>
+			</div>
+		<?php elseif ( isset( $_GET['supabase_probe'] ) && 'fail' === $_GET['supabase_probe'] ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
+			<div class="snf-admin__notice snf-admin__notice--warn">
+				<?php esc_html_e( 'Supabase catalog probe failed — check project URL and anon key.', 'super-ninety-four' ); ?>
+			</div>
+		<?php endif; ?>
+		<?php if ( isset( $_GET['mapbox_probe'] ) && 'missing' === $_GET['mapbox_probe'] ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
+			<div class="snf-admin__notice snf-admin__notice--warn">
+				<?php esc_html_e( 'Mapbox token is not set — Expo lead-rider map will stay inactive.', 'super-ninety-four' ); ?>
+			</div>
+		<?php elseif ( isset( $_GET['mapbox_probe'] ) && 'ok' === $_GET['mapbox_probe'] ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
+			<div class="snf-admin__notice snf-admin__notice--success">
+				<?php esc_html_e( 'Mapbox token is present.', 'super-ninety-four' ); ?>
+			</div>
+		<?php endif; ?>
+	<?php
+}
+
+/**
+ * Integration health rows for Overview / Critical / Stripe.
+ *
+ * @param string $context overview|critical|stripe.
+ * @return void
+ */
+function snf_admin_render_integrations_pulse( $context = 'overview' ) {
+	$health  = get_option( 'snf_api_health_cache', array() );
+	if ( ! is_array( $health ) ) {
+		$health = array();
+	}
+
+	$stripe_ready = function_exists( 'snf_stripe_is_ready' ) && snf_stripe_is_ready();
+	$stripe_probe = isset( $health['stripe'] ) ? (string) $health['stripe'] : '';
+	$sdk_ok       = function_exists( 'snf_stripe_sdk_available' ) && snf_stripe_sdk_available();
+	$mapbox_ok    = function_exists( 'snf_get_mapbox_token' ) && (string) snf_get_mapbox_token();
+	if ( ! $mapbox_ok && defined( 'SNF_MAPBOX_TOKEN' ) && SNF_MAPBOX_TOKEN ) {
+		$mapbox_ok = true;
+	}
+	if ( isset( $health['mapbox'] ) ) {
+		$mapbox_ok = ( 'ok' === $health['mapbox'] );
+	}
+
+	$supabase_probe = isset( $health['supabase'] ) ? (string) $health['supabase'] : '';
+	$supabase_ready = function_exists( 'snf_supabase_payments_is_ready' ) && snf_supabase_payments_is_ready();
+	$catalog_count  = isset( $health['catalog_count'] ) ? (int) $health['catalog_count'] : 0;
+
+	$media = function_exists( 'snf_get_media_settings' ) ? snf_get_media_settings() : array();
+	$live  = ! empty( $media['enable_live_audio_rooms'] );
+
+	$stripe_pill = 'snf-admin__pill--warn';
+	$stripe_label = __( 'Needs keys', 'super-ninety-four' );
+	if ( 'ok' === $stripe_probe || $stripe_ready ) {
+		$stripe_pill  = 'snf-admin__pill--ok';
+		$stripe_label = __( 'Ready', 'super-ninety-four' );
+	} elseif ( 'fail' === $stripe_probe ) {
+		$stripe_pill  = 'snf-admin__pill--bad';
+		$stripe_label = __( 'Probe failed', 'super-ninety-four' );
+	} elseif ( 'critical' === $context ) {
+		$stripe_label = __( 'Check keys', 'super-ninety-four' );
+	}
+
+	$supabase_pill  = 'snf-admin__pill--warn';
+	$supabase_label = __( 'Not probed', 'super-ninety-four' );
+	if ( 'ok' === $supabase_probe ) {
+		$supabase_pill  = 'snf-admin__pill--ok';
+		$supabase_label = $catalog_count
+			? sprintf(
+				/* translators: %d: catalog price count */
+				_n( '%d price', '%d prices', $catalog_count, 'super-ninety-four' ),
+				$catalog_count
+			)
+			: __( 'Ready', 'super-ninety-four' );
+	} elseif ( 'fail' === $supabase_probe ) {
+		$supabase_pill  = 'snf-admin__pill--bad';
+		$supabase_label = __( 'Probe failed', 'super-ninety-four' );
+	} elseif ( $supabase_ready ) {
+		$supabase_pill  = 'snf-admin__pill--ok';
+		$supabase_label = __( 'Configured', 'super-ninety-four' );
+	} elseif ( ! $supabase_ready ) {
+		$supabase_label = __( 'Off / incomplete', 'super-ninety-four' );
+	}
+	?>
+	<ul class="snf-admin__list">
+		<li>
+			<span><?php esc_html_e( 'Stripe', 'super-ninety-four' ); ?></span>
+			<span class="snf-admin__pill <?php echo esc_attr( $stripe_pill ); ?>"><?php echo esc_html( $stripe_label ); ?></span>
+		</li>
+		<li>
+			<span><?php esc_html_e( 'stripe/stripe-php SDK', 'super-ninety-four' ); ?></span>
+			<span class="snf-admin__pill <?php echo $sdk_ok ? 'snf-admin__pill--ok' : 'snf-admin__pill--warn'; ?>">
+				<?php echo $sdk_ok ? esc_html__( 'Loaded', 'super-ninety-four' ) : esc_html__( 'Missing', 'super-ninety-four' ); ?>
+			</span>
+		</li>
+		<li>
+			<span><?php esc_html_e( 'Supabase catalog', 'super-ninety-four' ); ?></span>
+			<span class="snf-admin__pill <?php echo esc_attr( $supabase_pill ); ?>"><?php echo esc_html( $supabase_label ); ?></span>
+		</li>
+		<li>
+			<span><?php esc_html_e( 'Mapbox', 'super-ninety-four' ); ?></span>
+			<span class="snf-admin__pill <?php echo $mapbox_ok ? 'snf-admin__pill--ok' : 'snf-admin__pill--warn'; ?>">
+				<?php echo $mapbox_ok ? esc_html__( 'Token set', 'super-ninety-four' ) : esc_html__( 'Missing', 'super-ninety-four' ); ?>
+			</span>
+		</li>
+		<?php if ( 'overview' === $context ) : ?>
+		<li>
+			<span><?php esc_html_e( 'Live audio rooms', 'super-ninety-four' ); ?></span>
+			<span class="snf-admin__pill <?php echo $live ? 'snf-admin__pill--ok' : 'snf-admin__pill--warn'; ?>">
+				<?php echo $live ? esc_html__( 'Enabled', 'super-ninety-four' ) : esc_html__( 'Off', 'super-ninety-four' ); ?>
+			</span>
+		</li>
+		<?php endif; ?>
+	</ul>
 	<?php
 }
 
@@ -402,27 +579,7 @@ function snf_admin_render_overview() {
 		<section class="snf-admin__panel">
 			<h2><?php esc_html_e( 'Integrations pulse', 'super-ninety-four' ); ?></h2>
 			<p class="snf-admin__panel-desc"><?php esc_html_e( 'Payments, maps, and media defaults that unlock front-end features.', 'super-ninety-four' ); ?></p>
-			<ul class="snf-admin__list">
-				<li>
-					<span><?php esc_html_e( 'Stripe', 'super-ninety-four' ); ?></span>
-					<span class="snf-admin__pill <?php echo ( function_exists( 'snf_stripe_is_ready' ) && snf_stripe_is_ready() ) ? 'snf-admin__pill--ok' : 'snf-admin__pill--warn'; ?>">
-						<?php echo ( function_exists( 'snf_stripe_is_ready' ) && snf_stripe_is_ready() ) ? esc_html__( 'Ready', 'super-ninety-four' ) : esc_html__( 'Needs keys', 'super-ninety-four' ); ?>
-					</span>
-				</li>
-				<li>
-					<span><?php esc_html_e( 'Mapbox', 'super-ninety-four' ); ?></span>
-					<span class="snf-admin__pill <?php echo ( function_exists( 'snf_get_mapbox_token' ) && snf_get_mapbox_token() ) ? 'snf-admin__pill--ok' : 'snf-admin__pill--warn'; ?>">
-						<?php echo ( function_exists( 'snf_get_mapbox_token' ) && snf_get_mapbox_token() ) ? esc_html__( 'Token set', 'super-ninety-four' ) : esc_html__( 'Missing', 'super-ninety-four' ); ?>
-					</span>
-				</li>
-				<li>
-					<span><?php esc_html_e( 'Live audio rooms', 'super-ninety-four' ); ?></span>
-					<?php $media = function_exists( 'snf_get_media_settings' ) ? snf_get_media_settings() : array(); ?>
-					<span class="snf-admin__pill <?php echo ! empty( $media['enable_live_audio_rooms'] ) ? 'snf-admin__pill--ok' : 'snf-admin__pill--warn'; ?>">
-						<?php echo ! empty( $media['enable_live_audio_rooms'] ) ? esc_html__( 'Enabled', 'super-ninety-four' ) : esc_html__( 'Off', 'super-ninety-four' ); ?>
-					</span>
-				</li>
-			</ul>
+			<?php snf_admin_render_integrations_pulse( 'overview' ); ?>
 			<div class="snf-admin__actions">
 				<?php if ( current_user_can( 'manage_options' ) ) : ?>
 					<a class="snf-admin__btn" href="<?php echo esc_url( admin_url( 'admin.php?page=snf-club-settings' ) ); ?>"><?php esc_html_e( 'Critical settings', 'super-ninety-four' ); ?></a>
@@ -1432,14 +1589,7 @@ function snf_admin_render_critical_settings() {
 		<section class="snf-admin__panel">
 			<h2><?php esc_html_e( 'Payments & CRM', 'super-ninety-four' ); ?></h2>
 			<p class="snf-admin__panel-desc"><?php esc_html_e( 'Stripe / Supabase live on the WooCommerce SNF Stripe screen.', 'super-ninety-four' ); ?></p>
-			<ul class="snf-admin__list">
-				<li>
-					<span><?php esc_html_e( 'Stripe readiness', 'super-ninety-four' ); ?></span>
-					<span class="snf-admin__pill <?php echo ( function_exists( 'snf_stripe_is_ready' ) && snf_stripe_is_ready() ) ? 'snf-admin__pill--ok' : 'snf-admin__pill--warn'; ?>">
-						<?php echo ( function_exists( 'snf_stripe_is_ready' ) && snf_stripe_is_ready() ) ? esc_html__( 'Ready', 'super-ninety-four' ) : esc_html__( 'Check keys', 'super-ninety-four' ); ?>
-					</span>
-				</li>
-			</ul>
+			<?php snf_admin_render_integrations_pulse( 'critical' ); ?>
 			<div class="snf-admin__actions">
 				<a class="snf-admin__btn" href="<?php echo esc_url( admin_url( 'admin.php?page=snf-stripe' ) ); ?>"><?php esc_html_e( 'Open SNF Stripe', 'super-ninety-four' ); ?></a>
 				<a class="snf-admin__btn snf-admin__btn--ghost" href="<?php echo esc_url( admin_url( 'admin.php?page=wc-settings&tab=checkout' ) ); ?>"><?php esc_html_e( 'Woo payments', 'super-ninety-four' ); ?></a>

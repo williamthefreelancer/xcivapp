@@ -1155,161 +1155,125 @@ function snf_stripe_render_settings_page() {
 	$sb      = function_exists( 'snf_get_supabase_payments_settings' ) ? snf_get_supabase_payments_settings() : array();
 	$account = get_option( 'snf_stripe_account_cache', array() );
 	$health  = get_option( 'snf_api_health_cache', array() );
+	if ( ! is_array( $health ) ) {
+		$health = array();
+	}
 	$webhook = snf_stripe_webhook_url();
 	$catalog = function_exists( 'snf_supabase_get_stripe_catalog' ) ? snf_supabase_get_stripe_catalog( true ) : array();
+
+	$enabled       = ( 'yes' === $s['enabled'] );
+	$mode_label    = ( 'live' === $s['mode'] ) ? __( 'Live', 'super-ninety-four' ) : __( 'Test', 'super-ninety-four' );
+	$sdk_ok        = snf_stripe_sdk_available();
+	$ready         = snf_stripe_is_ready();
+	$webhook_set   = (bool) snf_stripe_get_webhook_secret();
+	$catalog_count = isset( $health['catalog_count'] ) ? (int) $health['catalog_count'] : 0;
+	if ( ! $catalog_count && is_array( $catalog ) && ! is_wp_error( $catalog ) ) {
+		$catalog_count = count( $catalog );
+	}
+	$mapbox_saved      = (string) get_option( 'snf_mapbox_token', '' );
+	$mapbox_from_const = defined( 'SNF_MAPBOX_TOKEN' ) && SNF_MAPBOX_TOKEN;
+	$mapbox_ok         = $mapbox_from_const || '' !== $mapbox_saved;
+	if ( isset( $health['mapbox'] ) ) {
+		$mapbox_ok = ( 'ok' === $health['mapbox'] );
+	}
+
+	$nav = function_exists( 'snf_admin_payments_nav_pages' ) ? snf_admin_payments_nav_pages() : array();
+	if ( function_exists( 'snf_admin_render_shell_start' ) ) {
+		snf_admin_render_shell_start(
+			'snf-stripe',
+			__( 'Payments & integrations', 'super-ninety-four' ),
+			__( 'Stripe Checkout, webhooks, Supabase price sync, and Mapbox for Expo lead-rider maps.', 'super-ninety-four' ),
+			$nav
+		);
+	} else {
+		echo '<div class="wrap"><h1>' . esc_html__( 'SUPER NINETY FOUR — Stripe', 'super-ninety-four' ) . '</h1>';
+	}
 	?>
-	<div class="wrap">
-		<h1><?php esc_html_e( 'SUPER NINETY FOUR — Stripe', 'super-ninety-four' ); ?></h1>
+	<div class="snf-admin__grid snf-admin__grid--stats">
+		<div class="snf-admin__stat">
+			<span class="snf-admin__stat-value"><?php echo $enabled ? esc_html__( 'On', 'super-ninety-four' ) : esc_html__( 'Off', 'super-ninety-four' ); ?></span>
+			<span class="snf-admin__stat-label"><?php esc_html_e( 'Enabled', 'super-ninety-four' ); ?></span>
+		</div>
+		<div class="snf-admin__stat">
+			<span class="snf-admin__stat-value"><?php echo esc_html( $mode_label ); ?></span>
+			<span class="snf-admin__stat-label"><?php esc_html_e( 'Mode', 'super-ninety-four' ); ?></span>
+		</div>
+		<div class="snf-admin__stat">
+			<span class="snf-admin__stat-value"><?php echo $sdk_ok ? esc_html__( 'Yes', 'super-ninety-four' ) : esc_html__( 'No', 'super-ninety-four' ); ?></span>
+			<span class="snf-admin__stat-label"><?php esc_html_e( 'SDK loaded', 'super-ninety-four' ); ?></span>
+		</div>
+		<div class="snf-admin__stat">
+			<span class="snf-admin__stat-value"><?php echo $ready ? esc_html__( 'Ready', 'super-ninety-four' ) : esc_html__( 'No', 'super-ninety-four' ); ?></span>
+			<span class="snf-admin__stat-label"><?php esc_html_e( 'Stripe ready', 'super-ninety-four' ); ?></span>
+		</div>
+		<div class="snf-admin__stat">
+			<span class="snf-admin__stat-value"><?php echo $webhook_set ? esc_html__( 'Set', 'super-ninety-four' ) : esc_html__( 'Missing', 'super-ninety-four' ); ?></span>
+			<span class="snf-admin__stat-label"><?php esc_html_e( 'Webhook secret', 'super-ninety-four' ); ?></span>
+		</div>
+		<div class="snf-admin__stat">
+			<span class="snf-admin__stat-value"><?php echo esc_html( (string) $catalog_count ); ?></span>
+			<span class="snf-admin__stat-label"><?php esc_html_e( 'Catalog prices', 'super-ninety-four' ); ?></span>
+		</div>
+	</div>
 
-		<?php if ( isset( $_GET['updated'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
-			<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Stripe settings saved.', 'super-ninety-four' ); ?></p></div>
-		<?php endif; ?>
-		<?php if ( isset( $_GET['stripe_probe'] ) && 'ok' === $_GET['stripe_probe'] ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
-			<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Connected: Stripe API key accepted.', 'super-ninety-four' ); ?></p></div>
-		<?php elseif ( isset( $_GET['stripe_probe'] ) && 'fail' === $_GET['stripe_probe'] ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
-			<div class="notice notice-error is-dismissible"><p><?php esc_html_e( 'Stripe API probe failed — check the secret key for the selected mode.', 'super-ninety-four' ); ?></p></div>
-		<?php endif; ?>
-		<?php if ( isset( $_GET['supabase_probe'] ) && 'ok' === $_GET['supabase_probe'] ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
-			<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Supabase catalog probe succeeded.', 'super-ninety-four' ); ?></p></div>
-		<?php elseif ( isset( $_GET['supabase_probe'] ) && 'fail' === $_GET['supabase_probe'] ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
-			<div class="notice notice-warning is-dismissible"><p><?php esc_html_e( 'Supabase catalog probe failed — check project URL and anon key.', 'super-ninety-four' ); ?></p></div>
-		<?php endif; ?>
-		<?php if ( isset( $_GET['mapbox_probe'] ) && 'missing' === $_GET['mapbox_probe'] ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
-			<div class="notice notice-warning is-dismissible"><p><?php esc_html_e( 'Mapbox token is not set — Expo lead-rider map will stay inactive.', 'super-ninety-four' ); ?></p></div>
-		<?php endif; ?>
-
-		<h2><?php esc_html_e( 'API health', 'super-ninety-four' ); ?></h2>
-		<table class="widefat striped" style="max-width:720px;margin-bottom:1.5rem">
-			<tbody>
-				<tr>
-					<th scope="row"><?php esc_html_e( 'stripe/stripe-php SDK', 'super-ninety-four' ); ?></th>
-					<td><?php echo snf_stripe_sdk_available() ? esc_html__( 'Loaded', 'super-ninety-four' ) : esc_html__( 'Missing — run composer install in the theme', 'super-ninety-four' ); ?></td>
-				</tr>
-				<tr>
-					<th scope="row"><?php esc_html_e( 'Stripe account', 'super-ninety-four' ); ?></th>
-					<td><?php echo esc_html( isset( $health['stripe'] ) ? (string) $health['stripe'] : __( 'Not probed yet — save settings', 'super-ninety-four' ) ); ?></td>
-				</tr>
-				<tr>
-					<th scope="row"><?php esc_html_e( 'Supabase catalog', 'super-ninety-four' ); ?></th>
-					<td>
-						<?php
-						echo esc_html( isset( $health['supabase'] ) ? (string) $health['supabase'] : __( 'Not probed yet — save settings', 'super-ninety-four' ) );
-						if ( ! empty( $health['catalog_count'] ) ) {
-							echo ' — ' . esc_html( sprintf( /* translators: %d: catalog row count */ _n( '%d price', '%d prices', (int) $health['catalog_count'], 'super-ninety-four' ), (int) $health['catalog_count'] ) );
-						}
-						?>
-					</td>
-				</tr>
-				<tr>
-					<th scope="row"><?php esc_html_e( 'Mapbox token', 'super-ninety-four' ); ?></th>
-					<td><?php echo esc_html( isset( $health['mapbox'] ) ? (string) $health['mapbox'] : __( 'Not probed yet — save settings', 'super-ninety-four' ) ); ?></td>
-				</tr>
-			</tbody>
-		</table>
-
-		<p>
-			<?php esc_html_e( 'Custom webhook endpoint (add this in Stripe Dashboard → Developers → Webhooks):', 'super-ninety-four' ); ?>
-			<br>
-			<code><?php echo esc_html( $webhook ); ?></code>
-		</p>
-		<p class="description">
-			<?php esc_html_e( 'Events to send: checkout.session.completed, checkout.session.async_payment_succeeded, payment_intent.succeeded, charge.refunded.', 'super-ninety-four' ); ?>
-		</p>
-
-		<?php if ( ! empty( $account['id'] ) ) : ?>
-			<p>
-				<strong><?php esc_html_e( 'Last connected account', 'super-ninety-four' ); ?>:</strong>
-				<code><?php echo esc_html( (string) $account['id'] ); ?></code>
-				<?php if ( ! empty( $account['email'] ) ) : ?>
-					— <?php echo esc_html( (string) $account['email'] ); ?>
+	<div class="snf-admin__grid snf-admin__grid--panels">
+		<section class="snf-admin__panel">
+			<h2><?php esc_html_e( 'API health', 'super-ninety-four' ); ?></h2>
+			<p class="snf-admin__panel-desc"><?php esc_html_e( 'Probes refresh when you save settings below.', 'super-ninety-four' ); ?></p>
+			<?php
+			if ( function_exists( 'snf_admin_render_integrations_pulse' ) ) {
+				snf_admin_render_integrations_pulse( 'stripe' );
+			}
+			?>
+			<ul class="snf-admin__list">
+				<li>
+					<span><?php esc_html_e( 'Webhook endpoint', 'super-ninety-four' ); ?></span>
+					<code class="snf-admin__code"><?php echo esc_html( $webhook ); ?></code>
+				</li>
+				<?php if ( ! empty( $account['id'] ) ) : ?>
+				<li>
+					<span><?php esc_html_e( 'Last connected account', 'super-ninety-four' ); ?></span>
+					<span>
+						<code><?php echo esc_html( (string) $account['id'] ); ?></code>
+						<?php if ( ! empty( $account['email'] ) ) : ?>
+							<span class="snf-admin__muted"> — <?php echo esc_html( (string) $account['email'] ); ?></span>
+						<?php endif; ?>
+					</span>
+				</li>
 				<?php endif; ?>
-			</p>
-		<?php endif; ?>
+			</ul>
+			<p class="snf-admin__muted"><?php esc_html_e( 'Stripe Dashboard → Developers → Webhooks. Events: checkout.session.completed, checkout.session.async_payment_succeeded, payment_intent.succeeded, charge.refunded.', 'super-ninety-four' ); ?></p>
+			<div class="snf-admin__actions">
+				<a class="snf-admin__btn snf-admin__btn--ghost" href="<?php echo esc_url( admin_url( 'admin.php?page=snf-club' ) ); ?>"><?php esc_html_e( 'Club overview', 'super-ninety-four' ); ?></a>
+				<?php if ( current_user_can( 'manage_options' ) ) : ?>
+					<a class="snf-admin__btn snf-admin__btn--ghost" href="<?php echo esc_url( admin_url( 'admin.php?page=snf-club-settings' ) ); ?>"><?php esc_html_e( 'Critical settings', 'super-ninety-four' ); ?></a>
+				<?php endif; ?>
+				<a class="snf-admin__btn snf-admin__btn--ghost" href="<?php echo esc_url( admin_url( 'admin.php?page=snf-club-events' ) ); ?>"><?php esc_html_e( 'Events desk', 'super-ninety-four' ); ?></a>
+				<a class="snf-admin__btn snf-admin__btn--ghost" href="<?php echo esc_url( admin_url( 'admin.php?page=snf-club-addons' ) ); ?>"><?php esc_html_e( 'Addons desk', 'super-ninety-four' ); ?></a>
+				<a class="snf-admin__btn snf-admin__btn--ghost" href="<?php echo esc_url( admin_url( 'admin.php?page=wc-settings&tab=checkout' ) ); ?>"><?php esc_html_e( 'Woo payments', 'super-ninety-four' ); ?></a>
+			</div>
+		</section>
 
-		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+		<section class="snf-admin__panel">
+			<h2><?php esc_html_e( 'Mapbox (Expo lead rider)', 'super-ninety-four' ); ?></h2>
+			<p class="snf-admin__panel-desc"><?php esc_html_e( 'Public Mapbox access token for the Expo Marketplace lead-rider map. Constant SNF_MAPBOX_TOKEN overrides when defined.', 'super-ninety-four' ); ?></p>
+			<ul class="snf-admin__list">
+				<li>
+					<span><?php esc_html_e( 'Token status', 'super-ninety-four' ); ?></span>
+					<span class="snf-admin__pill <?php echo $mapbox_ok ? 'snf-admin__pill--ok' : 'snf-admin__pill--warn'; ?>">
+						<?php echo $mapbox_ok ? esc_html__( 'Present', 'super-ninety-four' ) : esc_html__( 'Missing', 'super-ninety-four' ); ?>
+					</span>
+				</li>
+			</ul>
+			<p class="snf-admin__muted"><?php esc_html_e( 'Edit the token in the form below (password field keeps the saved value when left blank).', 'super-ninety-four' ); ?></p>
+		</section>
+
+		<form class="snf-admin__form snf-admin__panel snf-admin__panel--wide" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 			<input type="hidden" name="action" value="snf_stripe_save_settings">
 			<?php wp_nonce_field( 'snf_stripe_settings', 'snf_stripe_settings_nonce' ); ?>
 
-			<h2><?php esc_html_e( 'Supabase Stripe Sync (Data Management)', 'super-ninety-four' ); ?></h2>
-			<p class="description">
-				<?php esc_html_e( 'Reads products/prices from your SUPER NINETY FOUR PAYMENTS Supabase project (stripe_sdp_data). Checkout still needs a Stripe secret key to create sessions; the sync supplies the catalog + status mirror.', 'super-ninety-four' ); ?>
-			</p>
-			<table class="form-table" role="presentation">
-				<tr>
-					<th scope="row"><?php esc_html_e( 'Use synced prices', 'super-ninety-four' ); ?></th>
-					<td>
-						<label>
-							<input type="checkbox" name="snf_stripe[prefer_supabase]" value="1" <?php checked( ! empty( $s['prefer_supabase'] ) ? $s['prefer_supabase'] : 'yes', 'yes' ); ?>>
-							<?php esc_html_e( 'Prefer Stripe Price IDs from Supabase Sync Engine when creating Checkout', 'super-ninety-four' ); ?>
-						</label>
-					</td>
-				</tr>
-				<tr>
-					<th scope="row"><?php esc_html_e( 'Enable bridge', 'super-ninety-four' ); ?></th>
-					<td>
-						<label>
-							<input type="checkbox" name="snf_supabase[enabled]" value="1" <?php checked( isset( $sb['enabled'] ) ? $sb['enabled'] : 'yes', 'yes' ); ?>>
-							<?php esc_html_e( 'Query Supabase for catalog / session lookups', 'super-ninety-four' ); ?>
-						</label>
-					</td>
-				</tr>
-				<tr>
-					<th scope="row"><?php esc_html_e( 'Project URL', 'super-ninety-four' ); ?></th>
-					<td><input type="url" class="regular-text" name="snf_supabase[url]" value="<?php echo esc_attr( isset( $sb['url'] ) ? $sb['url'] : '' ); ?>" placeholder="https://evzjkydniknyfjftfutv.supabase.co"></td>
-				</tr>
-				<tr>
-					<th scope="row"><?php esc_html_e( 'Anon / publishable key', 'super-ninety-four' ); ?></th>
-					<td><input type="password" class="large-text" name="snf_supabase[anon_key]" value="" placeholder="<?php echo ! empty( $sb['anon_key'] ) ? esc_attr__( '•••• saved — leave blank to keep', 'super-ninety-four' ) : ''; ?>" autocomplete="new-password"></td>
-				</tr>
-				<tr>
-					<th scope="row"><?php esc_html_e( 'Service role key (optional)', 'super-ninety-four' ); ?></th>
-					<td>
-						<input type="password" class="large-text" name="snf_supabase[service_role_key]" value="" placeholder="<?php echo ! empty( $sb['service_role_key'] ) ? esc_attr__( '•••• saved — leave blank to keep', 'super-ninety-four' ) : ''; ?>" autocomplete="new-password">
-						<p class="description"><?php esc_html_e( 'Needed only for per-user checkout/subscription lookups. Keep server-side (or define SNF_SUPABASE_SERVICE_ROLE_KEY in wp-config.php).', 'super-ninety-four' ); ?></p>
-					</td>
-				</tr>
-				<tr>
-					<th scope="row"><?php esc_html_e( 'Price map JSON', 'super-ninety-four' ); ?></th>
-					<td>
-						<textarea class="large-text code" rows="4" name="snf_supabase[price_map]" placeholder='{"application":"price_…","add-on":"price_…"}'><?php echo esc_textarea( isset( $sb['price_map'] ) ? $sb['price_map'] : '' ); ?></textarea>
-						<p class="description"><?php esc_html_e( 'Optional explicit slug → price_… map. Without it, names like “4-Week Experience” / “Add-On” auto-match.', 'super-ninety-four' ); ?></p>
-					</td>
-				</tr>
-			</table>
-
-			<?php if ( is_wp_error( $catalog ) ) : ?>
-				<div class="notice notice-warning inline"><p><?php echo esc_html( $catalog->get_error_message() ); ?></p></div>
-			<?php elseif ( is_array( $catalog ) && $catalog ) : ?>
-				<h3><?php esc_html_e( 'Synced catalog', 'super-ninety-four' ); ?></h3>
-				<table class="widefat striped" style="max-width:960px">
-					<thead>
-						<tr>
-							<th><?php esc_html_e( 'Product', 'super-ninety-four' ); ?></th>
-							<th><?php esc_html_e( 'Price ID', 'super-ninety-four' ); ?></th>
-							<th><?php esc_html_e( 'Amount', 'super-ninety-four' ); ?></th>
-							<th><?php esc_html_e( 'Type', 'super-ninety-four' ); ?></th>
-						</tr>
-					</thead>
-					<tbody>
-						<?php foreach ( $catalog as $row ) : ?>
-							<tr>
-								<td><?php echo esc_html( (string) ( $row['product_name'] ?? '' ) ); ?></td>
-								<td><code><?php echo esc_html( (string) ( $row['price_id'] ?? '' ) ); ?></code></td>
-								<td>
-									<?php
-									$cents = isset( $row['unit_amount'] ) ? (int) $row['unit_amount'] : 0;
-									$cur   = isset( $row['currency'] ) ? strtoupper( (string) $row['currency'] ) : 'USD';
-									echo esc_html( sprintf( '%s %0.2f', $cur, $cents / 100 ) );
-									?>
-								</td>
-								<td><?php echo esc_html( (string) ( $row['price_type'] ?? '' ) ); ?></td>
-							</tr>
-						<?php endforeach; ?>
-					</tbody>
-				</table>
-			<?php endif; ?>
-
 			<h2><?php esc_html_e( 'Stripe API keys', 'super-ninety-four' ); ?></h2>
+			<p class="snf-admin__panel-desc"><?php esc_html_e( 'Accept Stripe Checkout + webhooks for club dues / reciprocal. Secret fields keep the previous value when left blank.', 'super-ninety-four' ); ?></p>
 			<table class="form-table" role="presentation">
 				<tr>
 					<th scope="row"><?php esc_html_e( 'Enable Stripe', 'super-ninety-four' ); ?></th>
@@ -1355,18 +1319,88 @@ function snf_stripe_render_settings_page() {
 				</tr>
 			</table>
 
-			<h2><?php esc_html_e( 'Mapbox (Expo lead rider)', 'super-ninety-four' ); ?></h2>
-			<p class="description">
-				<?php esc_html_e( 'Public Mapbox access token for the Expo Marketplace lead-rider map. You can also define SNF_MAPBOX_TOKEN in wp-config.php.', 'super-ninety-four' ); ?>
-			</p>
+			<h2><?php esc_html_e( 'Supabase Stripe Sync', 'super-ninety-four' ); ?></h2>
+			<p class="snf-admin__panel-desc"><?php esc_html_e( 'Reads products/prices from your SUPER NINETY FOUR PAYMENTS Supabase project (stripe_sdp_data). Checkout still needs a Stripe secret key; the sync supplies the catalog + status mirror.', 'super-ninety-four' ); ?></p>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Use synced prices', 'super-ninety-four' ); ?></th>
+					<td>
+						<label>
+							<input type="checkbox" name="snf_stripe[prefer_supabase]" value="1" <?php checked( ! empty( $s['prefer_supabase'] ) ? $s['prefer_supabase'] : 'yes', 'yes' ); ?>>
+							<?php esc_html_e( 'Prefer Stripe Price IDs from Supabase Sync Engine when creating Checkout', 'super-ninety-four' ); ?>
+						</label>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Enable bridge', 'super-ninety-four' ); ?></th>
+					<td>
+						<label>
+							<input type="checkbox" name="snf_supabase[enabled]" value="1" <?php checked( isset( $sb['enabled'] ) ? $sb['enabled'] : 'yes', 'yes' ); ?>>
+							<?php esc_html_e( 'Query Supabase for catalog / session lookups', 'super-ninety-four' ); ?>
+						</label>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Project URL', 'super-ninety-four' ); ?></th>
+					<td><input type="url" class="regular-text" name="snf_supabase[url]" value="<?php echo esc_attr( isset( $sb['url'] ) ? $sb['url'] : '' ); ?>" placeholder="https://evzjkydniknyfjftfutv.supabase.co"></td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Anon / publishable key', 'super-ninety-four' ); ?></th>
+					<td><input type="password" class="large-text" name="snf_supabase[anon_key]" value="" placeholder="<?php echo ! empty( $sb['anon_key'] ) ? esc_attr__( '•••• saved — leave blank to keep', 'super-ninety-four' ) : ''; ?>" autocomplete="new-password"></td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Service role key (optional)', 'super-ninety-four' ); ?></th>
+					<td>
+						<input type="password" class="large-text" name="snf_supabase[service_role_key]" value="" placeholder="<?php echo ! empty( $sb['service_role_key'] ) ? esc_attr__( '•••• saved — leave blank to keep', 'super-ninety-four' ) : ''; ?>" autocomplete="new-password">
+						<p class="description"><?php esc_html_e( 'Needed only for per-user checkout/subscription lookups. Keep server-side (or define SNF_SUPABASE_SERVICE_ROLE_KEY in wp-config.php).', 'super-ninety-four' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Price map JSON', 'super-ninety-four' ); ?></th>
+					<td>
+						<textarea class="large-text code" rows="4" name="snf_supabase[price_map]" placeholder='{"application":"price_…","add-on":"price_…"}'><?php echo esc_textarea( isset( $sb['price_map'] ) ? $sb['price_map'] : '' ); ?></textarea>
+						<p class="description"><?php esc_html_e( 'Optional explicit slug → price_… map. Without it, names like “4-Week Experience” / “Add-On” auto-match.', 'super-ninety-four' ); ?></p>
+					</td>
+				</tr>
+			</table>
+
+			<?php if ( is_wp_error( $catalog ) ) : ?>
+				<div class="snf-admin__notice snf-admin__notice--warn"><p><?php echo esc_html( $catalog->get_error_message() ); ?></p></div>
+			<?php elseif ( is_array( $catalog ) && $catalog ) : ?>
+				<h3 class="snf-admin__subhead"><?php esc_html_e( 'Synced catalog', 'super-ninety-four' ); ?></h3>
+				<table class="snf-admin__table">
+					<thead>
+						<tr>
+							<th><?php esc_html_e( 'Product', 'super-ninety-four' ); ?></th>
+							<th><?php esc_html_e( 'Price ID', 'super-ninety-four' ); ?></th>
+							<th><?php esc_html_e( 'Amount', 'super-ninety-four' ); ?></th>
+							<th><?php esc_html_e( 'Type', 'super-ninety-four' ); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+						<?php foreach ( $catalog as $row ) : ?>
+							<tr>
+								<td><?php echo esc_html( (string) ( $row['product_name'] ?? '' ) ); ?></td>
+								<td><code><?php echo esc_html( (string) ( $row['price_id'] ?? '' ) ); ?></code></td>
+								<td>
+									<?php
+									$cents = isset( $row['unit_amount'] ) ? (int) $row['unit_amount'] : 0;
+									$cur   = isset( $row['currency'] ) ? strtoupper( (string) $row['currency'] ) : 'USD';
+									echo esc_html( sprintf( '%s %0.2f', $cur, $cents / 100 ) );
+									?>
+								</td>
+								<td><?php echo esc_html( (string) ( $row['price_type'] ?? '' ) ); ?></td>
+							</tr>
+						<?php endforeach; ?>
+					</tbody>
+				</table>
+			<?php endif; ?>
+
+			<h2><?php esc_html_e( 'Mapbox token', 'super-ninety-four' ); ?></h2>
 			<table class="form-table" role="presentation">
 				<tr>
 					<th scope="row"><?php esc_html_e( 'Mapbox token', 'super-ninety-four' ); ?></th>
 					<td>
-						<?php
-						$mapbox_saved = (string) get_option( 'snf_mapbox_token', '' );
-						$mapbox_from_const = defined( 'SNF_MAPBOX_TOKEN' ) && SNF_MAPBOX_TOKEN;
-						?>
 						<input
 							type="password"
 							class="large-text"
@@ -1380,10 +1414,17 @@ function snf_stripe_render_settings_page() {
 				</tr>
 			</table>
 
-			<?php submit_button( __( 'Save Stripe settings', 'super-ninety-four' ) ); ?>
+			<div class="snf-admin__actions">
+				<button type="submit" class="snf-admin__btn"><?php esc_html_e( 'Save Stripe settings', 'super-ninety-four' ); ?></button>
+			</div>
 		</form>
 	</div>
 	<?php
+	if ( function_exists( 'snf_admin_render_shell_end' ) ) {
+		snf_admin_render_shell_end();
+	} else {
+		echo '</div>';
+	}
 }
 
 /**

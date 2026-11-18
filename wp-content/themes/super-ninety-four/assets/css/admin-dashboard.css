@@ -1,5 +1,5 @@
 /**
- * SNF Club admin dashboards — brand tokens for wp-admin screens.
+ * SNF Club + SNF Stripe admin dashboards — brand tokens for wp-admin screens.
  */
 
 .snf-admin {
@@ -11,6 +11,9 @@
 	--snf-admin-muted: rgba(27, 19, 19, 0.62);
 	--snf-admin-surface: #fffaf7;
 	--snf-admin-panel: #ffffff;
+	--snf-admin-ok: #1b5e20;
+	--snf-admin-warn: #8a4b00;
+	--snf-admin-bad: #8a1f1f;
 	max-width: 1180px;
 	margin: 1.25rem 1.25rem 2.5rem 0;
 	color: var(--snf-admin-ink);
@@ -27,13 +30,14 @@
 .snf-admin__hero {
 	position: relative;
 	overflow: hidden;
-	padding: 1.75rem 1.75rem 1.5rem;
+	padding: 1.85rem 1.85rem 1.6rem;
 	border-radius: 2px;
 	background:
 		radial-gradient(120% 140% at 100% 0%, rgba(243, 235, 232, 0.18), transparent 55%),
 		linear-gradient(135deg, #815b5a 0%, #1b1313 78%);
 	color: var(--snf-admin-cream);
 	margin-bottom: 1.25rem;
+	animation: snf-admin-fade-up 0.45s ease both;
 }
 
 .snf-admin__hero::after {
@@ -58,7 +62,7 @@
 	margin: 0 0 0.4rem;
 	padding: 0;
 	color: var(--snf-admin-cream);
-	font-size: 1.85rem;
+	font-size: clamp(1.55rem, 2.2vw, 1.95rem);
 	font-weight: 650;
 	letter-spacing: -0.02em;
 	line-height: 1.15;
@@ -74,23 +78,25 @@
 .snf-admin__nav {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 0.4rem;
-	margin: 0 0 1.25rem;
-	padding: 0.35rem;
+	gap: 0.35rem;
+	margin: 0 0 1.35rem;
+	padding: 0.4rem;
 	background: var(--snf-admin-surface);
 	border: 1px solid var(--snf-admin-line);
+	animation: snf-admin-fade-up 0.5s ease 0.05s both;
 }
 
 .snf-admin__nav a {
 	display: inline-flex;
 	align-items: center;
 	gap: 0.35rem;
-	padding: 0.55rem 0.85rem;
+	padding: 0.55rem 0.9rem;
 	border-radius: 1px;
 	color: var(--snf-admin-ink);
 	text-decoration: none;
 	font-weight: 600;
 	font-size: 13px;
+	transition: background 0.18s ease, color 0.18s ease;
 }
 
 .snf-admin__nav a:hover {
@@ -105,40 +111,44 @@
 
 .snf-admin__grid {
 	display: grid;
-	gap: 1rem;
+	gap: 1.1rem;
 }
 
 .snf-admin__grid--stats {
-	grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-	margin-bottom: 1.25rem;
+	grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+	margin-bottom: 1.35rem;
+	animation: snf-admin-fade-up 0.55s ease 0.08s both;
 }
 
 .snf-admin__grid--panels {
 	grid-template-columns: repeat(12, minmax(0, 1fr));
 	align-items: start;
+	animation: snf-admin-fade-up 0.6s ease 0.12s both;
 }
 
 .snf-admin__stat {
-	padding: 1rem 1.05rem;
+	padding: 1.05rem 1.1rem;
 	background: var(--snf-admin-panel);
 	border: 1px solid var(--snf-admin-line);
 	border-top: 3px solid var(--snf-admin-accent);
+	min-width: 0;
 }
 
 .snf-admin__stat-value {
 	display: block;
-	font-size: 1.75rem;
+	font-size: clamp(1.25rem, 2vw, 1.75rem);
 	font-weight: 700;
 	letter-spacing: -0.03em;
 	line-height: 1.1;
+	word-break: break-word;
 }
 
 .snf-admin__stat-label {
 	display: block;
-	margin-top: 0.25rem;
+	margin-top: 0.3rem;
 	color: var(--snf-admin-muted);
-	font-size: 12px;
-	letter-spacing: 0.04em;
+	font-size: 11px;
+	letter-spacing: 0.06em;
 	text-transform: uppercase;
 }
 
@@ -146,7 +156,8 @@
 	grid-column: span 6;
 	background: var(--snf-admin-panel);
 	border: 1px solid var(--snf-admin-line);
-	padding: 1.15rem 1.25rem 1.25rem;
+	padding: 1.25rem 1.35rem 1.4rem;
+	min-width: 0;
 }
 
 .snf-admin__panel--wide {
@@ -157,16 +168,36 @@
 	grid-column: span 4;
 }
 
-.snf-admin__panel h2 {
-	margin: 0 0 0.35rem;
+.snf-admin__panel h2,
+.snf-admin__form h2 {
+	margin: 0 0 0.4rem;
 	padding: 0;
-	font-size: 1.05rem;
+	font-size: 1.08rem;
 	font-weight: 700;
 	letter-spacing: -0.01em;
 }
 
+.snf-admin__form h2 + .snf-admin__panel-desc,
+.snf-admin__form .snf-admin__panel-desc + .form-table,
+.snf-admin__form h2 + .form-table {
+	margin-top: 0;
+}
+
+.snf-admin__form h2:not(:first-child) {
+	margin-top: 1.75rem;
+	padding-top: 1.35rem;
+	border-top: 1px solid var(--snf-admin-line);
+}
+
+.snf-admin__subhead {
+	margin: 1.25rem 0 0.65rem;
+	padding: 0;
+	font-size: 0.95rem;
+	font-weight: 700;
+}
+
 .snf-admin__panel-desc {
-	margin: 0 0 1rem;
+	margin: 0 0 1.05rem;
 	color: var(--snf-admin-muted);
 }
 
@@ -174,14 +205,14 @@
 	display: flex;
 	flex-wrap: wrap;
 	gap: 0.5rem;
-	margin: 0.75rem 0 0;
+	margin: 0.9rem 0 0;
 }
 
 .snf-admin__btn {
 	display: inline-flex;
 	align-items: center;
 	gap: 0.35rem;
-	padding: 0.55rem 0.9rem;
+	padding: 0.55rem 0.95rem;
 	border: 1px solid var(--snf-admin-ink);
 	background: var(--snf-admin-ink);
 	color: var(--snf-admin-cream) !important;
@@ -191,6 +222,7 @@
 	line-height: 1.2;
 	cursor: pointer;
 	border-radius: 1px;
+	transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
 }
 
 .snf-admin__btn:hover {
@@ -213,11 +245,12 @@
 .snf-admin__table {
 	width: 100%;
 	border-collapse: collapse;
+	margin: 0 0 0.5rem;
 }
 
 .snf-admin__table th,
 .snf-admin__table td {
-	padding: 0.65rem 0.4rem;
+	padding: 0.7rem 0.45rem;
 	border-bottom: 1px solid var(--snf-admin-line);
 	text-align: left;
 	vertical-align: top;
@@ -241,53 +274,86 @@
 	text-decoration: underline;
 }
 
+.snf-admin__table code,
+.snf-admin__code {
+	font-size: 12px;
+	word-break: break-all;
+}
+
 .snf-admin__pill {
 	display: inline-block;
-	padding: 0.15rem 0.45rem;
+	padding: 0.18rem 0.5rem;
 	border: 1px solid var(--snf-admin-line);
 	background: var(--snf-admin-surface);
 	font-size: 11px;
 	font-weight: 650;
 	letter-spacing: 0.03em;
 	text-transform: uppercase;
+	white-space: nowrap;
 }
 
 .snf-admin__pill--ok {
-	border-color: rgba(46, 125, 50, 0.35);
-	background: rgba(46, 125, 50, 0.08);
-	color: #1b5e20;
+	border-color: rgba(46, 125, 50, 0.45);
+	background: rgba(46, 125, 50, 0.1);
+	color: var(--snf-admin-ok);
 }
 
 .snf-admin__pill--warn {
-	border-color: rgba(183, 110, 0, 0.4);
-	background: rgba(183, 110, 0, 0.1);
-	color: #8a4b00;
+	border-color: rgba(183, 110, 0, 0.5);
+	background: rgba(183, 110, 0, 0.12);
+	color: var(--snf-admin-warn);
 }
 
 .snf-admin__pill--bad {
-	border-color: rgba(160, 40, 40, 0.35);
-	background: rgba(160, 40, 40, 0.08);
-	color: #8a1f1f;
+	border-color: rgba(160, 40, 40, 0.45);
+	background: rgba(160, 40, 40, 0.1);
+	color: var(--snf-admin-bad);
+}
+
+.snf-admin__form .form-table {
+	margin-top: 0.25rem;
 }
 
 .snf-admin__form .form-table th {
 	width: 220px;
 	padding-left: 0;
+	vertical-align: top;
 }
 
 .snf-admin__form .form-table td {
 	padding-right: 0;
 }
 
+.snf-admin__form .form-table input.regular-text,
+.snf-admin__form .form-table input.large-text,
+.snf-admin__form .form-table textarea.large-text {
+	max-width: 100%;
+}
+
 .snf-admin__notice {
 	margin: 0 0 1rem;
-	padding: 0.75rem 0.9rem;
+	padding: 0.8rem 0.95rem;
 	border-left: 3px solid var(--snf-admin-accent);
 	background: var(--snf-admin-surface);
 }
 
+.snf-admin__notice p {
+	margin: 0;
+}
+
 .snf-admin__notice--success {
 	border-left-color: #2e7d32;
+	background: rgba(46, 125, 50, 0.07);
+}
+
+.snf-admin__notice--warn {
+	border-left-color: #b76e00;
+	background: rgba(183, 110, 0, 0.08);
+}
+
+.snf-admin__notice--error {
+	border-left-color: #a02828;
+	background: rgba(160, 40, 40, 0.08);
 }
 
 .snf-admin__list {
@@ -299,8 +365,9 @@
 .snf-admin__list li {
 	display: flex;
 	justify-content: space-between;
+	align-items: flex-start;
 	gap: 1rem;
-	padding: 0.55rem 0;
+	padding: 0.6rem 0;
 	border-bottom: 1px solid var(--snf-admin-line);
 }
 
@@ -308,13 +375,69 @@
 	border-bottom: 0;
 }
 
+.snf-admin__list li > span:last-child {
+	text-align: right;
+	max-width: 65%;
+}
+
 .snf-admin__muted {
 	color: var(--snf-admin-muted);
+	margin: 0.75rem 0 0;
+}
+
+@keyframes snf-admin-fade-up {
+	from {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.snf-admin__hero,
+	.snf-admin__nav,
+	.snf-admin__grid--stats,
+	.snf-admin__grid--panels {
+		animation: none;
+	}
+
+	.snf-admin__nav a,
+	.snf-admin__btn {
+		transition: none;
+	}
 }
 
 @media (max-width: 960px) {
+	.snf-admin {
+		margin-right: 0;
+	}
+
 	.snf-admin__panel,
 	.snf-admin__panel--narrow {
 		grid-column: span 12;
+	}
+
+	.snf-admin__form .form-table th {
+		width: auto;
+		display: block;
+		padding-bottom: 0.25rem;
+	}
+
+	.snf-admin__form .form-table td {
+		display: block;
+		padding-left: 0;
+	}
+
+	.snf-admin__list li {
+		flex-direction: column;
+		gap: 0.35rem;
+	}
+
+	.snf-admin__list li > span:last-child {
+		max-width: 100%;
+		text-align: left;
 	}
 }
