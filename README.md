@@ -223,6 +223,16 @@ After deploy, visit **Settings → Permalinks** and Save once so media rewrite r
 - Signups are stored in WP Admin → **SNF Club → Newsletter Subscribers** (`snf_subscriber` CPT) and emailed to the site admin. Override the notify address with the `snf_newsletter_notify_email` filter; override the channel with `snf_newsletter_youtube_url`.
 - The form uses a nonce, a honeypot, and duplicate-email detection. Published videos appear automatically; if none exist, the page links to the YouTube channel.
 
+YouTube library sync:
+
+- `bin/snf-sync-youtube-videos.php` pulls the public RSS feed for channel `UCbhI6iw4w753-hcEKdF3Ugg` (`snf_youtube_channel_id` filter) and creates `snf_video` posts. It runs on every deploy, twice daily via WP-Cron (`snf_youtube_video_sync`), or manually with `wp eval-file wp-content/themes/super-ninety-four/bin/snf-sync-youtube-videos.php`.
+- Duplicate uploads are detected by `_snf_youtube_id`; thumbnails fall back to YouTube's `i.ytimg.com` URLs.
+
+Daily X post:
+
+- `app/Services/x-daily-post.php` posts the newest library video to X once daily (`snf_x_daily_post` cron). Status and a **Post now** button live at WP Admin → **SNF Club → X Daily Post**.
+- Requires a write-capable X API v2 bearer token set **outside git** as `X_API_BEARER_TOKEN` (env) or `SNF_X_BEARER_TOKEN` (wp-config). Without it the job is a no-op and records an error in the status page. Filter the copy with `snf_x_daily_post_text`.
+
 ### Auto-managed pages
 
 On `init`, the theme creates/updates: Home, About, Apply, Under Consideration, Member Login, Messages, Billing Details, Select Events (members/non-members), Expo (`/expo/`), Videos & Audio hub, service inquiry landings, and the Reciprocal hub. Reciprocal clubs themselves are WooCommerce products.

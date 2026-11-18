@@ -38,4 +38,11 @@ if ( function_exists( 'snf_ensure_theme_menus' ) ) {
 	echo "menus:ok\n";
 }
 
+// Pull recent YouTube uploads into the video library on every deploy.
+$snf_youtube_sync = get_template_directory() . '/bin/snf-sync-youtube-videos.php';
+if ( is_readable( $snf_youtube_sync ) ) {
+	require_once $snf_youtube_sync;
+	echo 'youtube_sync:' . (int) $snf_sync_result['added'] . " added\n";
+}
+
 echo "bootstrap:done\n";

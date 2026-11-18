@@ -45,9 +45,9 @@ get_header();
 			</p>
 
 			<ul class="snf-newsletter__benefits">
-				<li><?php esc_html_e( 'Fresh videos before they hit the main library', 'super-ninety-four' ); ?></li>
-				<li><?php esc_html_e( 'Event and reciprocal-club updates', 'super-ninety-four' ); ?></li>
-				<li><?php esc_html_e( 'No noise — just the highlights', 'super-ninety-four' ); ?></li>
+				<li><?php esc_html_e( 'Upcoming event updates and private invitations', 'super-ninety-four' ); ?></li>
+				<li><?php esc_html_e( 'Every new YouTube video, delivered as soon as it lands', 'super-ninety-four' ); ?></li>
+				<li><?php esc_html_e( 'A fresh post on X every single day', 'super-ninety-four' ); ?></li>
 			</ul>
 
 			<?php if ( $youtube_url ) : ?>

@@ -175,3 +175,24 @@ function snf_newsletter_handle_subscribe() {
 }
 add_action( 'admin_post_snf_newsletter_subscribe', 'snf_newsletter_handle_subscribe' );
 add_action( 'admin_post_nopriv_snf_newsletter_subscribe', 'snf_newsletter_handle_subscribe' );
+
+/**
+ * Keep the video library fresh from the YouTube channel feed.
+ */
+function snf_youtube_schedule_sync() {
+	if ( ! wp_next_scheduled( 'snf_youtube_video_sync' ) ) {
+		wp_schedule_event( time() + HOUR_IN_SECONDS, 'twicedaily', 'snf_youtube_video_sync' );
+	}
+}
+add_action( 'init', 'snf_youtube_schedule_sync' );
+
+/**
+ * Cron callback for the YouTube RSS sync.
+ */
+function snf_youtube_run_sync() {
+	$path = get_template_directory() . '/bin/snf-sync-youtube-videos.php';
+	if ( is_readable( $path ) ) {
+		require_once $path;
+	}
+}
+add_action( 'snf_youtube_video_sync', 'snf_youtube_run_sync' );

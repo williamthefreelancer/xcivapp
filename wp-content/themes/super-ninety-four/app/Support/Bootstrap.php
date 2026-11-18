@@ -54,6 +54,7 @@ final class Bootstrap {
 		'x-ads-pixel.php',
 		'seo-meta.php',
 		'newsletter.php',
+		'x-daily-post.php',
 	);
 
 	/**
