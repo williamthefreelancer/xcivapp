@@ -7,14 +7,28 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'SNF_VERSION', '2.27.0' );
+define( 'SNF_VERSION', '2.28.1' );
 
 $snf_autoload = get_template_directory() . '/vendor/autoload.php';
 if ( file_exists( $snf_autoload ) ) {
 	require_once $snf_autoload;
 }
 
-\SNF\Support\Bootstrap::init();
+if ( class_exists( '\SNF\Support\Bootstrap' ) ) {
+	\SNF\Support\Bootstrap::init();
+} else {
+	add_action(
+		'admin_notices',
+		static function () {
+			if ( ! current_user_can( 'manage_options' ) ) {
+				return;
+			}
+			echo '<div class="notice notice-error"><p>';
+			echo esc_html__( 'Super Ninety Four: run composer install in the theme directory (vendor/autoload.php is missing).', 'super-ninety-four' );
+			echo '</p></div>';
+		}
+	);
+}
 
 function snf_setup() {
 	add_theme_support( 'title-tag' );

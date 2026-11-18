@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 const themeRoot = path.dirname(fileURLToPath(import.meta.url));
 
-const distCacheHeaders = `<!-- Long-cache built Vite assets -->
+const distCacheHeaders = `# Long-cache built Vite assets
 <IfModule mod_headers.c>
 	Header set Cache-Control "public, max-age=31536000, immutable"
 </IfModule>
