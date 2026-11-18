@@ -144,6 +144,75 @@ function snf_woocommerce_product_query( $q ) {
 add_action( 'woocommerce_product_query', 'snf_woocommerce_product_query' );
 
 /**
+ * Theme-relative icon path for a listing slug (SERP favicon).
+ *
+ * Brand marks first; MIT Phosphor UI icons for services / clubs.
+ * Never returns a product photo thumbnail.
+ *
+ * @param string $slug Product or event slug.
+ * @return string Relative path under assets/icons/, or empty.
+ */
+function snf_get_listing_favicon_relative_path( $slug ) {
+	$slug = sanitize_title( (string) $slug );
+	if ( 'the-eight-hundred-plus-journeys' === $slug ) {
+		$slug = 'the-eight-hundred-plus-journeys-event';
+	}
+	if ( 'the-badlands-bra-party-bus-gathering' === $slug ) {
+		$slug = 'the-badlands-bra-private-gathering';
+	}
+
+	$map = array(
+		/* Brand marks when they read at favicon size; Phosphor MIT otherwise. */
+		'the-badlands-bra-private-gathering'        => 'female-body-icon.svg',
+		'the-eight-hundred-plus-journeys-event'     => 'ui/car.svg',
+		'the-township-adventures-event'             => 'ui/buildings.svg',
+		'the-lifestyle-concierge-club-workshop'     => 'ui/chalkboard-teacher.svg',
+		'litter-pickup-service'                     => 'ui/broom.svg',
+		'professional-line-sitting-courier-service' => 'ui/person-simple-walk.svg',
+		'janitorial-cleaning-service'               => 'ui/sparkle.svg',
+		'the-clubs-at-back-creek'                   => 'ui/buildings.svg',
+		'the-badlands-bra-club'                     => 'female-body-icon.svg',
+		'the-clubs-at-wyoma-square'                 => 'ui/map-pin.svg',
+		'the-city-clubs-at-super-ninety-four'       => 'ui/buildings.svg',
+	);
+
+	/**
+	 * Filter listing favicon relative paths.
+	 *
+	 * @param array<string, string> $map Slug => path under assets/icons/.
+	 */
+	$map = apply_filters( 'snf_listing_favicon_map', $map );
+
+	if ( empty( $map[ $slug ] ) ) {
+		return '';
+	}
+
+	$rel  = ltrim( (string) $map[ $slug ], '/' );
+	$file = get_template_directory() . '/assets/icons/' . $rel;
+	return is_readable( $file ) ? $rel : '';
+}
+
+/**
+ * Absolute URL for a listing SERP favicon.
+ *
+ * @param string $slug Product or event slug.
+ * @return string
+ */
+function snf_get_listing_favicon_url( $slug ) {
+	$rel = snf_get_listing_favicon_relative_path( $slug );
+	if ( ! $rel ) {
+		// Site mark — never a letter placeholder when a brand asset exists.
+		$fallback = get_template_directory() . '/assets/icons/logo-white.svg';
+		if ( is_readable( $fallback ) ) {
+			return get_template_directory_uri() . '/assets/icons/logo-white.svg';
+		}
+		return '';
+	}
+
+	return get_template_directory_uri() . '/assets/icons/' . $rel;
+}
+
+/**
  * Map a product to a SERP result row.
  *
  * @param WC_Product|int|null $product Product object or ID.
@@ -183,8 +252,7 @@ function snf_get_product_serp_row( $product = null ) {
 		$action = __( 'View listing', 'super-ninety-four' );
 	}
 
-	$thumb_id = $product->get_image_id();
-	$favicon  = $thumb_id ? wp_get_attachment_image_url( $thumb_id, 'thumbnail' ) : '';
+	$favicon = snf_get_listing_favicon_url( $product->get_slug() );
 
 	$result_url = get_permalink( $product_id );
 	if ( function_exists( 'snf_is_lifestyle_concierge_workshop' ) && snf_is_lifestyle_concierge_workshop( $product_id ) ) {
@@ -198,8 +266,8 @@ function snf_get_product_serp_row( $product = null ) {
 		'meta'     => trim( implode( ' · ', array_filter( array( $location, $timing ) ) ) ),
 		'crumb'    => 'superninetyfour.com › shop › ' . $product->get_slug(),
 		'action'   => $action,
-		'favicon'  => $favicon ? $favicon : '',
-		'fallback' => mb_substr( $title, 0, 1 ),
+		'favicon'  => $favicon,
+		'fallback' => '',
 	);
 }
 

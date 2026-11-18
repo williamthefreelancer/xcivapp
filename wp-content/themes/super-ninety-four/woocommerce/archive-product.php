@@ -50,8 +50,6 @@ $shop_url      = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permal
 										<span class="snf-result__favicon" aria-hidden="true">
 											<?php if ( ! empty( $row['favicon'] ) ) : ?>
 												<img src="<?php echo esc_url( $row['favicon'] ); ?>" alt="" width="28" height="28">
-											<?php else : ?>
-												<span class="snf-result__favicon-fallback"><?php echo esc_html( $row['fallback'] ); ?></span>
 											<?php endif; ?>
 										</span>
 										<span class="snf-result__source-text">

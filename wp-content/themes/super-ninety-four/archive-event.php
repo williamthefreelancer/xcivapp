@@ -48,7 +48,9 @@ $display_query = $query ? $query : __( 'events & services', 'super-ninety-four' 
 						$admission_url = snf_get_event_action_url( get_the_ID() );
 						$location = get_post_meta( get_the_ID(), 'snf_event_location', true );
 						$timing   = get_post_meta( get_the_ID(), 'snf_event_when', true );
-						$icon     = get_post_meta( get_the_ID(), 'snf_event_icon', true );
+						$favicon  = function_exists( 'snf_get_listing_favicon_url' )
+							? snf_get_listing_favicon_url( get_post_field( 'post_name', get_the_ID() ) )
+							: '';
 						$snippet  = has_excerpt() ? get_the_excerpt() : wp_trim_words( wp_strip_all_tags( get_the_content() ), 28 );
 						$crumb    = 'superninetyfour.com › events › ' . get_post_field( 'post_name', get_the_ID() );
 						?>
@@ -57,10 +59,8 @@ $display_query = $query ? $query : __( 'events & services', 'super-ninety-four' 
 								<a class="snf-result__hit" href="<?php echo esc_url( $admission_url ); ?>">
 									<div class="snf-result__source">
 										<span class="snf-result__favicon" aria-hidden="true">
-											<?php if ( $icon ) : ?>
-												<img src="<?php echo esc_url( get_template_directory_uri() . '/assets/icons/events/' . $icon ); ?>" alt="" width="28" height="28">
-											<?php else : ?>
-												<span class="snf-result__favicon-fallback"><?php echo esc_html( mb_substr( get_the_title(), 0, 1 ) ); ?></span>
+											<?php if ( $favicon ) : ?>
+												<img src="<?php echo esc_url( $favicon ); ?>" alt="" width="28" height="28">
 											<?php endif; ?>
 										</span>
 										<span class="snf-result__source-text">
@@ -86,12 +86,21 @@ $display_query = $query ? $query : __( 'events & services', 'super-ninety-four' 
 					<?php endwhile; ?>
 
 					<?php foreach ( $service_results as $service ) : ?>
+						<?php
+						$service_favicon = ! empty( $service['favicon'] )
+							? $service['favicon']
+							: ( function_exists( 'snf_get_listing_favicon_url' ) && ! empty( $service['slug'] )
+								? snf_get_listing_favicon_url( $service['slug'] )
+								: ( function_exists( 'snf_get_listing_favicon_url' ) ? snf_get_listing_favicon_url( '' ) : '' ) );
+						?>
 						<li class="snf-serp__item">
 							<article class="snf-result">
 								<a class="snf-result__hit" href="<?php echo esc_url( $service['url'] ); ?>">
 									<div class="snf-result__source">
 										<span class="snf-result__favicon" aria-hidden="true">
-											<span class="snf-result__favicon-fallback"><?php echo esc_html( mb_substr( $service['title'], 0, 1 ) ); ?></span>
+											<?php if ( $service_favicon ) : ?>
+												<img src="<?php echo esc_url( $service_favicon ); ?>" alt="" width="28" height="28">
+											<?php endif; ?>
 										</span>
 										<span class="snf-result__source-text">
 											<span class="snf-result__site"><?php bloginfo( 'name' ); ?></span>

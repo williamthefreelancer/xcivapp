@@ -305,30 +305,64 @@ function snf_get_reciprocal_hub_data() {
 }
 
 /**
- * Simple SVG icon shared by reciprocal / home cards.
+ * Phosphor (MIT) / theme UI icon filename for a semantic key.
  *
  * @param string $name Icon key.
- * @return string
+ * @return string Filename under assets/icons/ui/.
  */
-function snf_reciprocal_icon_svg( $name ) {
-	$icons = array(
-		'pin'       => '<path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/>',
-		'crown'     => '<path d="M3 18h18v2H3zm1.5-3 2.7-7.2L12 11l4.8-3.2L19.5 15z"/>',
-		'shield'    => '<path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5z"/>',
-		'clipboard' => '<path d="M9 2h6a2 2 0 0 1 2 2h1a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1a2 2 0 0 1 2-2zm0 2v2h6V4zm2 8h6v2h-6zm0 4h6v2h-6zM7 12h2v2H7zm0 4h2v2H7z"/>',
-		'bulb'      => '<path d="M9 21h6v1H9zm3-19a7 7 0 0 0-4 12.7V18h8v-3.3A7 7 0 0 0 12 2z"/>',
-		'walk'      => '<path d="M13.5 5.5a2 2 0 1 0-2 0V8l-3 2 1 7h2l1-4 2 2v5h2v-6l-2.5-2.5L15 8z"/>',
-		'cart'      => '<path d="M7 18a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm10 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM3 4h2l3.6 9.6L7.2 16H19v-2H8.4l.8-1.5H19l2-7H6.2L5.4 2H3z"/>',
-		'lock'      => '<path d="M17 8h-1V6a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zm-7-2a2 2 0 1 1 4 0v2h-4z"/>',
-		'ticket'    => '<path d="M22 10V6H2v4a2 2 0 0 1 0 4v4h20v-4a2 2 0 0 1 0-4zM4 8h16v1.5a3.5 3.5 0 0 0 0 5V18H4v-3.5a3.5 3.5 0 0 0 0-5z"/>',
-		'car'       => '<path d="M5 11 6.5 6.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11h1a1 1 0 0 1 1 1v5h-2a2 2 0 1 1-4 0H9a2 2 0 1 1-4 0H3v-5a1 1 0 0 1 1-1zm2.2-3.5L6.3 11h11.4l-.9-3.5z"/>',
-		'card'      => '<path d="M2 6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2zm2 0v3h16V6zm0 5v7h16v-7z"/>',
-		'home'      => '<path d="M12 3 3 10v11h6v-6h6v6h6V10z"/>',
-		'bed'       => '<path d="M3 7h2v6h14V9a2 2 0 0 0-2-2H9V7H3zm0 10h18v2H3z"/>',
-		'wrench'    => '<path d="M22.7 19.4 15 11.7A6 6 0 0 0 7.2 3.1L11 7 7 11 3.1 7.2A6 6 0 0 0 11.7 15l7.7 7.7a1 1 0 0 0 1.4 0l1.9-1.9a1 1 0 0 0 0-1.4z"/>',
-		'globe'     => '<path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 2c1.7 0 3.3 2.7 3.8 6H8.2C8.7 6.7 10.3 4 12 4zm-4.9 8H16.9c-.2 1.4-.7 2.8-1.4 4H8.5c-.7-1.2-1.2-2.6-1.4-4zM12 20c-1.7 0-3.3-2.7-3.8-6h7.6C15.3 17.3 13.7 20 12 20z"/>',
+function snf_ui_icon_filename( $name ) {
+	$map = array(
+		'pin'       => 'map-pin.svg',
+		'crown'     => 'crown.svg',
+		'shield'    => 'shield-check.svg',
+		'clipboard' => 'clipboard-text.svg',
+		'ticket'    => 'ticket.svg',
+		'car'       => 'car.svg',
+		'home'      => 'house.svg',
+		'globe'     => 'globe.svg',
+		'walk'      => 'person-simple-walk.svg',
+		'broom'     => 'broom.svg',
+		'bulb'      => 'sparkle.svg',
+		'buildings' => 'buildings.svg',
+		'users'     => 'users-three.svg',
+		'workshop'  => 'chalkboard-teacher.svg',
 	);
 
-	$path = isset( $icons[ $name ] ) ? $icons[ $name ] : $icons['pin'];
-	return '<svg class="snf-reciprocal__icon" viewBox="0 0 24 24" width="28" height="28" aria-hidden="true" focusable="false">' . $path . '</svg>';
+	return isset( $map[ $name ] ) ? $map[ $name ] : $map['pin'];
+}
+
+/**
+ * Inline SVG icon shared by reciprocal / home cards (Phosphor MIT assets).
+ *
+ * @param string $name  Icon key.
+ * @param string $class CSS class on the root <svg>.
+ * @return string
+ */
+function snf_reciprocal_icon_svg( $name, $class = 'snf-reciprocal__icon' ) {
+	$file = get_template_directory() . '/assets/icons/ui/' . snf_ui_icon_filename( $name );
+	if ( ! is_readable( $file ) ) {
+		$file = get_template_directory() . '/assets/icons/ui/map-pin.svg';
+	}
+
+	$svg = (string) file_get_contents( $file ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+	$svg = preg_replace( '/<\?xml[^>]*\?>/', '', $svg );
+	$class = sanitize_html_class( $class );
+
+	if ( preg_match( '/<svg\b([^>]*)>/i', $svg, $m ) ) {
+		$attrs = $m[1];
+		if ( false === stripos( $attrs, 'class=' ) ) {
+			$attrs .= ' class="' . esc_attr( $class ) . '"';
+		} else {
+			$attrs = preg_replace( '/class="([^"]*)"/i', 'class="$1 ' . esc_attr( $class ) . '"', $attrs, 1 );
+		}
+		if ( false === stripos( $attrs, 'width=' ) ) {
+			$attrs .= ' width="28" height="28"';
+		}
+		if ( false === stripos( $attrs, 'aria-hidden' ) ) {
+			$attrs .= ' aria-hidden="true" focusable="false"';
+		}
+		$svg = preg_replace( '/<svg\b[^>]*>/i', '<svg' . $attrs . '>', $svg, 1 );
+	}
+
+	return $svg;
 }
