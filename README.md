@@ -35,6 +35,10 @@ This writes `dist/main.css` and `dist/main.js`. Deploy CI runs the same build be
 
 ## Start the site
 
+Prefer XAMPP Apache at [https://localhost/super-ninety-four/](https://localhost/super-ninety-four/) (matches `siteurl` / `home`).
+
+Optional built-in PHP server (only if you also point WordPress URLs at it):
+
 ```powershell
 .\scripts\start-server.ps1
 ```
@@ -54,7 +58,7 @@ Credentials are also stored in `.mysql-local.json` (gitignored).
 
 ## Admin login
 
-- URL: [http://localhost:8080/wp-admin](http://localhost:8080/wp-admin)
+- URL: [https://localhost/super-ninety-four/wp-admin](https://localhost/super-ninety-four/wp-admin)
 - User: `admin`
 - Password: `admin123!`
 
@@ -94,9 +98,24 @@ cd wp-content\themes\super-ninety-four
 composer install --no-dev
 ```
 
-Deploy CI runs `composer install --no-dev` and `npm ci && npm run build`, then rsyncs the theme (including generated `vendor/` and `dist/`). Legacy `inc/*.php` paths are thin shims to `app/Services/`.
+Deploy CI runs `composer install --no-dev` and `npm ci && npm run build`, then rsyncs the theme (including generated `vendor/` and `dist/`) plus `wp-content/plugins/snf-payments/`, and activates the payments plugin when WP-CLI is available. Legacy `inc/*.php` paths are thin shims to `app/Services/`.
 
-### Stripe webhook
+### SUPER NINETY FOUR Payments (WooCommerce gateway)
+
+Plugin: `wp-content/plugins/snf-payments/`
+
+1. Activate **SUPER NINETY FOUR Payments** under **Plugins**.
+2. Enable it at **WooCommerce → Settings → Payments → SUPER NINETY FOUR**.
+3. Keys prefer theme / `SNF_STRIPE_*` / **WooCommerce → SNF Stripe**; gateway settings are fallbacks.
+4. Point a Stripe webhook at:
+
+`https://YOUR-DOMAIN/wp-json/snf-payments/v1/stripe/webhook`
+
+Events: `payment_intent.succeeded`, `payment_intent.payment_failed`, `charge.refunded`.
+
+Checkout uses Stripe Payment Element on-site (branded multi-step UI). Apply / workshop / event forms still add products to the cart, then redirect here.
+
+### Stripe webhook (theme / legacy Checkout Sessions)
 
 Point Stripe Dashboard → Developers → Webhooks at:
 

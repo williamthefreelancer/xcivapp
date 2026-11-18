@@ -2,6 +2,11 @@
 /**
  * Stripe integration: settings, Checkout Sessions, and custom webhook endpoint.
  *
+ * Hook contract:
+ * - Listen: REST snf/v1/stripe/* (admin + webhook).
+ * - Emit: snf_stripe_webhook_handled; membership/reciprocal via WooCommerce order hooks only.
+ * - Bridge: checkout.session.completed creates/completes a WC order (never activates with order_id 0).
+ *
  * Webhook URL: /wp-json/snf/v1/stripe/webhook
  * Uses stripe/stripe-php (Composer) when vendor/autoload.php is present;
  * falls back to wp_remote_* if the SDK is missing.
@@ -526,7 +531,141 @@ function snf_stripe_handle_event( array $event ) {
 }
 
 /**
- * Activate membership / reciprocal from Checkout Session metadata.
+ * Resolve WooCommerce product IDs for Stripe session metadata.
+ *
+ * @param array<string, mixed> $meta Session metadata.
+ * @return int[] Product IDs.
+ */
+function snf_stripe_bridge_product_ids_from_meta( array $meta ) {
+	$ids     = array();
+	$sku     = isset( $meta['sku'] ) ? sanitize_title( (string) $meta['sku'] ) : '';
+	$plan    = isset( $meta['plan'] ) ? sanitize_title( (string) $meta['plan'] ) : '';
+	$program = isset( $meta['program'] ) ? sanitize_title( (string) $meta['program'] ) : '';
+	$init    = ! empty( $meta['initiation'] ) && in_array( (string) $meta['initiation'], array( '1', 'yes', 'true' ), true );
+
+	if ( 'application' === $sku && function_exists( 'snf_get_membership_product_id' ) ) {
+		$app_id = snf_get_membership_product_id( 'application' );
+		if ( $app_id ) {
+			$ids[] = $app_id;
+		}
+	}
+
+	if ( $init && function_exists( 'snf_get_membership_product_id' ) ) {
+		$init_id = snf_get_membership_product_id( 'initiation' );
+		if ( $init_id ) {
+			$ids[] = $init_id;
+		}
+	}
+
+	if ( $plan && 'application' !== $sku && function_exists( 'snf_get_membership_product_id' ) ) {
+		$plan_id = snf_get_membership_product_id( $plan );
+		if ( $plan_id ) {
+			$ids[] = $plan_id;
+		}
+	}
+
+	if ( $program ) {
+		$product = get_page_by_path( $program, OBJECT, 'product' );
+		if ( $product ) {
+			$ids[] = (int) $product->ID;
+		}
+	}
+
+	/**
+	 * Filter Woo product IDs bridged from a Stripe Checkout session.
+	 *
+	 * @param int[]                $ids  Product IDs.
+	 * @param array<string, mixed> $meta Session metadata.
+	 */
+	$ids = apply_filters( 'snf_stripe_bridge_product_ids', $ids, $meta );
+
+	return array_values( array_unique( array_filter( array_map( 'intval', $ids ) ) ) );
+}
+
+/**
+ * Create a paid WooCommerce order from Stripe session metadata, then rely on WC hooks.
+ *
+ * @param int                  $user_id User ID.
+ * @param array<string, mixed> $meta    Session metadata.
+ * @param array<string, mixed> $session Stripe session.
+ * @return int|\WP_Error Order ID or error.
+ */
+function snf_stripe_bridge_create_wc_order( $user_id, array $meta, array $session ) {
+	if ( ! function_exists( 'wc_create_order' ) ) {
+		return new WP_Error( 'snf_stripe_no_woo', __( 'WooCommerce is required to bridge Stripe payments.', 'super-ninety-four' ) );
+	}
+
+	$user_id     = (int) $user_id;
+	$product_ids = snf_stripe_bridge_product_ids_from_meta( $meta );
+	if ( ! $product_ids ) {
+		return new WP_Error( 'snf_stripe_no_products', __( 'No WooCommerce products matched this Stripe session.', 'super-ninety-four' ) );
+	}
+
+	$order = wc_create_order(
+		array(
+			'customer_id' => $user_id,
+			'created_via' => 'snf_stripe_bridge',
+		)
+	);
+	if ( is_wp_error( $order ) || ! $order ) {
+		return is_wp_error( $order ) ? $order : new WP_Error( 'snf_stripe_order_failed', __( 'Could not create WooCommerce order.', 'super-ninety-four' ) );
+	}
+
+	$plan = isset( $meta['plan'] ) ? sanitize_title( (string) $meta['plan'] ) : '';
+
+	foreach ( $product_ids as $product_id ) {
+		$product = wc_get_product( $product_id );
+		if ( ! $product ) {
+			continue;
+		}
+		$item_id = $order->add_product( $product, 1 );
+		if ( $item_id && $plan && function_exists( 'snf_get_plan_slug_from_product' ) ) {
+			$item = $order->get_item( $item_id );
+			if ( $item && snf_get_plan_slug_from_product( $product ) === $plan ) {
+				$item->add_meta_data( '_snf_membership_plan', $plan, true );
+				$item->save();
+			}
+		}
+	}
+
+	if ( $plan ) {
+		$order->update_meta_data( '_snf_membership_plan', $plan );
+	}
+	$order->update_meta_data( '_snf_stripe_checkout_session', sanitize_text_field( (string) ( $session['id'] ?? '' ) ) );
+	$order->update_meta_data( '_snf_stripe_bridged', 'yes' );
+
+	$user = get_userdata( $user_id );
+	if ( $user ) {
+		$order->set_billing_email( $user->user_email );
+		$order->set_billing_first_name( $user->first_name ? $user->first_name : $user->display_name );
+	} elseif ( ! empty( $session['customer_email'] ) ) {
+		$order->set_billing_email( sanitize_email( (string) $session['customer_email'] ) );
+	}
+
+	$order->set_payment_method( 'snf_stripe' );
+	$order->set_payment_method_title( __( 'Stripe (theme bridge)', 'super-ninety-four' ) );
+	$order->calculate_totals( false );
+	$order->save();
+
+	$txn = sanitize_text_field( (string) ( $session['payment_intent'] ?? $session['id'] ?? '' ) );
+	$order->payment_complete( $txn );
+	$order->add_order_note( __( 'SUPER NINETY FOUR: Stripe Checkout bridged to WooCommerce order; activations run via WC hooks.', 'super-ninety-four' ) );
+
+	/**
+	 * Fires after a Stripe Checkout session is bridged into a WooCommerce order.
+	 *
+	 * @param int                  $order_id Order ID.
+	 * @param int                  $user_id  User ID.
+	 * @param array<string, mixed> $session  Stripe session.
+	 * @param array<string, mixed> $meta     Session metadata.
+	 */
+	do_action( 'snf_stripe_order_bridged', $order->get_id(), $user_id, $session, $meta );
+
+	return (int) $order->get_id();
+}
+
+/**
+ * Bridge Checkout Session to a WooCommerce order (activations via WC hooks only).
  *
  * @param array<string, mixed> $session Session object.
  * @return array<string, mixed>
@@ -536,7 +675,7 @@ function snf_stripe_handle_checkout_session_completed( array $session ) {
 	$user_id = isset( $meta['user_id'] ) ? (int) $meta['user_id'] : 0;
 	$plan    = isset( $meta['plan'] ) ? sanitize_title( (string) $meta['plan'] ) : '';
 	$program = isset( $meta['program'] ) ? sanitize_title( (string) $meta['program'] ) : '';
-	$init    = ! empty( $meta['initiation'] ) && in_array( (string) $meta['initiation'], array( '1', 'yes', 'true' ), true );
+	$sku     = isset( $meta['sku'] ) ? sanitize_title( (string) $meta['sku'] ) : '';
 
 	if ( $user_id <= 0 && ! empty( $session['client_reference_id'] ) ) {
 		$user_id = (int) $session['client_reference_id'];
@@ -549,10 +688,12 @@ function snf_stripe_handle_checkout_session_completed( array $session ) {
 	}
 
 	$out = array(
-		'user_id' => $user_id,
-		'plan'    => $plan,
-		'program' => $program,
-		'actions' => array(),
+		'user_id'  => $user_id,
+		'plan'     => $plan,
+		'program'  => $program,
+		'sku'      => $sku,
+		'actions'  => array(),
+		'order_id' => 0,
 	);
 
 	if ( $user_id <= 0 ) {
@@ -560,64 +701,38 @@ function snf_stripe_handle_checkout_session_completed( array $session ) {
 		return $out;
 	}
 
-	$sku = isset( $meta['sku'] ) ? sanitize_title( (string) $meta['sku'] ) : '';
-	$out['sku'] = $sku;
-
-	if ( 'application' === $sku ) {
-		update_user_meta( $user_id, 'snf_application_paid', 1 );
-		update_user_meta( $user_id, 'snf_application_paid_at', time() );
-		update_user_meta( $user_id, 'snf_application_checkout_session', sanitize_text_field( (string) ( $session['id'] ?? '' ) ) );
-		if ( $plan ) {
-			update_user_meta( $user_id, 'snf_pending_membership_plan', $plan );
-		}
-		if ( function_exists( 'snf_assign_club_role' ) ) {
-			$user = get_userdata( $user_id );
-			$skip = array( 'administrator', 'snf_staff', 'snf_reciprocal', 'snf_member' );
-			if ( $user && ! array_intersect( $skip, (array) $user->roles ) ) {
-				snf_assign_club_role( $user_id, 'snf_applicant' );
-			}
-		}
-		$out['actions'][] = 'application_paid';
+	if ( $plan ) {
+		update_user_meta( $user_id, 'snf_pending_membership_plan', $plan );
 	}
+	update_user_meta( $user_id, 'snf_stripe_checkout_session', sanitize_text_field( (string) ( $session['id'] ?? '' ) ) );
 
-	if ( $init && defined( 'SNF_META_INITIATION' ) ) {
-		update_user_meta( $user_id, SNF_META_INITIATION, 1 );
-		$out['actions'][] = 'initiation_paid';
-	}
-
-	if ( $plan && function_exists( 'snf_activate_membership' ) && 'application' !== $sku ) {
-		snf_activate_membership(
-			$user_id,
-			$plan,
-			array(
-				'initiation_paid' => $init,
-				'order_id'        => 0,
-			)
-		);
-		update_user_meta( $user_id, 'snf_stripe_checkout_session', sanitize_text_field( (string) ( $session['id'] ?? '' ) ) );
-		$out['actions'][] = 'membership_activated';
-	}
-
-	if ( $program && function_exists( 'snf_activate_reciprocal_subscription' ) ) {
-		$product_id = 0;
-		$product    = get_page_by_path( $program, OBJECT, 'product' );
-		if ( $product ) {
-			$product_id = (int) $product->ID;
-		}
-		snf_activate_reciprocal_subscription( $user_id, $program, $product_id, 0 );
-		$out['actions'][] = 'reciprocal_activated';
-	}
-
-	// If this session is tied to a Woo order, mark paid / processing.
+	// Prefer completing an existing Woo order referenced in metadata.
 	if ( ! empty( $meta['order_id'] ) && function_exists( 'wc_get_order' ) ) {
 		$order = wc_get_order( (int) $meta['order_id'] );
 		if ( $order && ! $order->is_paid() ) {
 			$order->payment_complete( sanitize_text_field( (string) ( $session['payment_intent'] ?? $session['id'] ?? '' ) ) );
 			$order->add_order_note( __( 'SUPER NINETY FOUR: Stripe Checkout session completed via webhook.', 'super-ninety-four' ) );
 			$out['actions'][] = 'order_paid';
+			$out['order_id']  = (int) $order->get_id();
+			return $out;
+		}
+		if ( $order && $order->is_paid() ) {
+			$out['actions'][] = 'order_already_paid';
+			$out['order_id']  = (int) $order->get_id();
+			return $out;
 		}
 	}
 
+	// Create a Woo order so membership/reciprocal listeners run on WC hooks.
+	$bridged = snf_stripe_bridge_create_wc_order( $user_id, $meta, $session );
+	if ( is_wp_error( $bridged ) ) {
+		$out['actions'][] = 'bridge_failed';
+		$out['error']     = $bridged->get_error_message();
+		return $out;
+	}
+
+	$out['actions'][] = 'order_bridged';
+	$out['order_id']  = (int) $bridged;
 	return $out;
 }
 

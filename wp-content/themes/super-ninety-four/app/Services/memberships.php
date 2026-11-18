@@ -2,8 +2,12 @@
 /**
  * Custom memberships & subscriptions (no paid plugins).
  *
- * Uses WordPress roles/user meta, WooCommerce order hooks, and
- * Action Scheduler (or WP-Cron fallback) for renewals/expiry.
+ * Hook contract:
+ * - Listen: woocommerce_payment_complete, woocommerce_order_status_processing/completed,
+ *   admin_post_snf_apply_membership (WC cart only).
+ * - Emit: snf_membership_activated, snf_membership_ended, snf_membership_renewal_reminder_sent,
+ *   snf_membership_dues_reminder_sent, snf_apply_checkout_prepared.
+ * - Cron: snf_membership_daily_sweep (+ per-user expire/remind) via SNF\Support\Scheduling.
  *
  * @package Super_Ninety_Four
  */
@@ -38,6 +42,12 @@ const SNF_PRODUCT_PLAN_META = '_snf_membership_plan';
 
 /** Product meta: mark product as initiation fee. */
 const SNF_PRODUCT_INITIATION_META = '_snf_is_initiation';
+
+/** Product meta: mark product as application fee ($97). */
+const SNF_PRODUCT_APPLICATION_META = '_snf_is_application';
+
+/** User meta: application fee paid (1|0). */
+const SNF_META_APPLICATION = 'snf_application_paid';
 
 /**
  * Plan catalog with numeric amounts for order matching / display.
@@ -107,16 +117,23 @@ function snf_get_membership_plan_definitions() {
 	return apply_filters(
 		'snf_membership_plan_definitions',
 		array(
-			'initiation_fee' => array(
+			'application_fee' => array(
+				'amount'       => '$97.00',
+				'amount_raw'   => 97.0,
+				'label'        => __( 'Application fee', 'super-ninety-four' ),
+				'meta'         => __( '4-week experience / application fee', 'super-ninety-four' ),
+				'product_slug' => 'membership-application',
+			),
+			'initiation_fee'  => array(
 				'amount'       => '$75,000.00',
 				'amount_raw'   => 75000.0,
 				'label'        => __( 'Initiation fee', 'super-ninety-four' ),
 				'meta'         => __( 'Required for all membership plans', 'super-ninety-four' ),
 				'product_slug' => 'membership-initiation',
 			),
-			'term_months'    => 12,
-			'renewal_note'   => $renewal_note,
-			'plans'          => $plans,
+			'term_months'     => 12,
+			'renewal_note'    => $renewal_note,
+			'plans'           => $plans,
 		)
 	);
 }
@@ -229,21 +246,7 @@ function snf_get_user_membership( $user_id ) {
  * @return void
  */
 function snf_membership_schedule_single( $timestamp, $hook, $args = array(), $group = 'snf-memberships' ) {
-	$timestamp = (int) $timestamp;
-	if ( $timestamp <= time() ) {
-		$timestamp = time() + 60;
-	}
-
-	if ( function_exists( 'as_has_scheduled_action' ) && function_exists( 'as_schedule_single_action' ) ) {
-		if ( ! as_has_scheduled_action( $hook, $args, $group ) ) {
-			as_schedule_single_action( $timestamp, $hook, $args, $group );
-		}
-		return;
-	}
-
-	if ( ! wp_next_scheduled( $hook, $args ) ) {
-		wp_schedule_single_event( $timestamp, $hook, $args );
-	}
+	\SNF\Support\Scheduling::once( (string) $hook, (int) $timestamp, (array) $args, (string) $group );
 }
 
 /**
@@ -419,18 +422,37 @@ function snf_product_is_initiation( $product ) {
 }
 
 /**
+ * Whether a product is the application fee SKU.
+ *
+ * @param WC_Product $product Product.
+ * @return bool
+ */
+function snf_product_is_application( $product ) {
+	if ( ! $product || ! is_a( $product, 'WC_Product' ) ) {
+		return false;
+	}
+	if ( 'yes' === $product->get_meta( SNF_PRODUCT_APPLICATION_META, true ) || '1' === $product->get_meta( SNF_PRODUCT_APPLICATION_META, true ) ) {
+		return true;
+	}
+	$defs = snf_get_membership_plan_definitions();
+	$app  = isset( $defs['application_fee'] ) ? $defs['application_fee'] : null;
+	return $app && $product->get_slug() === $app['product_slug'];
+}
+
+/**
  * Extract membership signals from a Woo order.
  *
  * @param WC_Order $order Order.
- * @return array{plan:string,initiation:bool,product_ids:int[]}
+ * @return array{plan:string,initiation:bool,application:bool,product_ids:int[]}
  */
 function snf_membership_signals_from_order( $order ) {
 	$plan         = '';
 	$initiation   = false;
+	$application  = false;
 	$product_ids  = array();
 
 	if ( ! $order ) {
-		return compact( 'plan', 'initiation', 'product_ids' );
+		return compact( 'plan', 'initiation', 'application', 'product_ids' );
 	}
 
 	$order_plan = (string) $order->get_meta( '_snf_membership_plan' );
@@ -455,12 +477,16 @@ function snf_membership_signals_from_order( $order ) {
 		if ( snf_product_is_initiation( $product ) ) {
 			$initiation = true;
 		}
+		if ( snf_product_is_application( $product ) ) {
+			$application = true;
+		}
 	}
 
 	return array(
-		'plan'        => $plan,
-		'initiation'  => $initiation,
-		'product_ids' => $product_ids,
+		'plan'         => $plan,
+		'initiation'   => $initiation,
+		'application'  => $application,
+		'product_ids'  => $product_ids,
 	);
 }
 
@@ -491,9 +517,30 @@ function snf_process_membership_order( $order_id ) {
 	}
 
 	$signals = snf_membership_signals_from_order( $order );
-	if ( ! $signals['plan'] && ! $signals['initiation'] ) {
+	if ( ! $signals['plan'] && ! $signals['initiation'] && empty( $signals['application'] ) ) {
 		// Non-membership order: leave alone (workshop / events keep their own flows).
 		return;
+	}
+
+	if ( ! empty( $signals['application'] ) ) {
+		update_user_meta( $user_id, SNF_META_APPLICATION, 1 );
+		update_user_meta( $user_id, 'snf_application_paid_at', time() );
+		update_user_meta( $user_id, 'snf_application_order_id', $order_id );
+		if ( function_exists( 'snf_assign_club_role' ) ) {
+			$user = get_userdata( $user_id );
+			if ( $user && ! array_intersect( array( 'administrator', 'snf_staff', 'snf_reciprocal', 'snf_member' ), (array) $user->roles ) ) {
+				snf_assign_club_role( $user_id, 'snf_applicant' );
+			}
+		}
+		/**
+		 * Fires when an application fee is recorded from a WooCommerce order.
+		 *
+		 * @param int      $user_id  User ID.
+		 * @param int      $order_id Order ID.
+		 * @param WC_Order $order    Order.
+		 */
+		do_action( 'snf_application_paid', $user_id, $order_id, $order );
+		$order->add_order_note( __( 'SUPER NINETY FOUR: application fee recorded.', 'super-ninety-four' ) );
 	}
 
 	if ( $signals['plan'] ) {
@@ -677,16 +724,13 @@ add_action( 'snf_membership_daily_sweep', 'snf_membership_daily_sweep' );
  * Ensure daily sweep is scheduled.
  */
 function snf_membership_schedule_cron() {
-	if ( function_exists( 'as_has_scheduled_action' ) && function_exists( 'as_schedule_recurring_action' ) ) {
-		if ( ! as_has_scheduled_action( 'snf_membership_daily_sweep', array(), 'snf-memberships' ) ) {
-			as_schedule_recurring_action( time() + HOUR_IN_SECONDS, DAY_IN_SECONDS, 'snf_membership_daily_sweep', array(), 'snf-memberships' );
-		}
-	}
-
-	// WP-Cron safety net even when Action Scheduler is present.
-	if ( ! wp_next_scheduled( 'snf_membership_daily_sweep' ) ) {
-		wp_schedule_event( time() + HOUR_IN_SECONDS, 'daily', 'snf_membership_daily_sweep' );
-	}
+	\SNF\Support\Scheduling::recurring(
+		'snf_membership_daily_sweep',
+		DAY_IN_SECONDS,
+		array(),
+		'snf-memberships',
+		time() + HOUR_IN_SECONDS
+	);
 }
 add_action( 'init', 'snf_membership_schedule_cron', 30 );
 
@@ -702,6 +746,8 @@ function snf_get_membership_product_id( $key ) {
 
 	if ( 'initiation' === $key ) {
 		$slug = $defs['initiation_fee']['product_slug'];
+	} elseif ( 'application' === $key ) {
+		$slug = isset( $defs['application_fee']['product_slug'] ) ? $defs['application_fee']['product_slug'] : 'membership-application';
 	} else {
 		$plan = snf_get_membership_plan_by_slug( $key );
 		if ( ! $plan ) {
@@ -736,6 +782,7 @@ function snf_membership_prepare_checkout_for_plan( $plan_slug ) {
 	$plan_slug = sanitize_title( (string) $plan_slug );
 	$plan_id   = snf_get_membership_product_id( $plan_slug );
 	$init_id   = snf_get_membership_product_id( 'initiation' );
+	$app_id    = snf_get_membership_product_id( 'application' );
 
 	if ( ! $plan_id ) {
 		return new WP_Error( 'snf_no_plan_product', __( 'Membership plan product is missing.', 'super-ninety-four' ) );
@@ -744,6 +791,12 @@ function snf_membership_prepare_checkout_for_plan( $plan_slug ) {
 	WC()->cart->empty_cart();
 
 	$user_id = get_current_user_id();
+
+	// Application fee ($97) first when unpaid — real WC line item, not theme Stripe.
+	if ( $user_id && ! get_user_meta( $user_id, SNF_META_APPLICATION, true ) && $app_id ) {
+		WC()->cart->add_to_cart( $app_id, 1 );
+	}
+
 	if ( $user_id && ! get_user_meta( $user_id, SNF_META_INITIATION, true ) && $init_id ) {
 		WC()->cart->add_to_cart( $init_id, 1 );
 	}
@@ -764,7 +817,18 @@ function snf_membership_prepare_checkout_for_plan( $plan_slug ) {
 		update_user_meta( $user_id, 'snf_pending_membership_plan', $plan_slug );
 	}
 
-	return wc_get_checkout_url();
+	$checkout_url = wc_get_checkout_url();
+
+	/**
+	 * Fires after Apply prepares a WooCommerce cart for membership checkout.
+	 *
+	 * @param string $plan_slug     Plan slug.
+	 * @param string $checkout_url  Checkout URL.
+	 * @param int    $user_id       User ID.
+	 */
+	do_action( 'snf_apply_checkout_prepared', $plan_slug, $checkout_url, $user_id );
+
+	return $checkout_url;
 }
 
 /**
@@ -781,6 +845,39 @@ function snf_handle_apply_membership_checkout() {
 	$plan_slug = sanitize_title( wp_unslash( $_POST['snf_apply_plan'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
 	$name      = isset( $_POST['snf_apply_name'] ) ? sanitize_text_field( wp_unslash( $_POST['snf_apply_name'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing
 	$email     = isset( $_POST['snf_apply_email'] ) ? sanitize_email( wp_unslash( $_POST['snf_apply_email'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing
+
+	// Stash Apply fields for SNF Payments branded checkout prefill.
+	if ( function_exists( 'snf_payments_stash_apply_fields' ) ) {
+		snf_payments_stash_apply_fields(
+			array(
+				'snf_apply_name'          => $name,
+				'snf_apply_email'         => $email,
+				'snf_apply_phone'         => isset( $_POST['snf_apply_phone'] ) ? sanitize_text_field( wp_unslash( $_POST['snf_apply_phone'] ) ) : '', // phpcs:ignore WordPress.Security.NonceVerification.Missing
+				'snf_apply_org'           => isset( $_POST['snf_apply_org'] ) ? sanitize_text_field( wp_unslash( $_POST['snf_apply_org'] ) ) : '', // phpcs:ignore WordPress.Security.NonceVerification.Missing
+				'snf_apply_city'          => isset( $_POST['snf_apply_city'] ) ? sanitize_text_field( wp_unslash( $_POST['snf_apply_city'] ) ) : '', // phpcs:ignore WordPress.Security.NonceVerification.Missing
+				'snf_apply_referral'      => isset( $_POST['snf_apply_referral'] ) ? sanitize_text_field( wp_unslash( $_POST['snf_apply_referral'] ) ) : '', // phpcs:ignore WordPress.Security.NonceVerification.Missing
+				'snf_apply_plan'          => $plan_slug,
+				'snf_apply_card_name'     => isset( $_POST['snf_apply_card_name'] ) ? sanitize_text_field( wp_unslash( $_POST['snf_apply_card_name'] ) ) : '', // phpcs:ignore WordPress.Security.NonceVerification.Missing
+				'snf_apply_billing_zip'   => isset( $_POST['snf_apply_billing_zip'] ) ? sanitize_text_field( wp_unslash( $_POST['snf_apply_billing_zip'] ) ) : '', // phpcs:ignore WordPress.Security.NonceVerification.Missing
+				'snf_apply_billing_notes' => isset( $_POST['snf_apply_billing_notes'] ) ? sanitize_textarea_field( wp_unslash( $_POST['snf_apply_billing_notes'] ) ) : '', // phpcs:ignore WordPress.Security.NonceVerification.Missing
+				'snf_apply_event'         => isset( $_POST['snf_apply_event'] ) ? absint( wp_unslash( $_POST['snf_apply_event'] ) ) : 0, // phpcs:ignore WordPress.Security.NonceVerification.Missing
+			)
+		);
+	} elseif ( function_exists( 'WC' ) ) {
+		if ( function_exists( 'wc_load_cart' ) ) {
+			wc_load_cart();
+		}
+		if ( WC()->session ) {
+			WC()->session->set(
+				'snf_apply_checkout_fields',
+				array(
+					'snf_apply_name'  => $name,
+					'snf_apply_email' => $email,
+					'snf_apply_plan'  => $plan_slug,
+				)
+			);
+		}
+	}
 
 	if ( ! is_user_logged_in() && $email && is_email( $email ) ) {
 		$existing = email_exists( $email );
@@ -833,21 +930,7 @@ function snf_handle_apply_membership_checkout() {
 		update_user_meta( (int) $user->ID, 'snf_pending_membership_plan', $plan_slug );
 	}
 
-	// Prefer Stripe Checkout for the synced $97 application SKU (Supabase Data Management).
-	if ( is_user_logged_in() && function_exists( 'snf_stripe_is_ready' ) && snf_stripe_is_ready() && function_exists( 'snf_stripe_create_application_checkout' ) ) {
-		$stripe_url = snf_stripe_create_application_checkout( get_current_user_id(), $plan_slug );
-		if ( ! is_wp_error( $stripe_url ) && $stripe_url ) {
-			if ( function_exists( 'snf_fire_apply_stripe_checkout_started' ) ) {
-				snf_fire_apply_stripe_checkout_started( get_current_user_id(), $plan_slug, $stripe_url );
-			}
-			wp_safe_redirect( $stripe_url );
-			exit;
-		}
-		if ( is_wp_error( $stripe_url ) && function_exists( 'wc_add_notice' ) ) {
-			wc_add_notice( $stripe_url->get_error_message(), 'error' );
-		}
-	}
-
+	// Always WooCommerce cart → checkout (application + initiation + plan products).
 	$result = snf_membership_prepare_checkout_for_plan( $plan_slug );
 	if ( is_wp_error( $result ) ) {
 		if ( function_exists( 'wc_add_notice' ) ) {
@@ -887,21 +970,31 @@ function snf_ensure_membership_products() {
 
 	$to_create = array(
 		array(
-			'slug'        => $defs['initiation_fee']['product_slug'],
-			'title'       => __( 'Club Initiation Fee', 'super-ninety-four' ),
-			'price'       => $defs['initiation_fee']['amount_raw'],
-			'plan'        => '',
-			'initiation'  => true,
+			'slug'         => isset( $defs['application_fee']['product_slug'] ) ? $defs['application_fee']['product_slug'] : 'membership-application',
+			'title'        => __( 'Club Application Fee', 'super-ninety-four' ),
+			'price'        => isset( $defs['application_fee']['amount_raw'] ) ? $defs['application_fee']['amount_raw'] : 97.0,
+			'plan'         => '',
+			'initiation'   => false,
+			'application'  => true,
+		),
+		array(
+			'slug'         => $defs['initiation_fee']['product_slug'],
+			'title'        => __( 'Club Initiation Fee', 'super-ninety-four' ),
+			'price'        => $defs['initiation_fee']['amount_raw'],
+			'plan'         => '',
+			'initiation'   => true,
+			'application'  => false,
 		),
 	);
 
 	foreach ( $defs['plans'] as $plan ) {
 		$to_create[] = array(
-			'slug'       => $plan['product_slug'],
-			'title'      => $plan['name'],
-			'price'      => $plan['amount_raw'],
-			'plan'       => $plan['slug'],
-			'initiation' => false,
+			'slug'        => $plan['product_slug'],
+			'title'       => $plan['name'],
+			'price'       => $plan['amount_raw'],
+			'plan'        => $plan['slug'],
+			'initiation'  => false,
+			'application' => false,
 		);
 	}
 
@@ -912,11 +1005,11 @@ function snf_ensure_membership_products() {
 		} else {
 			$product_id = wp_insert_post(
 				array(
-					'post_title'  => $row['title'],
-					'post_name'   => $row['slug'],
-					'post_status' => 'publish',
-					'post_type'   => 'product',
-					'post_content'=> '',
+					'post_title'   => $row['title'],
+					'post_name'    => $row['slug'],
+					'post_status'  => 'publish',
+					'post_type'    => 'product',
+					'post_content' => '',
 				),
 				true
 			);
@@ -939,11 +1032,70 @@ function snf_ensure_membership_products() {
 		if ( $row['initiation'] ) {
 			update_post_meta( $product_id, SNF_PRODUCT_INITIATION_META, 'yes' );
 		}
+		if ( ! empty( $row['application'] ) ) {
+			update_post_meta( $product_id, SNF_PRODUCT_APPLICATION_META, 'yes' );
+		}
 	}
 
 	update_option( 'snf_membership_products_seeded_v1', 1, false );
+	update_option( 'snf_membership_products_seeded_v2', 1, false );
 }
 add_action( 'init', 'snf_ensure_membership_products', 50 );
+
+/**
+ * Ensure the application fee WC product exists even when v1 seed already ran.
+ */
+function snf_ensure_application_product() {
+	if ( ! class_exists( 'WooCommerce' ) || ! taxonomy_exists( 'product_cat' ) ) {
+		return;
+	}
+	if ( get_option( 'snf_membership_products_seeded_v2' ) ) {
+		return;
+	}
+
+	$defs = snf_get_membership_plan_definitions();
+	$slug = isset( $defs['application_fee']['product_slug'] ) ? $defs['application_fee']['product_slug'] : 'membership-application';
+	$price = isset( $defs['application_fee']['amount_raw'] ) ? $defs['application_fee']['amount_raw'] : 97.0;
+
+	$existing = get_page_by_path( $slug, OBJECT, 'product' );
+	if ( $existing ) {
+		$product_id = (int) $existing->ID;
+	} else {
+		$product_id = wp_insert_post(
+			array(
+				'post_title'   => __( 'Club Application Fee', 'super-ninety-four' ),
+				'post_name'    => $slug,
+				'post_status'  => 'publish',
+				'post_type'    => 'product',
+				'post_content' => '',
+			),
+			true
+		);
+		if ( is_wp_error( $product_id ) || ! $product_id ) {
+			return;
+		}
+	}
+
+	if ( ! term_exists( 'memberships', 'product_cat' ) ) {
+		wp_insert_term(
+			__( 'Memberships', 'super-ninety-four' ),
+			'product_cat',
+			array( 'slug' => 'memberships' )
+		);
+	}
+
+	wp_set_object_terms( $product_id, 'memberships', 'product_cat', true );
+	update_post_meta( $product_id, '_regular_price', (string) $price );
+	update_post_meta( $product_id, '_price', (string) $price );
+	update_post_meta( $product_id, '_virtual', 'yes' );
+	update_post_meta( $product_id, '_sold_individually', 'yes' );
+	update_post_meta( $product_id, '_manage_stock', 'no' );
+	update_post_meta( $product_id, SNF_PRODUCT_APPLICATION_META, 'yes' );
+	wp_set_object_terms( $product_id, 'simple', 'product_type', false );
+
+	update_option( 'snf_membership_products_seeded_v2', 1, false );
+}
+add_action( 'init', 'snf_ensure_application_product', 51 );
 
 /**
  * Product admin: map SKU → club plan / initiation.
@@ -974,6 +1126,14 @@ function snf_woocommerce_membership_product_fields() {
 		)
 	);
 
+	woocommerce_wp_checkbox(
+		array(
+			'id'          => SNF_PRODUCT_APPLICATION_META,
+			'label'       => __( 'Application fee product', 'super-ninety-four' ),
+			'description' => __( 'Marks application fee paid on the customer via WooCommerce order hooks.', 'super-ninety-four' ),
+		)
+	);
+
 	echo '</div>';
 }
 add_action( 'woocommerce_product_options_general_product_data', 'snf_woocommerce_membership_product_fields', 20 );
@@ -991,6 +1151,9 @@ function snf_woocommerce_save_membership_product_fields( $product_id ) {
 
 	$is_init = isset( $_POST[ SNF_PRODUCT_INITIATION_META ] ) ? 'yes' : 'no'; // phpcs:ignore WordPress.Security.NonceVerification.Missing
 	update_post_meta( $product_id, SNF_PRODUCT_INITIATION_META, $is_init );
+
+	$is_app = isset( $_POST[ SNF_PRODUCT_APPLICATION_META ] ) ? 'yes' : 'no'; // phpcs:ignore WordPress.Security.NonceVerification.Missing
+	update_post_meta( $product_id, SNF_PRODUCT_APPLICATION_META, $is_app );
 }
 add_action( 'woocommerce_process_product_meta', 'snf_woocommerce_save_membership_product_fields', 20 );
 

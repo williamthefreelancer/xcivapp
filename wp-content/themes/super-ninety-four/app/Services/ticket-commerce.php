@@ -2,6 +2,12 @@
 /**
  * TicketSpice-style ticket tiers, addons, upsells, and immerse interactivities.
  *
+ * Hook contract:
+ * - Listen: woocommerce_add_to_cart_validation, woocommerce_add_cart_item_data,
+ *   woocommerce_before_calculate_totals, woocommerce_checkout_create_order_line_item,
+ *   woocommerce_payment_complete / order_status_*.
+ * - Emit: snf_ticket_order_processed.
+ *
  * Extends existing `event` CPT + Woo `product` posts — does not register a
  * duplicate event post type. Taxonomies classify experience / addon kinds only.
  *
@@ -1357,3 +1363,62 @@ function snf_ticket_commerce_attach_apply_event_to_order( $order_id ) {
 	$order->save();
 }
 add_action( 'woocommerce_checkout_order_processed', 'snf_ticket_commerce_attach_apply_event_to_order', 20 );
+
+/**
+ * Whether an order contains ticket-commerce line items.
+ *
+ * @param WC_Order $order Order.
+ * @return bool
+ */
+function snf_order_has_ticket_commerce_items( $order ) {
+	if ( ! $order ) {
+		return false;
+	}
+
+	foreach ( $order->get_items() as $item ) {
+		$product_id = (int) $item->get_product_id();
+		if ( $product_id && function_exists( 'snf_ticket_commerce_is_enabled' ) && snf_ticket_commerce_is_enabled( $product_id ) ) {
+			return true;
+		}
+		if ( $item->get_meta( '_snf_ticket_tier' ) || $item->get_meta( 'snf_ticket_tier' ) || $item->get_meta( '_snf_event_name' ) ) {
+			return true;
+		}
+	}
+
+	return (bool) apply_filters( 'snf_order_has_ticket_commerce_items', false, $order );
+}
+
+/**
+ * Emit ticket order processed after Woo payment/status hooks.
+ *
+ * @param int $order_id Order ID.
+ */
+function snf_ticket_commerce_process_order( $order_id ) {
+	if ( ! function_exists( 'wc_get_order' ) ) {
+		return;
+	}
+
+	$order_id = (int) $order_id;
+	$order    = wc_get_order( $order_id );
+	if ( ! $order || 'yes' === $order->get_meta( '_snf_ticket_processed' ) ) {
+		return;
+	}
+
+	if ( ! snf_order_has_ticket_commerce_items( $order ) ) {
+		return;
+	}
+
+	$order->update_meta_data( '_snf_ticket_processed', 'yes' );
+	$order->save();
+
+	/**
+	 * Fires when a WooCommerce order containing ticket commerce is paid/processing.
+	 *
+	 * @param int      $order_id Order ID.
+	 * @param WC_Order $order    Order.
+	 */
+	do_action( 'snf_ticket_order_processed', $order_id, $order );
+}
+add_action( 'woocommerce_order_status_completed', 'snf_ticket_commerce_process_order', 30 );
+add_action( 'woocommerce_order_status_processing', 'snf_ticket_commerce_process_order', 30 );
+add_action( 'woocommerce_payment_complete', 'snf_ticket_commerce_process_order', 30 );

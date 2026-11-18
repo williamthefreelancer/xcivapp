@@ -2,6 +2,11 @@
 /**
  * Reciprocal-program subscriptions (theme-native, no paid plugins).
  *
+ * Hook contract:
+ * - Listen: woocommerce_order_status_processing/completed.
+ * - Emit: snf_reciprocal_subscription_activated, snf_reciprocal_subscription_expired.
+ * - Cron: snf_expire_reciprocal_subscriptions via SNF\Support\Scheduling.
+ *
  * Grants snf_reciprocal + user meta from WooCommerce orders for reciprocal
  * program products only. Daily cron expires lapsed programs.
  */
@@ -387,10 +392,13 @@ add_action( SNF_CRON_RECIPROCAL_EXPIRE, 'snf_expire_reciprocal_subscriptions' );
  * Schedule daily reciprocal expiry cron.
  */
 function snf_schedule_reciprocal_expiry_cron() {
-	if ( wp_next_scheduled( SNF_CRON_RECIPROCAL_EXPIRE ) ) {
-		return;
-	}
-	wp_schedule_event( time() + HOUR_IN_SECONDS, 'daily', SNF_CRON_RECIPROCAL_EXPIRE );
+	\SNF\Support\Scheduling::recurring(
+		SNF_CRON_RECIPROCAL_EXPIRE,
+		DAY_IN_SECONDS,
+		array(),
+		'snf-reciprocal',
+		time() + HOUR_IN_SECONDS
+	);
 }
 add_action( 'init', 'snf_schedule_reciprocal_expiry_cron', 30 );
 

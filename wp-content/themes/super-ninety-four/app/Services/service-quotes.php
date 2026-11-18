@@ -2,6 +2,11 @@
 /**
  * Service quote landings (Figma quote-single-page 2166:165).
  *
+ * Hook contract:
+ * - Listen: template_redirect (legacy redirects), init/admin product seed.
+ * - Emit: snf_service_quote_content, snf_service_quote_cta_url, snf_service_quote_order_processed.
+ * - CTA: WooCommerce add-to-cart / checkout (not Apply).
+ *
  * @package Super_Ninety_Four
  */
 
@@ -72,6 +77,30 @@ function snf_get_service_quote_product_url( $slug ) {
 }
 
 /**
+ * Primary CTA URL for a service quote product (ATC → cart/checkout).
+ *
+ * @param string $slug Product slug.
+ * @return string
+ */
+function snf_get_service_quote_cta_url( $slug ) {
+	$slug = sanitize_title( (string) $slug );
+	$url  = snf_get_service_quote_product_url( $slug );
+
+	$product = get_page_by_path( $slug, OBJECT, 'product' );
+	if ( $product instanceof WP_Post && function_exists( 'wc_get_cart_url' ) ) {
+		$url = add_query_arg( 'add-to-cart', (int) $product->ID, wc_get_cart_url() );
+	}
+
+	/**
+	 * Filter service quote primary CTA URL.
+	 *
+	 * @param string $url  CTA URL.
+	 * @param string $slug Product slug.
+	 */
+	return (string) apply_filters( 'snf_service_quote_cta_url', $url, $slug );
+}
+
+/**
  * Quote landing content keyed by product slug.
  *
  * @param string $slug Product slug.
@@ -80,7 +109,6 @@ function snf_get_service_quote_product_url( $slug ) {
 function snf_get_service_quote( $slug = '' ) {
 	$slug     = $slug ? sanitize_title( $slug ) : '';
 	$img_base = get_template_directory_uri() . '/assets/images/services/';
-	$apply    = snf_get_page_url( 'apply' );
 
 	$quotes = array(
 		'litter-pickup-service' => array(
@@ -108,7 +136,7 @@ function snf_get_service_quote( $slug = '' ) {
 			'price'            => '$400.00/mo',
 			'card_description' => __( 'Exterior litter pickup on a fixed overnight route for business-park grounds and bar-tenant frontage — bagged, logged, and cleared to a photographed standard.', 'super-ninety-four' ),
 			'cta_label'        => __( 'Get Quote Now', 'super-ninety-four' ),
-			'cta_url'          => $apply,
+			'cta_url'          => snf_get_service_quote_cta_url( 'litter-pickup-service' ),
 		),
 		'professional-line-sitting-courier-service' => array(
 			'title'            => __( 'Professional Line Sitting & Courier Service', 'super-ninety-four' ),
@@ -135,7 +163,7 @@ function snf_get_service_quote( $slug = '' ) {
 			'price'            => '$400.00/mo',
 			'card_description' => __( 'Line sitting and courier runs for consumer-goods drops: we hold your place, ping status, and hand off with a photographed receipt — one request, one outcome.', 'super-ninety-four' ),
 			'cta_label'        => __( 'Get Quote Now', 'super-ninety-four' ),
-			'cta_url'          => $apply,
+			'cta_url'          => snf_get_service_quote_cta_url( 'professional-line-sitting-courier-service' ),
 		),
 		'janitorial-cleaning-service' => array(
 			'title'            => __( 'Janitorial Cleaning Service', 'super-ninety-four' ),
@@ -162,7 +190,7 @@ function snf_get_service_quote( $slug = '' ) {
 			'price'            => '$400.00/mo',
 			'card_description' => __( 'Commercial janitorial cleaning for suites and bar tenants: checklist-driven interior reset on a recurring overnight cadence you can verify.', 'super-ninety-four' ),
 			'cta_label'        => __( 'Get Quote Now', 'super-ninety-four' ),
-			'cta_url'          => $apply,
+			'cta_url'          => snf_get_service_quote_cta_url( 'janitorial-cleaning-service' ),
 		),
 	);
 
@@ -304,3 +332,54 @@ function snf_ensure_line_sitting_courier_quote_product() {
 add_action( 'after_switch_theme', 'snf_ensure_line_sitting_courier_quote_product' );
 add_action( 'admin_init', 'snf_ensure_line_sitting_courier_quote_product', 33 );
 add_action( 'init', 'snf_ensure_line_sitting_courier_quote_product', 60 );
+
+/**
+ * Emit when a paid order includes a service quote product.
+ *
+ * @param int $order_id Order ID.
+ */
+function snf_service_quote_process_order( $order_id ) {
+	if ( ! function_exists( 'wc_get_order' ) ) {
+		return;
+	}
+
+	$order_id = (int) $order_id;
+	$order    = wc_get_order( $order_id );
+	if ( ! $order || 'yes' === $order->get_meta( '_snf_service_quote_processed' ) ) {
+		return;
+	}
+
+	$slugs = snf_get_service_quote_product_slugs();
+	$matched = array();
+
+	foreach ( $order->get_items() as $item ) {
+		$product = $item->get_product();
+		if ( ! $product ) {
+			continue;
+		}
+		$slug = $product->get_slug();
+		if ( in_array( $slug, $slugs, true ) ) {
+			$matched[] = $slug;
+		}
+	}
+
+	if ( ! $matched ) {
+		return;
+	}
+
+	$order->update_meta_data( '_snf_service_quote_processed', 'yes' );
+	$order->update_meta_data( '_snf_service_quote_slugs', array_values( array_unique( $matched ) ) );
+	$order->save();
+
+	/**
+	 * Fires when a WooCommerce order containing service quote products is paid/processing.
+	 *
+	 * @param int      $order_id Order ID.
+	 * @param WC_Order $order    Order.
+	 * @param string[] $matched  Matched product slugs.
+	 */
+	do_action( 'snf_service_quote_order_processed', $order_id, $order, $matched );
+}
+add_action( 'woocommerce_order_status_completed', 'snf_service_quote_process_order', 30 );
+add_action( 'woocommerce_order_status_processing', 'snf_service_quote_process_order', 30 );
+add_action( 'woocommerce_payment_complete', 'snf_service_quote_process_order', 30 );

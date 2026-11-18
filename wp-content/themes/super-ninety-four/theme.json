@@ -3,7 +3,10 @@
   "version": 3,
   "settings": {
     "appearanceTools": true,
+    "useRootPaddingAwareAlignments": true,
     "color": {
+      "defaultPalette": false,
+      "defaultGradients": false,
       "palette": [
         {
           "slug": "ink",
@@ -16,6 +19,11 @@
           "color": "rgba(243, 235, 232, 0.72)"
         },
         {
+          "slug": "ink-soft",
+          "name": "Ink soft",
+          "color": "rgba(243, 235, 232, 0.42)"
+        },
+        {
           "slug": "grad-top",
           "name": "Gradient top",
           "color": "#815B5A"
@@ -26,9 +34,26 @@
           "color": "#1B1313"
         },
         {
+          "slug": "surface",
+          "name": "Surface",
+          "color": "rgba(27, 19, 19, 0.42)"
+        },
+        {
+          "slug": "surface-strong",
+          "name": "Surface strong",
+          "color": "rgba(27, 19, 19, 0.72)"
+        },
+        {
           "slug": "surface-border",
           "name": "Surface border",
           "color": "rgba(243, 235, 232, 0.18)"
+        }
+      ],
+      "gradients": [
+        {
+          "slug": "brand-vertical",
+          "name": "Brand vertical",
+          "gradient": "linear-gradient(180deg, #815B5A 0%, #1B1313 100%)"
         }
       ]
     },
@@ -54,26 +79,60 @@
     "layout": {
       "contentSize": "720px",
       "wideSize": "1400px"
+    },
+    "custom": {
+      "snf": {
+        "frame-w": "1400px",
+        "header-offset": "clamp(5.75rem, 11vw, 7.5rem)",
+        "pad-x": "clamp(1rem, 4vw, 3rem)"
+      }
     }
   },
   "styles": {
     "color": {
-      "background": "#1B1313",
-      "text": "#f3ebe8"
+      "background": "var(--wp--preset--color--grad-bottom)",
+      "text": "var(--wp--preset--color--ink)"
     },
     "typography": {
-      "fontFamily": "var(--wp--preset--font-family--body)"
+      "fontFamily": "var(--wp--preset--font-family--body)",
+      "fontSize": "1rem",
+      "lineHeight": "1.5"
     },
     "elements": {
       "heading": {
         "typography": {
           "fontFamily": "var(--wp--preset--font-family--display)",
-          "fontWeight": "400"
+          "fontWeight": "400",
+          "letterSpacing": "0.02em"
+        },
+        "color": {
+          "text": "#ffffff"
         }
       },
       "link": {
         "color": {
-          "text": "#f3ebe8"
+          "text": "var(--wp--preset--color--ink)"
+        },
+        ":hover": {
+          "color": {
+            "text": "#ffffff"
+          }
+        }
+      },
+      "button": {
+        "color": {
+          "background": "transparent",
+          "text": "var(--wp--preset--color--ink)"
+        },
+        "border": {
+          "color": "var(--wp--preset--color--surface-border)",
+          "style": "solid",
+          "width": "1px",
+          "radius": "2px"
+        },
+        "typography": {
+          "fontFamily": "var(--wp--preset--font-family--body)",
+          "fontWeight": "600"
         }
       }
     }
@@ -169,6 +228,16 @@
     {
       "name": "woocommerce-account",
       "title": "WooCommerce Account Shell",
+      "postTypes": ["page"]
+    },
+    {
+      "name": "woocommerce-cart",
+      "title": "WooCommerce Cart Shell",
+      "postTypes": ["page"]
+    },
+    {
+      "name": "woocommerce-checkout",
+      "title": "WooCommerce Checkout Shell",
       "postTypes": ["page"]
     }
   ]

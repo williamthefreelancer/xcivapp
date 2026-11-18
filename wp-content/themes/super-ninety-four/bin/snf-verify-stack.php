@@ -16,8 +16,6 @@ foreach ( array( 'snf/page-hero', 'snf/cta-button', 'snf/listing-grid', 'snf/for
 
 echo 'ottokit_actions:' . ( function_exists( 'snf_get_ottokit_action_catalog' ) ? (string) count( snf_get_ottokit_action_catalog() ) : '0' ) . PHP_EOL;
 echo 'sureforms_hosts:' . ( function_exists( 'snf_get_sureforms_host_page_slugs' ) ? implode( ',', snf_get_sureforms_host_page_slugs() ) : 'none' ) . PHP_EOL;
-echo 'funnel_intents:' . ( function_exists( 'snf_get_sureforms_funnel_intents' ) ? (string) count( snf_get_sureforms_funnel_intents() ) : '0' ) . PHP_EOL;
-echo 'funnel_class:' . ( class_exists( 'SNF_SureForms_Funnel' ) ? 'ok' : 'missing' ) . PHP_EOL;
 echo 'media_cpts:' . ( post_type_exists( 'snf_video' ) && post_type_exists( 'snf_audio' ) ? 'ok' : 'missing' ) . PHP_EOL;
 echo 'media_tax:' . ( taxonomy_exists( 'snf_media_topic' ) && taxonomy_exists( 'snf_audio_channel' ) && taxonomy_exists( 'snf_broadcast_format' ) ? 'ok' : 'missing' ) . PHP_EOL;
 echo 'media_settings:' . ( function_exists( 'snf_get_media_settings' ) ? 'ok' : 'missing' ) . PHP_EOL;

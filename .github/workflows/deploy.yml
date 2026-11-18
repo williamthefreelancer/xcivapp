@@ -1,9 +1,11 @@
-# Deploy the Super Ninety Four theme to DreamHost (superninetyfour.com).
-# Source: wp-content/themes/super-ninety-four/
-# Dest:   secrets.DREAMHOST_THEME_PATH
+# Deploy Super Ninety Four theme + payments plugin to DreamHost (superninetyfour.com).
+# Theme source:  wp-content/themes/super-ninety-four/
+# Plugin source: wp-content/plugins/snf-payments/
+# Theme dest:    secrets.DREAMHOST_THEME_PATH
+# Plugin dest:   derived as .../wp-content/plugins/snf-payments
 #
-# Trailing slash on the local path syncs *contents* into the remote theme
-# folder (avoids nested super-ninety-four/super-ninety-four/).
+# Trailing slash on local paths syncs *contents* into remote folders
+# (avoids nested directory duplication).
 #
 # Repo secrets (Settings → Secrets and variables → Actions):
 #   DREAMHOST_HOST        vps72256.dreamhostps.com
@@ -18,6 +20,7 @@ on:
     branches: [main]
     paths:
       - "wp-content/themes/super-ninety-four/**"
+      - "wp-content/plugins/snf-payments/**"
       - ".github/workflows/deploy.yml"
   workflow_dispatch:
 
@@ -111,3 +114,47 @@ jobs:
             --exclude 'bin/build-islands.mjs' \
             "./wp-content/themes/super-ninety-four/" \
             "${DREAMHOST_USERNAME}@${DREAMHOST_HOST}:${remote_theme}/"
+
+      - name: Sync snf-payments plugin to DreamHost
+        env:
+          DREAMHOST_HOST: ${{ secrets.DREAMHOST_HOST }}
+          DREAMHOST_USERNAME: ${{ secrets.DREAMHOST_USERNAME }}
+          DREAMHOST_THEME_PATH: ${{ secrets.DREAMHOST_THEME_PATH }}
+        run: |
+          set -euo pipefail
+          remote_theme="${DREAMHOST_THEME_PATH%/}"
+          remote_plugin="${remote_theme%/themes/super-ninety-four}/plugins/snf-payments"
+          echo "Local:  wp-content/plugins/snf-payments/"
+          echo "Remote: ${DREAMHOST_USERNAME}@${DREAMHOST_HOST}:${remote_plugin}/"
+
+          ssh -i "${HOME}/.ssh/dreamhost_deploy" -o IdentitiesOnly=yes -o BatchMode=yes \
+            "${DREAMHOST_USERNAME}@${DREAMHOST_HOST}" \
+            "mkdir -p '${remote_plugin}'"
+
+          rsync -avz --delete \
+            -e "ssh -i ${HOME}/.ssh/dreamhost_deploy -o IdentitiesOnly=yes -o BatchMode=yes" \
+            --exclude '.git/' \
+            "./wp-content/plugins/snf-payments/" \
+            "${DREAMHOST_USERNAME}@${DREAMHOST_HOST}:${remote_plugin}/"
+
+      - name: Activate snf-payments on DreamHost
+        env:
+          DREAMHOST_HOST: ${{ secrets.DREAMHOST_HOST }}
+          DREAMHOST_USERNAME: ${{ secrets.DREAMHOST_USERNAME }}
+          DREAMHOST_THEME_PATH: ${{ secrets.DREAMHOST_THEME_PATH }}
+        run: |
+          set -euo pipefail
+          remote_theme="${DREAMHOST_THEME_PATH%/}"
+          remote_wp="${remote_theme%/wp-content/themes/super-ninety-four}"
+
+          ssh -i "${HOME}/.ssh/dreamhost_deploy" -o IdentitiesOnly=yes -o BatchMode=yes \
+            "${DREAMHOST_USERNAME}@${DREAMHOST_HOST}" \
+            "cd '${remote_wp}' && \
+             if command -v wp >/dev/null 2>&1; then \
+               wp plugin activate snf-payments --quiet || true; \
+               wp option update woocommerce_cart_checkout_blocks_enabled no --quiet || true; \
+               wp rewrite flush --quiet || true; \
+               echo 'wp-cli: activated snf-payments / classic cart-checkout'; \
+             else \
+               echo 'wp-cli not found; activate snf-payments manually in WP Admin'; \
+             fi"

@@ -21,7 +21,6 @@ $initiation = isset( $plans['initiation_fee'] ) && is_array( $plans['initiation_
 
 $application_label  = __( '4-Week Experience Application', 'super-ninety-four' );
 $application_amount = '$97.00';
-$stripe_ready       = function_exists( 'snf_stripe_is_ready' ) && snf_stripe_is_ready();
 if ( function_exists( 'snf_supabase_get_stripe_catalog' ) ) {
 	$sync_catalog = snf_supabase_get_stripe_catalog();
 	if ( is_array( $sync_catalog ) ) {
@@ -142,11 +141,10 @@ if ( function_exists( 'snf_supabase_get_stripe_catalog' ) ) {
 					);
 					?>
 				</p>
-				<?php if ( $stripe_ready ) : ?>
-					<p class="snf-apply-steps__meta">
-						<?php esc_html_e( 'You’ll continue to secure Stripe Checkout for this application fee. Preferred membership plan is saved for admissions.', 'super-ninety-four' ); ?>
-					</p>
-				<?php elseif ( ! empty( $initiation['amount'] ) ) : ?>
+				<p class="snf-apply-steps__meta">
+					<?php esc_html_e( 'You’ll continue to secure checkout on this site. Preferred membership plan is saved for admissions.', 'super-ninety-four' ); ?>
+				</p>
+				<?php if ( ! empty( $initiation['amount'] ) ) : ?>
 					<p class="snf-apply-steps__meta">
 						<?php
 						printf(
@@ -197,15 +195,11 @@ if ( function_exists( 'snf_supabase_get_stripe_catalog' ) ) {
 					</button>
 					<button class="snf-hub__action snf-hub__action--primary" type="submit">
 						<?php
-						echo $stripe_ready
-							? esc_html(
-								sprintf(
-									/* translators: %s: application fee amount */
-									__( 'Pay application fee (%s)', 'super-ninety-four' ),
-									$application_amount
-								)
-							)
-							: esc_html__( 'Continue to dues checkout', 'super-ninety-four' );
+						printf(
+							/* translators: %s: application fee amount */
+							esc_html__( 'Continue to secure checkout (%s)', 'super-ninety-four' ),
+							esc_html( $application_amount )
+						);
 						?>
 					</button>
 				</div>

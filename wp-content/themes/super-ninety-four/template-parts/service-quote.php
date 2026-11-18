@@ -29,8 +29,17 @@ $plan_title       = isset( $quote['plan_title'] ) ? (string) $quote['plan_title'
 $price            = isset( $quote['price'] ) ? (string) $quote['price'] : '';
 $card_description = isset( $quote['card_description'] ) ? (string) $quote['card_description'] : '';
 $cta_label        = isset( $quote['cta_label'] ) ? (string) $quote['cta_label'] : __( 'Get Quote Now', 'super-ninety-four' );
-$cta_url          = isset( $quote['cta_url'] ) ? (string) $quote['cta_url'] : snf_get_page_url( 'apply' );
 $quote_slug       = get_post_field( 'post_name', get_the_ID() );
+$cta_url          = isset( $quote['cta_url'] ) ? (string) $quote['cta_url'] : '';
+if ( ! $cta_url && function_exists( 'snf_get_service_quote_cta_url' ) ) {
+	$cta_url = snf_get_service_quote_cta_url( (string) $quote_slug );
+}
+if ( ! $cta_url && function_exists( 'wc_get_cart_url' ) && get_the_ID() ) {
+	$cta_url = add_query_arg( 'add-to-cart', (int) get_the_ID(), wc_get_cart_url() );
+}
+if ( ! $cta_url ) {
+	$cta_url = get_permalink();
+}
 $sureforms_quote  = '';
 if ( function_exists( 'snf_render_sureforms_embed' ) ) {
 	$sureforms_quote = snf_render_sureforms_embed( 'quote_' . sanitize_title( (string) $quote_slug ) );

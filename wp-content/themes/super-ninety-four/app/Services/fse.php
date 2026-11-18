@@ -48,6 +48,10 @@ function snf_fse_view_map() {
 		'under-consideration'   => 'page-templates/under-consideration.php',
 		'videos-audio'          => 'page-templates/videos-audio.php',
 		'woocommerce-account'   => 'page-templates/woocommerce-account.php',
+		'woocommerce-cart'      => 'page-templates/woocommerce-cart.php',
+		'woocommerce-checkout'  => 'page-templates/woocommerce-checkout.php',
+		'archive-product'       => 'woocommerce/archive-product.php',
+		'single-product'        => 'woocommerce/single-product.php',
 	);
 }
 
@@ -74,6 +78,8 @@ function snf_fse_classic_page_template_map() {
 		'page-templates/under-consideration.php'   => 'under-consideration',
 		'page-templates/videos-audio.php'          => 'videos-audio',
 		'page-templates/woocommerce-account.php'   => 'woocommerce-account',
+		'page-templates/woocommerce-cart.php'      => 'woocommerce-cart',
+		'page-templates/woocommerce-checkout.php'  => 'woocommerce-checkout',
 	);
 }
 
@@ -103,6 +109,22 @@ function snf_fse_render_php_view( $slug ) {
 	$path = snf_fse_resolve_view_path( $slug );
 	if ( ! $path ) {
 		return '';
+	}
+
+	// Header/nav WP_Query calls can leave the main loop on the wrong post.
+	// Restore the queried object so embedded PHP templates see the right context.
+	$queried = get_queried_object();
+	if ( $queried instanceof WP_Post ) {
+		$GLOBALS['post'] = $queried;
+		setup_postdata( $queried );
+		if ( isset( $GLOBALS['wp_query'] ) && $GLOBALS['wp_query'] instanceof WP_Query ) {
+			$GLOBALS['wp_query']->post = $queried;
+			$GLOBALS['wp_query']->posts = array( $queried );
+			$GLOBALS['wp_query']->post_count = 1;
+			$GLOBALS['wp_query']->current_post = -1;
+			$GLOBALS['wp_query']->in_the_loop = false;
+			$GLOBALS['wp_query']->rewind_posts();
+		}
 	}
 
 	$GLOBALS['snf_fse_embed'] = true;
