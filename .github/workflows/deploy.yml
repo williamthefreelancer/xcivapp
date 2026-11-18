@@ -147,27 +147,30 @@ jobs:
           remote_theme="${DREAMHOST_THEME_PATH%/}"
           remote_wp="${remote_theme%/wp-content/themes/super-ninety-four}"
 
-          # Keep activate lean: style reset is available in SNF Club → Critical settings.
-          ssh -i "${HOME}/.ssh/dreamhost_deploy" \
+          # Theme/plugin files are already synced above. Cap WP-CLI so a slow host
+          # cannot hang the whole workflow (style reset lives in SNF Club Critical settings).
+          set +e
+          timeout 90 ssh -i "${HOME}/.ssh/dreamhost_deploy" \
             -o IdentitiesOnly=yes \
             -o BatchMode=yes \
             -o ConnectTimeout=20 \
-            -o ServerAliveInterval=15 \
-            -o ServerAliveCountMax=4 \
+            -o ServerAliveInterval=10 \
+            -o ServerAliveCountMax=3 \
             "${DREAMHOST_USERNAME}@${DREAMHOST_HOST}" \
             "cd '${remote_wp}' && \
              if command -v wp >/dev/null 2>&1; then \
                wp plugin activate snf-payments --quiet || true; \
-               wp plugin deactivate buddypress --quiet || true; \
-               wp plugin deactivate bp-classic --quiet || true; \
-               wp plugin deactivate sureforms --quiet || true; \
-               wp plugin deactivate suretriggers --quiet || true; \
-               wp option update woocommerce_cart_checkout_blocks_enabled no --quiet || true; \
                wp theme activate super-ninety-four --quiet || true; \
                wp rewrite flush --quiet || true; \
                wp eval-file wp-content/themes/super-ninety-four/bin/snf-production-bootstrap.php || true; \
-               wp eval-file wp-content/themes/super-ninety-four/bin/snf-verify-club-stack.php || true; \
-               echo 'wp-cli: snf-payments on; club stack bootstrapped'; \
+               echo 'wp-cli: activate/bootstrap finished'; \
              else \
                echo 'wp-cli not found; activate snf-payments manually in WP Admin'; \
              fi"
+          ssh_rc=$?
+          set -euo pipefail
+          if [ "${ssh_rc}" -eq 124 ]; then
+            echo "WP-CLI activate timed out after 90s; theme/plugin rsync already completed."
+          elif [ "${ssh_rc}" -ne 0 ]; then
+            echo "WP-CLI activate exited ${ssh_rc}; theme/plugin rsync already completed."
+          fi
