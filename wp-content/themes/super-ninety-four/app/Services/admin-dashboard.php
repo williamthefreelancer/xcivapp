@@ -228,6 +228,35 @@ function snf_admin_render_core_dashboard() {
 add_action( 'all_admin_notices', 'snf_admin_render_core_dashboard', 1 );
 
 /**
+ * Replace stock Dashboard help with Club overview context.
+ */
+function snf_admin_core_dashboard_help() {
+	if ( ! snf_admin_should_brand_core_dashboard() ) {
+		return;
+	}
+
+	$screen = get_current_screen();
+	if ( ! $screen ) {
+		return;
+	}
+
+	$screen->remove_help_tabs();
+	$screen->add_help_tab(
+		array(
+			'id'      => 'snf-club-overview',
+			'title'   => __( 'Club overview', 'super-ninety-four' ),
+			'content' => '<p>' . esc_html__( 'This Dashboard is the Super Ninety Four Club operations overview — the same home as SNF Club → Overview.', 'super-ninety-four' ) . '</p>',
+		)
+	);
+	$screen->set_help_sidebar(
+		'<p><strong>' . esc_html__( 'Jump to:', 'super-ninety-four' ) . '</strong></p>' .
+		'<p><a href="' . esc_url( admin_url( 'admin.php?page=snf-club-events' ) ) . '">' . esc_html__( 'Events', 'super-ninety-four' ) . '</a></p>' .
+		'<p><a href="' . esc_url( admin_url( 'admin.php?page=snf-club-settings' ) ) . '">' . esc_html__( 'Critical settings', 'super-ninety-four' ) . '</a></p>'
+	);
+}
+add_action( 'admin_head-index.php', 'snf_admin_core_dashboard_help' );
+
+/**
  * Register top-level SNF Club menu + CPT dashboard shortcuts.
  */
 function snf_admin_dashboard_menu() {
@@ -430,8 +459,12 @@ function snf_admin_render_shell_start( $active, $title, $lede, $nav_pages = null
 				if ( 'snf-stripe' === $slug && ! current_user_can( 'manage_woocommerce' ) ) {
 					continue;
 				}
+				// Overview lives on Dashboard Home (index.php); keep that the canonical URL.
+				$href = ( 'snf-club' === $slug )
+					? admin_url( 'index.php' )
+					: admin_url( 'admin.php?page=' . $slug );
 				?>
-				<a class="<?php echo $active === $slug ? 'is-active' : ''; ?>" href="<?php echo esc_url( admin_url( 'admin.php?page=' . $slug ) ); ?>">
+				<a class="<?php echo $active === $slug ? 'is-active' : ''; ?>" href="<?php echo esc_url( $href ); ?>">
 					<?php echo esc_html( $page['label'] ); ?>
 				</a>
 			<?php endforeach; ?>
