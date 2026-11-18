@@ -36,7 +36,7 @@ const notices = computed(() => props.data.notices || []);
     <div
       v-for="(notice, i) in notices"
       :key="i"
-      class="rounded-md border border-border bg-card m-[0.75rem_1rem] text-sm"
+      class="rounded-md border border-border bg-card px-4 py-3 text-sm"
       :class="{
         'border-l-[0.1875rem] border-l-emerald-400 bg-emerald-500/20 text-white': notice.type === 'success',
         'border-l-[0.1875rem] border-l-amber-400 bg-amber-500/20 text-white': notice.type === 'warn',
@@ -53,7 +53,7 @@ const notices = computed(() => props.data.notices || []);
         class="snf-admin-stat border-t-[0.1875rem] border-t-primary bg-card text-card-foreground"
         :style="{ animationDelay: `${80 + i * 40}ms` }"
       >
-        <CardContent class="m-3 sm:m-4">
+        <CardContent class="p-3 sm:p-4">
           <span class="block text-[clamp(1.2rem,2vw,1.75rem)] font-bold leading-none tracking-tight text-foreground">
             {{ stat.value }}
           </span>

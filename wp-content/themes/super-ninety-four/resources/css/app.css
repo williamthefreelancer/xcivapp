@@ -74,12 +74,12 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
-  margin-bottom: var(--snf-section-gap, 1.35rem);
+  margin-bottom: 1.5rem;
 }
 .snf-community__cta {
   display: inline-flex;
   align-items: center;
-  margin: 0.65rem 1rem;
+  padding: 0.65rem 1rem;
   border: 0.0625rem solid color-mix(in srgb, var(--snf-accent, #815b5a) 70%, transparent);
   color: var(--snf-ink, #fff);
   text-decoration: none;
@@ -93,8 +93,9 @@
 .snf-community__grid {
   list-style: none;
   margin: 0;
+  padding: 0;
   display: grid;
-  gap: var(--snf-section-gap, 1.25rem);
+  gap: 1.25rem;
   grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
 }
 .snf-community__card {
@@ -109,12 +110,12 @@
   object-fit: cover;
 }
 .snf-community__body {
-  margin: 1rem 1.1rem 1.2rem;
+  padding: 1rem 1.1rem 1.2rem;
 }
 .snf-community__title {
   margin: 0 0 0.4rem;
   font-family: var(--font-display, "League Gothic", sans-serif);
-  font-size: var(--snf-title-section, clamp(1.25rem, 2.2vw, 1.65rem));
+  font-size: clamp(1.5rem, 2vw, 2rem);
   letter-spacing: 0.02em;
   text-transform: uppercase;
   color: #fff;
@@ -131,7 +132,7 @@
   border: 0.0625rem solid var(--snf-accent, #815b5a);
   background: transparent;
   color: var(--snf-ink, #fff);
-  margin: 0.55rem 0.9rem;
+  padding: 0.55rem 0.9rem;
   cursor: pointer;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -141,21 +142,10 @@
   border-color: rgb(255 255 255 / 0.35);
 }
 .snf-rfq {
-  margin: 1.75rem 0 0;
+  margin-top: 1.75rem;
+  padding: 1.25rem;
   border: 0.0625rem solid rgb(243 235 232 / 0.16);
   background: rgb(0 0 0 / 0.28);
-}
-
-.snf-rfq > * {
-  margin-inline: 1.25rem;
-}
-
-.snf-rfq > *:first-child {
-  margin-top: 1.25rem;
-}
-
-.snf-rfq > *:last-child {
-  margin-bottom: 1.25rem;
 }
 .snf-rfq__title {
   margin: 0 0 1rem;
@@ -193,17 +183,18 @@
   border: 0.0625rem solid rgb(243 235 232 / 0.22);
   background: rgb(0 0 0 / 0.35);
   color: var(--snf-ink, #fff);
-  margin: 0.65rem 0.75rem;
+  padding: 0.65rem 0.75rem;
   font: inherit;
   text-transform: none;
   letter-spacing: normal;
 }
 .snf-rfq__submit {
+  margin-top: 1rem;
   appearance: none;
   border: 0;
   background: var(--snf-accent, #815b5a);
   color: #fff;
-  margin: 1rem 1.1rem 0.7rem;
+  padding: 0.7rem 1.1rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   font-size: 0.75rem;
@@ -219,18 +210,16 @@
   }
 }
 
-/* Post-purchase funnel offer pages — gradient owned by html; padding in main.css */
+/* Post-purchase funnel offer pages */
 .snf-funnel-offer {
   color: var(--snf-ink, #fff);
 }
 .snf-funnel-offer__canvas {
   max-width: 40rem;
-  display: grid;
-  gap: var(--snf-section-gap, clamp(1.35rem, 2.8vw, 2rem));
 }
 .snf-funnel-offer__eyebrow,
 .snf-funnel-pattern__eyebrow {
-  margin: 0 0 0.55rem;
+  margin: 0 0 0.75rem;
   font-family: var(--font-nav, "Lato", sans-serif);
   font-size: 0.75rem;
   letter-spacing: 0.14em;
@@ -239,24 +228,24 @@
 }
 .snf-funnel-offer__title,
 .snf-funnel-pattern__title {
-  margin: 0 0 0.85rem;
+  margin: 0 0 1rem;
   font-family: var(--font-display, "League Gothic", Impact, sans-serif);
-  font-size: var(--snf-title-display, clamp(2rem, 5vw, 3.25rem));
+  font-size: clamp(2.5rem, 8vw, 4rem);
   font-weight: 400;
   letter-spacing: 0.02em;
-  line-height: 1;
+  line-height: 0.95;
   color: #fff;
 }
 .snf-funnel-offer__lede,
 .snf-funnel-pattern__lede {
-  margin: 0 0 1.25rem;
+  margin: 0 0 1.5rem;
   font-size: 1.05rem;
   line-height: 1.55;
   color: var(--snf-ink-muted, rgb(255 255 255 / 0.72));
 }
 .snf-funnel-pattern__bullets {
   margin: 0 0 2rem;
-  margin-left: 1.15rem;
+  padding-left: 1.15rem;
   color: var(--snf-ink, #fff);
 }
 .snf-funnel-pattern__bullets li + li {
@@ -279,7 +268,7 @@
   align-items: center;
   justify-content: center;
   min-height: 2.75rem;
-  margin: 0.7rem 1.25rem;
+  padding: 0.7rem 1.25rem;
   border: 0.0625rem solid var(--snf-border, rgb(255 255 255 / 0.18));
   background: transparent;
   color: var(--snf-ink, #fff);

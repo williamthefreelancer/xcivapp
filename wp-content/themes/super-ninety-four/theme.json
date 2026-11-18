@@ -792,9 +792,9 @@
       "blockGap": "1.5rem",
       "padding": {
         "top": "0",
-        "right": "var(--wp--custom--snf--pad-x)",
+        "right": "0",
         "bottom": "0",
-        "left": "var(--wp--custom--snf--pad-x)"
+        "left": "0"
       }
     },
     "typography": {

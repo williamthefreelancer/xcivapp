@@ -19,6 +19,7 @@ $journey     = isset( $home['journey'] ) ? $home['journey'] : array();
 $rules_faq   = isset( $home['rules_faq'] ) ? $home['rules_faq'] : array();
 ?>
 <main class="snf-home" data-figma-ready="true">
+	<h1 class="screen-reader-text"><?php echo esc_html( get_bloginfo( 'name' ) ); ?></h1>
 
 	<?php /* 2100:86 — Hero: brand, search, icon row */ ?>
 	<section class="snf-hero" data-figma-node="2100:86" aria-label="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>">

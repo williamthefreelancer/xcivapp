@@ -121,7 +121,7 @@ body.snf-admin-home #wpbody-content {
 .snf-admin__hero {
 	position: relative;
 	overflow: hidden;
-	margin: 1.85rem var(--snf-admin-space) 1.6rem;
+	padding: 1.85rem var(--snf-admin-space) 1.6rem;
 	border-radius: 0.125rem;
 	border: 0.0625rem solid var(--snf-admin-line);
 	background:
@@ -153,7 +153,7 @@ body.snf-admin-home #wpbody-content {
 
 .snf-admin__hero h1 {
 	margin: 0 0 0.4rem;
-	margin: 0;
+	padding: 0;
 	color: var(--snf-admin-on-dark);
 	font-size: var(--snf-admin-title);
 	font-weight: 650;
@@ -174,7 +174,7 @@ body.snf-admin-home #wpbody-content {
 	flex-wrap: wrap;
 	gap: 0.35rem;
 	margin: 0 0 var(--snf-admin-gap);
-	margin: 0.4rem;
+	padding: 0.4rem;
 	background: var(--snf-admin-surface);
 	border: 0.0625rem solid var(--snf-admin-line);
 	animation: snf-admin-fade-up 0.5s ease 0.05s both;
@@ -184,8 +184,8 @@ body.snf-admin-home #wpbody-content {
 	display: inline-flex;
 	align-items: center;
 	gap: 0.35rem;
+	padding: 0.55rem 0.9rem;
 	min-height: 2.25rem;
-	margin: 0.55rem 0.9rem;
 	border-radius: 0.0625rem;
 	color: var(--snf-admin-muted);
 	text-decoration: none;
@@ -222,7 +222,7 @@ body.snf-admin-home #wpbody-content {
 }
 
 .snf-admin__stat {
-	margin: 1.05rem 1.1rem;
+	padding: 1.05rem 1.1rem;
 	background: var(--snf-admin-panel);
 	border: 0.0625rem solid var(--snf-admin-line);
 	border-top: 0.1875rem solid var(--snf-admin-accent);
@@ -252,7 +252,7 @@ body.snf-admin-home #wpbody-content {
 	grid-column: span 6;
 	background: var(--snf-admin-panel);
 	border: 0.0625rem solid var(--snf-admin-line);
-	margin: var(--snf-admin-space) calc(var(--snf-admin-space) + 0.1rem) calc(var(--snf-admin-space) + 0.15rem);
+	padding: var(--snf-admin-space) calc(var(--snf-admin-space) + 0.1rem) calc(var(--snf-admin-space) + 0.15rem);
 	min-width: 0;
 }
 
@@ -267,7 +267,7 @@ body.snf-admin-home #wpbody-content {
 .snf-admin__panel h2,
 .snf-admin__form h2 {
 	margin: 0 0 0.4rem;
-	margin: 0;
+	padding: 0;
 	font-size: var(--snf-admin-section-title);
 	font-weight: 700;
 	letter-spacing: -0.01em;
@@ -322,13 +322,13 @@ body.snf-admin-home #wpbody-content {
 
 .snf-admin__form h2:not(:first-child) {
 	margin-top: 1.75rem;
-	margin-top: var(--snf-admin-gap);
+	padding-top: var(--snf-admin-gap);
 	border-top: 0.0625rem solid var(--snf-admin-line);
 }
 
 .snf-admin__subhead {
 	margin: 1.25rem 0 0.65rem;
-	margin: 0;
+	padding: 0;
 	font-size: 0.95rem;
 	font-weight: 700;
 	color: var(--snf-admin-ink);
@@ -351,8 +351,8 @@ body.snf-admin-home #wpbody-content {
 	align-items: center;
 	justify-content: center;
 	gap: 0.35rem;
+	padding: 0.55rem 0.95rem;
 	min-height: 2.25rem;
-	margin: 0.55rem 0.95rem;
 	border: 0.0625rem solid var(--snf-admin-accent);
 	background: var(--snf-admin-accent);
 	color: var(--snf-admin-on-dark) !important;
@@ -391,7 +391,7 @@ body.snf-admin-home #wpbody-content {
 
 .snf-admin__table th,
 .snf-admin__table td {
-	margin: 0.7rem 0.45rem;
+	padding: 0.7rem 0.45rem;
 	border-bottom: 0.0625rem solid var(--snf-admin-line);
 	text-align: left;
 	vertical-align: top;
@@ -425,7 +425,7 @@ body.snf-admin-home #wpbody-content {
 
 .snf-admin__pill {
 	display: inline-block;
-	margin: 0.18rem 0.5rem;
+	padding: 0.18rem 0.5rem;
 	border: 0.0625rem solid var(--snf-admin-line);
 	background: var(--snf-admin-surface);
 	color: var(--snf-admin-ink);
@@ -489,16 +489,15 @@ body.snf-admin-home #wpbody-content {
 
 .snf-admin__form .form-table th {
 	width: 13.75rem;
-	margin-left: 0;
+	padding-left: 0;
 	vertical-align: top;
 	color: var(--snf-admin-ink);
 }
 
 .snf-admin__form .form-table td {
-	margin-right: 0;
+	padding-right: 0;
 	color: var(--snf-admin-ink);
 }
-
 .snf-admin__form .form-table .description {
 	color: var(--snf-admin-muted);
 }
@@ -511,7 +510,7 @@ body.snf-admin-home #wpbody-content {
 
 .snf-admin__notice {
 	margin: 0 0 var(--snf-admin-gap);
-	margin: 0.8rem 0.95rem;
+	padding: 0.8rem 0.95rem;
 	border-left: 0.1875rem solid var(--snf-admin-accent);
 	background: var(--snf-admin-surface);
 	color: var(--snf-admin-ink);
@@ -580,7 +579,7 @@ body.snf-admin-home #wpbody-content {
 
 .snf-admin__list {
 	margin: 0;
-	margin: 0;
+	padding: 0;
 	list-style: none;
 }
 
@@ -589,7 +588,7 @@ body.snf-admin-home #wpbody-content {
 	justify-content: space-between;
 	align-items: flex-start;
 	gap: 1rem;
-	margin: 0.6rem 0;
+	padding: 0.6rem 0;
 	border-bottom: 0.0625rem solid var(--snf-admin-line);
 	color: var(--snf-admin-ink);
 }
@@ -648,7 +647,7 @@ body.snf-admin-home #wpbody-content {
 	}
 
 	.snf-admin__hero {
-		margin: 1.35rem 1.25rem 1.2rem;
+		padding: 1.35rem 1.25rem 1.2rem;
 	}
 
 	.snf-admin__panel,
@@ -659,12 +658,12 @@ body.snf-admin-home #wpbody-content {
 	.snf-admin__form .form-table th {
 		width: auto;
 		display: block;
-		margin-bottom: 0.25rem;
+		padding-bottom: 0.25rem;
 	}
 
 	.snf-admin__form .form-table td {
 		display: block;
-		margin-left: 0;
+		padding-left: 0;
 	}
 
 	.snf-admin__list li {
@@ -692,7 +691,7 @@ body.snf-admin-home #wpbody-content {
 	}
 
 	.snf-admin__hero {
-		margin: 1.15rem 1rem 1rem;
+		padding: 1.15rem 1rem 1rem;
 		border-radius: 0.25rem;
 	}
 

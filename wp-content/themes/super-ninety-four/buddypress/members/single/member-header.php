@@ -11,7 +11,7 @@ $member = snf_get_displayed_member_context();
 
 <div class="snf-profile-identity" data-figma-slot="profile-identity">
 	<div id="item-header-avatar" class="snf-profile-identity__avatar">
-		<a href="<?php bp_displayed_user_link(); ?>">
+		<a href="<?php bp_displayed_user_link(); ?>" aria-label="<?php echo esc_attr( sprintf( /* translators: %s: member display name */ __( 'View %s profile', 'super-ninety-four' ), $member['name'] ) ); ?>">
 			<img
 				src="<?php echo esc_url( $member['avatar'] ); ?>"
 				alt=""

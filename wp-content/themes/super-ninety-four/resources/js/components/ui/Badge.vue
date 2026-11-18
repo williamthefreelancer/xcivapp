@@ -15,7 +15,7 @@ const props = defineProps({
 });
 
 const badgeVariants = cva(
-  'inline-flex items-center rounded-sm border m-[0.125rem_0.5rem] text-[0.6875rem] font-semibold tracking-wide uppercase transition-colors',
+  'inline-flex items-center rounded-sm border px-2 py-0.5 text-[0.6875rem] font-semibold tracking-wide uppercase transition-colors',
   {
     variants: {
       variant: {

@@ -25,7 +25,7 @@ const notices = computed(() => props.data.notices || []);
     <div
       v-for="(notice, i) in notices"
       :key="i"
-      class="rounded-md border border-border bg-card m-[0.75rem_1rem] text-sm"
+      class="rounded-md border border-border bg-card px-4 py-3 text-sm"
       :class="{
         'border-l-[0.1875rem] border-l-emerald-400 bg-emerald-500/20 text-white': notice.type === 'success',
         'border-l-[0.1875rem] border-l-amber-400 bg-amber-500/20 text-white': notice.type === 'warn',

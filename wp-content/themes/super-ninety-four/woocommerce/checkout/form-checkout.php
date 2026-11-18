@@ -65,7 +65,7 @@ if ( $is_membership || 'generic' === $context ) {
 }
 ?>
 
-<div class="snf-checkout snf-page" data-snf-checkout-context="<?php echo esc_attr( $context ); ?>">
+<div class="snf-checkout" data-snf-checkout-context="<?php echo esc_attr( $context ); ?>">
 	<header class="snf-checkout__intro">
 		<h1 class="snf-checkout__title"><?php esc_html_e( 'Checkout', 'super-ninety-four' ); ?></h1>
 		<p class="snf-checkout__lede">
@@ -92,14 +92,14 @@ if ( $is_membership || 'generic' === $context ) {
 		novalidate
 	>
 		<nav class="snf-checkout__steps" aria-label="<?php esc_attr_e( 'Checkout steps', 'super-ninety-four' ); ?>">
-			<ol class="snf-checkout__stepper">
+			<ol class="snf-checkout__stepper" role="tablist">
 				<?php
 				$i = 0;
 				foreach ( $steps as $step_key => $step_label ) :
 					$i++;
 					?>
 					<li class="snf-checkout__step<?php echo 1 === $i ? ' is-active' : ''; ?>" data-step-indicator="<?php echo esc_attr( (string) $step_key ); ?>">
-						<button type="button" class="snf-checkout__step-btn<?php echo 1 === $i ? ' is-active' : ''; ?>" data-step="<?php echo esc_attr( (string) $step_key ); ?>" <?php echo 1 === $i ? 'aria-current="step"' : ''; ?>>
+						<button type="button" role="tab" class="snf-checkout__step-btn<?php echo 1 === $i ? ' is-active' : ''; ?>" id="snf-checkout-tab-<?php echo esc_attr( (string) $step_key ); ?>" aria-controls="snf-checkout-panel-<?php echo esc_attr( (string) $step_key ); ?>" aria-selected="<?php echo 1 === $i ? 'true' : 'false'; ?>" data-step="<?php echo esc_attr( (string) $step_key ); ?>" <?php echo 1 === $i ? 'aria-current="step"' : ''; ?>>
 							<span class="snf-checkout__step-num" aria-hidden="true"><?php echo esc_html( (string) $i ); ?></span>
 							<span class="snf-checkout__step-label"><?php echo esc_html( $step_label ); ?></span>
 						</button>
@@ -110,14 +110,14 @@ if ( $is_membership || 'generic' === $context ) {
 
 		<?php do_action( 'woocommerce_checkout_before_customer_details' ); ?>
 
-		<?php /* Keep Woo billing fields in DOM for AJAX checkout; CSS hides address chrome. */ ?>
-		<div class="snf-checkout__woo-billing snf-checkout-woo-hidden" aria-hidden="true">
+		<?php /* Keep Woo billing fields in the DOM and accessibility tree for checkout. */ ?>
+		<div class="snf-checkout__woo-billing">
 			<?php do_action( 'woocommerce_checkout_billing' ); ?>
 			<?php do_action( 'woocommerce_checkout_shipping' ); ?>
 		</div>
 
 		<?php if ( $is_membership || 'generic' === $context ) : ?>
-			<div class="snf-checkout__panel is-active" data-step-panel="1" role="tabpanel">
+			<div class="snf-checkout__panel is-active" data-step-panel="1" role="tabpanel" id="snf-checkout-panel-1" aria-labelledby="snf-checkout-tab-1">
 				<label class="snf-checkout__field">
 					<span><?php esc_html_e( 'Full name', 'super-ninety-four' ); ?></span>
 					<input type="text" name="snf_apply_name" autocomplete="name" value="<?php echo esc_attr( $get( 'snf_apply_name' ) ); ?>" required>
@@ -137,7 +137,7 @@ if ( $is_membership || 'generic' === $context ) {
 				</div>
 			</div>
 
-			<div class="snf-checkout__panel" data-step-panel="2" role="tabpanel" hidden>
+			<div class="snf-checkout__panel" data-step-panel="2" role="tabpanel" id="snf-checkout-panel-2" aria-labelledby="snf-checkout-tab-2" hidden>
 				<label class="snf-checkout__field">
 					<span><?php esc_html_e( 'Organization / firm', 'super-ninety-four' ); ?></span>
 					<input type="text" name="snf_apply_org" autocomplete="organization" value="<?php echo esc_attr( $get( 'snf_apply_org' ) ); ?>">
@@ -158,7 +158,7 @@ if ( $is_membership || 'generic' === $context ) {
 				</div>
 			</div>
 
-			<div class="snf-checkout__panel" data-step-panel="3" role="tabpanel" hidden>
+			<div class="snf-checkout__panel" data-step-panel="3" role="tabpanel" id="snf-checkout-panel-3" aria-labelledby="snf-checkout-tab-3" hidden>
 				<?php if ( $plan_slug ) : ?>
 					<p class="snf-checkout__summary-title">
 						<?php
@@ -196,7 +196,7 @@ if ( $is_membership || 'generic' === $context ) {
 				</div>
 			</div>
 		<?php else : ?>
-			<div class="snf-checkout__panel is-active" data-step-panel="1" role="tabpanel">
+			<div class="snf-checkout__panel is-active" data-step-panel="1" role="tabpanel" id="snf-checkout-panel-1" aria-labelledby="snf-checkout-tab-1">
 				<label class="snf-checkout__field">
 					<span><?php esc_html_e( 'Full name', 'super-ninety-four' ); ?></span>
 					<input type="text" name="snf_apply_name" autocomplete="name" value="<?php echo esc_attr( $get( 'snf_apply_name' ) ); ?>" required>
@@ -216,7 +216,7 @@ if ( $is_membership || 'generic' === $context ) {
 				</div>
 			</div>
 
-			<div class="snf-checkout__panel" data-step-panel="2" role="tabpanel" hidden>
+			<div class="snf-checkout__panel" data-step-panel="2" role="tabpanel" id="snf-checkout-panel-2" aria-labelledby="snf-checkout-tab-2" hidden>
 				<label class="snf-checkout__field">
 					<span><?php esc_html_e( 'Cardholder name', 'super-ninety-four' ); ?></span>
 					<input type="text" name="snf_apply_card_name" autocomplete="cc-name" value="<?php echo esc_attr( $get( 'snf_apply_card_name' ) ); ?>" required>
@@ -238,7 +238,7 @@ if ( $is_membership || 'generic' === $context ) {
 			</div>
 		<?php endif; ?>
 
-		<div class="snf-checkout__panel" data-step-panel="pay" role="tabpanel" hidden>
+		<div class="snf-checkout__panel" data-step-panel="pay" role="tabpanel" id="snf-checkout-panel-pay" aria-labelledby="snf-checkout-tab-pay" hidden>
 			<?php do_action( 'woocommerce_checkout_before_order_review_heading' ); ?>
 			<h2 class="snf-checkout__summary-title" id="order_review_heading"><?php esc_html_e( 'Your order', 'super-ninety-four' ); ?></h2>
 			<?php do_action( 'woocommerce_checkout_before_order_review' ); ?>

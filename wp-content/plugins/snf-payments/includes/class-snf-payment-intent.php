@@ -146,8 +146,20 @@ class SNF_Payments_Payment_Intent {
 			return new WP_Error( 'snf_payments_no_order', __( 'Missing order.', 'snf-payments' ), array( 'status' => 400 ) );
 		}
 
+		// The order key is the per-order bearer secret. It is mandatory: without it
+		// any known order ID could be used to create or complete a payment intent.
+		if ( ! $order_key ) {
+			return new WP_Error( 'snf_payments_bad_order', __( 'Invalid order.', 'snf-payments' ), array( 'status' => 403 ) );
+		}
+
 		$order = wc_get_order( $order_id );
-		if ( ! $order || ( $order_key && $order->get_order_key() !== $order_key ) ) {
+		if ( ! $order || ! hash_equals( (string) $order->get_order_key(), $order_key ) ) {
+			return new WP_Error( 'snf_payments_bad_order', __( 'Invalid order.', 'snf-payments' ), array( 'status' => 403 ) );
+		}
+
+		// Registered customers must also own the order; guest orders rely on the key.
+		$customer_id = (int) $order->get_customer_id();
+		if ( $customer_id && (int) get_current_user_id() !== $customer_id && ! current_user_can( 'edit_shop_orders', $order_id ) ) {
 			return new WP_Error( 'snf_payments_bad_order', __( 'Invalid order.', 'snf-payments' ), array( 'status' => 403 ) );
 		}
 
@@ -310,6 +322,22 @@ class SNF_Payments_Payment_Intent {
 		$intent = SNF_Payments_Stripe_API::request( 'GET', 'payment_intents/' . rawurlencode( $pi_id ) );
 		if ( is_wp_error( $intent ) ) {
 			wp_send_json_error( array( 'message' => $intent->get_error_message() ), 400 );
+		}
+
+		// Bind the intent to this order. Without this check a valid, paid intent
+		// from one order could be replayed to mark a different (unpaid) order paid.
+		$intent_meta  = isset( $intent['metadata'] ) && is_array( $intent['metadata'] ) ? $intent['metadata'] : array();
+		$intent_order = isset( $intent_meta['order_id'] ) ? absint( $intent_meta['order_id'] ) : 0;
+		$intent_key   = isset( $intent_meta['order_key'] ) ? (string) $intent_meta['order_key'] : '';
+		$stored_pi    = (string) $order->get_meta( '_snf_payment_intent' );
+
+		$belongs = ( $intent_order && $intent_order === $order->get_id() )
+			|| ( ! $intent_order && $stored_pi && hash_equals( $stored_pi, $pi_id ) );
+		if ( ! $belongs ) {
+			wp_send_json_error( array( 'message' => __( 'Payment intent does not belong to this order.', 'snf-payments' ) ), 403 );
+		}
+		if ( $intent_key && ! hash_equals( (string) $order->get_order_key(), $intent_key ) ) {
+			wp_send_json_error( array( 'message' => __( 'Payment intent does not belong to this order.', 'snf-payments' ) ), 403 );
 		}
 
 		$ok = self::complete_order_from_intent( $order, $intent );

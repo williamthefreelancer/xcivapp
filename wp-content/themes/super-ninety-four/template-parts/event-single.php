@@ -70,7 +70,7 @@ if ( $can_purchase && $is_member && $product_id ) {
 						decoding="async"
 					>
 				</a>
-				<a class="snf-event__avatar" href="<?php echo esc_url( home_url( '/' ) ); ?>">
+				<a class="snf-event__avatar" href="<?php echo esc_url( home_url( '/' ) ); ?>" aria-label="<?php esc_attr_e( 'Home', 'super-ninety-four' ); ?>">
 					<img src="<?php echo esc_url( $avatar ); ?>" alt="" width="40" height="40" decoding="async">
 				</a>
 			</header>
@@ -179,23 +179,23 @@ if ( $can_purchase && $is_member && $product_id ) {
 
 						<?php if ( $is_member ) : ?>
 							<div class="snf-event__step-tabs" role="tablist" aria-label="<?php esc_attr_e( 'Member admissions steps', 'super-ninety-four' ); ?>">
-								<button type="button" class="snf-event__step-tab is-active" role="tab" aria-selected="true" data-step="1">
+								<button type="button" class="snf-event__step-tab is-active" role="tab" id="snf-event-tab-1" aria-controls="snf-event-panel-1" aria-selected="true" data-step="1">
 									<?php esc_html_e( 'Profile', 'super-ninety-four' ); ?>
 								</button>
-								<button type="button" class="snf-event__step-tab" role="tab" aria-selected="false" data-step="2">
+								<button type="button" class="snf-event__step-tab" role="tab" id="snf-event-tab-2" aria-controls="snf-event-panel-2" aria-selected="false" data-step="2">
 									<?php esc_html_e( 'Contact', 'super-ninety-four' ); ?>
 								</button>
-								<button type="button" class="snf-event__step-tab" role="tab" aria-selected="false" data-step="3">
+								<button type="button" class="snf-event__step-tab" role="tab" id="snf-event-tab-3" aria-controls="snf-event-panel-3" aria-selected="false" data-step="3">
 									<?php esc_html_e( 'Intent', 'super-ninety-four' ); ?>
 								</button>
 								<?php if ( $can_purchase && ! empty( $commerce['enabled'] ) ) : ?>
-									<button type="button" class="snf-event__step-tab" role="tab" aria-selected="false" data-step="4">
+									<button type="button" class="snf-event__step-tab" role="tab" id="snf-event-tab-4" aria-controls="snf-event-panel-4" aria-selected="false" data-step="4">
 										<?php esc_html_e( 'Tickets', 'super-ninety-four' ); ?>
 									</button>
 								<?php endif; ?>
 							</div>
 
-							<div class="snf-event__step-panel is-active" data-step-panel="1" role="tabpanel">
+							<div class="snf-event__step-panel is-active" data-step-panel="1" role="tabpanel" id="snf-event-panel-1" aria-labelledby="snf-event-tab-1">
 								<p class="snf-event__step-copy"><?php esc_html_e( 'Step 1 — Profile. Confirm how the desk should recognize you for this member gathering.', 'super-ninety-four' ); ?></p>
 								<label class="snf-event__field">
 									<span><?php esc_html_e( 'Preferred name', 'super-ninety-four' ); ?></span>
@@ -218,7 +218,7 @@ if ( $can_purchase && $is_member && $product_id ) {
 								</button>
 							</div>
 
-							<div class="snf-event__step-panel" data-step-panel="2" role="tabpanel" hidden>
+							<div class="snf-event__step-panel" data-step-panel="2" role="tabpanel" id="snf-event-panel-2" aria-labelledby="snf-event-tab-2" hidden>
 								<p class="snf-event__step-copy"><?php esc_html_e( 'Step 2 — Contact details. Where should credentials and arrival notes be sent?', 'super-ninety-four' ); ?></p>
 								<label class="snf-event__field">
 									<span><?php esc_html_e( 'Email', 'super-ninety-four' ); ?></span>
@@ -242,7 +242,7 @@ if ( $can_purchase && $is_member && $product_id ) {
 								</div>
 							</div>
 
-							<div class="snf-event__step-panel" data-step-panel="3" role="tabpanel" hidden>
+							<div class="snf-event__step-panel" data-step-panel="3" role="tabpanel" id="snf-event-panel-3" aria-labelledby="snf-event-tab-3" hidden>
 								<p class="snf-event__step-copy"><?php esc_html_e( 'Step 3 — Your intent. Tell admissions how you plan to participate.', 'super-ninety-four' ); ?></p>
 								<label class="snf-event__field">
 									<span><?php esc_html_e( 'Attendance intent', 'super-ninety-four' ); ?></span>
@@ -278,7 +278,7 @@ if ( $can_purchase && $is_member && $product_id ) {
 							</div>
 
 							<?php if ( $can_purchase && ! empty( $commerce['enabled'] ) ) : ?>
-								<div class="snf-event__step-panel" data-step-panel="4" role="tabpanel" hidden>
+								<div class="snf-event__step-panel" data-step-panel="4" role="tabpanel" id="snf-event-panel-4" aria-labelledby="snf-event-tab-4" hidden>
 									<p class="snf-event__step-copy"><?php esc_html_e( 'Step 4 — Tickets. Select your tier, add-ons, upsells, and immerse interactivities.', 'super-ninety-four' ); ?></p>
 									<?php
 									get_template_part(
@@ -307,15 +307,15 @@ if ( $can_purchase && $is_member && $product_id ) {
 							<?php endif; ?>
 						<?php else : ?>
 							<div class="snf-event__step-tabs" role="tablist" aria-label="<?php esc_attr_e( 'Non-member admissions steps', 'super-ninety-four' ); ?>">
-								<button type="button" class="snf-event__step-tab is-active" role="tab" aria-selected="true" data-step="1">
+								<button type="button" class="snf-event__step-tab is-active" role="tab" id="snf-event-guest-tab-1" aria-controls="snf-event-guest-panel-1" aria-selected="true" data-step="1">
 									<?php esc_html_e( 'Contact', 'super-ninety-four' ); ?>
 								</button>
-								<button type="button" class="snf-event__step-tab" role="tab" aria-selected="false" data-step="2">
+								<button type="button" class="snf-event__step-tab" role="tab" id="snf-event-guest-tab-2" aria-controls="snf-event-guest-panel-2" aria-selected="false" data-step="2">
 									<?php esc_html_e( 'Billing', 'super-ninety-four' ); ?>
 								</button>
 							</div>
 
-							<div class="snf-event__step-panel is-active" data-step-panel="1" role="tabpanel">
+							<div class="snf-event__step-panel is-active" data-step-panel="1" role="tabpanel" id="snf-event-guest-panel-1" aria-labelledby="snf-event-guest-tab-1">
 								<p class="snf-event__step-copy"><?php esc_html_e( 'Step 1 — Contact details. Introduce yourself to the admissions desk.', 'super-ninety-four' ); ?></p>
 								<label class="snf-event__field">
 									<span><?php esc_html_e( 'Full name', 'super-ninety-four' ); ?></span>
@@ -338,7 +338,7 @@ if ( $can_purchase && $is_member && $product_id ) {
 								</button>
 							</div>
 
-							<div class="snf-event__step-panel" data-step-panel="2" role="tabpanel" hidden>
+							<div class="snf-event__step-panel" data-step-panel="2" role="tabpanel" id="snf-event-guest-panel-2" aria-labelledby="snf-event-guest-tab-2" hidden>
 								<p class="snf-event__step-copy"><?php esc_html_e( 'Step 2 — Billing details. Choose a membership plan to complete open admission.', 'super-ninety-four' ); ?></p>
 								<?php if ( ! empty( $initiation['amount'] ) ) : ?>
 									<p class="snf-event__step-meta">

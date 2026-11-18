@@ -1443,6 +1443,10 @@ function snf_get_ticket_commerce_payload( $post = null ) {
  * Store apply-flow event attribution on the user / session.
  */
 function snf_ticket_commerce_capture_apply_event() {
+	// This runs at priority 5, before the main Apply handler verifies the nonce.
+	// Verify it here too so anonymous requests cannot poison session/user meta.
+	check_admin_referer( 'snf_apply_membership', 'snf_apply_nonce' );
+
 	$event_id = 0;
 	if ( isset( $_POST['snf_apply_event'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
 		$event_id = absint( wp_unslash( $_POST['snf_apply_event'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing

@@ -47,9 +47,18 @@ class SNF_Payments_Webhook {
 		$sig     = $request->get_header( 'stripe-signature' );
 		$secret  = SNF_Payments_Stripe_API::webhook_secret();
 
+		// Fail closed: never trust an unsigned or unconfigured webhook. Without this,
+		// anyone could POST a forged payment_intent.succeeded and mark orders paid.
+		if ( ! $secret ) {
+			return new WP_Error( 'snf_payments_no_whsec', __( 'Webhook secret not configured.', 'snf-payments' ), array( 'status' => 500 ) );
+		}
+		if ( ! $sig ) {
+			return new WP_Error( 'snf_payments_sig', __( 'Missing Stripe signature.', 'snf-payments' ), array( 'status' => 400 ) );
+		}
+
 		$event = null;
 
-		if ( $secret && $sig && function_exists( 'snf_stripe_verify_webhook_signature' ) ) {
+		if ( function_exists( 'snf_stripe_verify_webhook_signature' ) ) {
 			$verified = snf_stripe_verify_webhook_signature( $payload, $sig, $secret );
 			if ( is_wp_error( $verified ) ) {
 				return new WP_Error( 'snf_payments_sig', $verified->get_error_message(), array( 'status' => 400 ) );
@@ -59,7 +68,7 @@ class SNF_Payments_Webhook {
 				return new WP_Error( 'snf_payments_payload', __( 'Invalid webhook payload.', 'snf-payments' ), array( 'status' => 400 ) );
 			}
 			$event = $decoded;
-		} elseif ( $secret && $sig && class_exists( '\Stripe\Webhook' ) ) {
+		} elseif ( class_exists( '\Stripe\Webhook' ) ) {
 			try {
 				$event = \Stripe\Webhook::constructEvent( $payload, $sig, $secret );
 				if ( is_object( $event ) && method_exists( $event, 'toArray' ) ) {
@@ -71,15 +80,7 @@ class SNF_Payments_Webhook {
 				return new WP_Error( 'snf_payments_sig', $e->getMessage(), array( 'status' => 400 ) );
 			}
 		} else {
-			$decoded = json_decode( $payload, true );
-			if ( ! is_array( $decoded ) ) {
-				return new WP_Error( 'snf_payments_payload', __( 'Invalid webhook payload.', 'snf-payments' ), array( 'status' => 400 ) );
-			}
-			$event = $decoded;
-			if ( $secret ) {
-				// Secret configured but signature missing/unverifiable.
-				return new WP_Error( 'snf_payments_sig', __( 'Missing or invalid Stripe signature.', 'snf-payments' ), array( 'status' => 400 ) );
-			}
+			return new WP_Error( 'snf_payments_no_verifier', __( 'Webhook signature verification unavailable.', 'snf-payments' ), array( 'status' => 500 ) );
 		}
 
 		$type     = isset( $event['type'] ) ? (string) $event['type'] : '';
