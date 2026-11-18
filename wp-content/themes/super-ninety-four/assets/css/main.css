@@ -14,12 +14,13 @@
 	--snf-frame-h: 791px;
 	--snf-search-w: 683px;
 	--snf-search-h: 82px;
-	--snf-ink: #f3ebe8;
-	--snf-ink-muted: rgba(243, 235, 232, 0.72);
-	--snf-ink-soft: rgba(243, 235, 232, 0.42);
+	--snf-ink: #ffffff;
+	--snf-ink-muted: rgba(255, 255, 255, 0.72);
+	--snf-ink-soft: rgba(255, 255, 255, 0.42);
+	--snf-cream: #f3ebe8;
 	--snf-surface: rgba(27, 19, 19, 0.42);
 	--snf-surface-strong: rgba(27, 19, 19, 0.72);
-	--snf-surface-border: rgba(243, 235, 232, 0.18);
+	--snf-surface-border: rgba(255, 255, 255, 0.18);
 	--snf-font-display: "League Gothic", "Arial Narrow", Impact, sans-serif;
 	--snf-font-body: "Open Sans", "Avenir Next", "Segoe UI", sans-serif;
 	--snf-font-nav: "Open Sans", "Avenir Next", "Segoe UI", sans-serif;
@@ -1754,8 +1755,8 @@ body.snf-nav-open {
 }
 
 .snf-result__hit:hover .snf-result__title {
-	color: #f3ebe8;
-	text-decoration-color: rgba(243, 235, 232, 0.45);
+	color: #fff;
+	text-decoration-color: rgba(255, 255, 255, 0.45);
 }
 
 .snf-result__snippet {

@@ -8,31 +8,31 @@
 @theme {
   --color-snf-grad-top: #815b5a;
   --color-snf-grad-bottom: #1b1313;
-  --color-snf-ink: #f3ebe8;
-  --color-snf-ink-muted: rgb(243 235 232 / 0.72);
-  --color-snf-ink-soft: rgb(243 235 232 / 0.42);
+  --color-snf-ink: #ffffff;
+  --color-snf-ink-muted: rgb(255 255 255 / 0.72);
+  --color-snf-ink-soft: rgb(255 255 255 / 0.42);
   --color-snf-surface: rgb(27 19 19 / 0.42);
   --color-snf-surface-strong: rgb(27 19 19 / 0.72);
-  --color-snf-border: rgb(243 235 232 / 0.18);
+  --color-snf-border: rgb(255 255 255 / 0.18);
 
   --color-background: #1b1313;
-  --color-foreground: #f3ebe8;
+  --color-foreground: #ffffff;
   --color-card: rgb(27 19 19 / 0.72);
-  --color-card-foreground: #f3ebe8;
+  --color-card-foreground: #ffffff;
   --color-popover: #1b1313;
-  --color-popover-foreground: #f3ebe8;
+  --color-popover-foreground: #ffffff;
   --color-primary: #815b5a;
-  --color-primary-foreground: #f3ebe8;
-  --color-secondary: rgb(243 235 232 / 0.12);
-  --color-secondary-foreground: #f3ebe8;
-  --color-muted: rgb(243 235 232 / 0.08);
-  --color-muted-foreground: rgb(243 235 232 / 0.72);
+  --color-primary-foreground: #ffffff;
+  --color-secondary: rgb(255 255 255 / 0.12);
+  --color-secondary-foreground: #ffffff;
+  --color-muted: rgb(255 255 255 / 0.08);
+  --color-muted-foreground: rgb(255 255 255 / 0.72);
   --color-accent: #815b5a;
-  --color-accent-foreground: #f3ebe8;
+  --color-accent-foreground: #ffffff;
   --color-destructive: #b54a4a;
-  --color-destructive-foreground: #f3ebe8;
-  --color-border: rgb(243 235 232 / 0.18);
-  --color-input: rgb(243 235 232 / 0.18);
+  --color-destructive-foreground: #ffffff;
+  --color-border: rgb(255 255 255 / 0.18);
+  --color-input: rgb(255 255 255 / 0.18);
   --color-ring: #815b5a;
 
   --font-display: "League Gothic", "Arial Narrow", Impact, sans-serif;
@@ -47,21 +47,21 @@
 @layer base {
   :root {
     --background: 15 20% 9%;
-    --foreground: 20 33% 93%;
+    --foreground: 0 0% 100%;
     --card: 15 20% 9%;
-    --card-foreground: 20 33% 93%;
+    --card-foreground: 0 0% 100%;
     --popover: 15 20% 9%;
-    --popover-foreground: 20 33% 93%;
+    --popover-foreground: 0 0% 100%;
     --primary: 2 18% 43%;
-    --primary-foreground: 20 33% 93%;
+    --primary-foreground: 0 0% 100%;
     --secondary: 20 20% 18%;
-    --secondary-foreground: 20 33% 93%;
+    --secondary-foreground: 0 0% 100%;
     --muted: 15 15% 14%;
-    --muted-foreground: 20 20% 72%;
+    --muted-foreground: 0 0% 72%;
     --accent: 2 18% 43%;
-    --accent-foreground: 20 33% 93%;
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 45% 50%;
-    --destructive-foreground: 20 33% 93%;
+    --destructive-foreground: 0 0% 100%;
     --border: 20 20% 28%;
     --input: 20 20% 28%;
     --ring: 2 18% 43%;
@@ -81,14 +81,14 @@
   align-items: center;
   padding: 0.65rem 1rem;
   border: 1px solid color-mix(in srgb, var(--snf-accent, #815b5a) 70%, transparent);
-  color: var(--snf-cream, #f3ebe8);
+  color: var(--snf-ink, #fff);
   text-decoration: none;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   font-size: 0.75rem;
 }
 .snf-community__cta--ghost {
-  border-color: rgb(243 235 232 / 0.28);
+  border-color: rgb(255 255 255 / 0.28);
 }
 .snf-community__grid {
   list-style: none;
@@ -123,7 +123,7 @@
 .snf-community__excerpt,
 .snf-community__meta {
   margin: 0 0 0.75rem;
-  color: rgb(243 235 232 / 0.78);
+  color: rgb(255 255 255 / 0.78);
   font-size: 0.92rem;
   line-height: 1.45;
 }
@@ -131,7 +131,7 @@
   appearance: none;
   border: 1px solid var(--snf-accent, #815b5a);
   background: transparent;
-  color: var(--snf-cream, #f3ebe8);
+  color: var(--snf-ink, #fff);
   padding: 0.55rem 0.9rem;
   cursor: pointer;
   text-transform: uppercase;
@@ -139,7 +139,7 @@
   font-size: 0.72rem;
 }
 .snf-community__join.is-joined {
-  border-color: rgb(243 235 232 / 0.35);
+  border-color: rgb(255 255 255 / 0.35);
 }
 .snf-rfq {
   margin-top: 1.75rem;
@@ -182,7 +182,7 @@
   width: 100%;
   border: 1px solid rgb(243 235 232 / 0.22);
   background: rgb(0 0 0 / 0.35);
-  color: var(--snf-cream, #f3ebe8);
+  color: var(--snf-ink, #fff);
   padding: 0.65rem 0.75rem;
   font: inherit;
   text-transform: none;
@@ -193,7 +193,7 @@
   appearance: none;
   border: 0;
   background: var(--snf-accent, #815b5a);
-  color: var(--snf-cream, #f3ebe8);
+  color: #fff;
   padding: 0.7rem 1.1rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -215,7 +215,7 @@
   min-height: 100vh;
   padding: clamp(2.5rem, 8vw, 5rem) 0;
   background: linear-gradient(180deg, var(--snf-grad-top, #815b5a) 0%, var(--snf-grad-bottom, #1b1313) 100%);
-  color: var(--snf-ink, #f3ebe8);
+  color: var(--snf-ink, #fff);
 }
 .snf-funnel-offer__canvas {
   max-width: 40rem;
@@ -227,7 +227,7 @@
   font-size: 0.75rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--snf-ink-muted, rgb(243 235 232 / 0.72));
+  color: var(--snf-ink-muted, rgb(255 255 255 / 0.72));
 }
 .snf-funnel-offer__title,
 .snf-funnel-pattern__title {
@@ -244,12 +244,12 @@
   margin: 0 0 1.5rem;
   font-size: 1.05rem;
   line-height: 1.55;
-  color: var(--snf-ink-muted, rgb(243 235 232 / 0.72));
+  color: var(--snf-ink-muted, rgb(255 255 255 / 0.72));
 }
 .snf-funnel-pattern__bullets {
   margin: 0 0 2rem;
   padding-left: 1.15rem;
-  color: var(--snf-ink, #f3ebe8);
+  color: var(--snf-ink, #fff);
 }
 .snf-funnel-pattern__bullets li + li {
   margin-top: 0.5rem;
@@ -272,9 +272,9 @@
   justify-content: center;
   min-height: 2.75rem;
   padding: 0.7rem 1.25rem;
-  border: 1px solid var(--snf-border, rgb(243 235 232 / 0.18));
+  border: 1px solid var(--snf-border, rgb(255 255 255 / 0.18));
   background: transparent;
-  color: var(--snf-ink, #f3ebe8);
+  color: var(--snf-ink, #fff);
   font-family: var(--font-sans, "Open Sans", sans-serif);
   font-size: 0.85rem;
   font-weight: 600;
@@ -284,14 +284,14 @@
 }
 .snf-funnel-actions__accept:hover {
   color: #fff;
-  border-color: rgb(243 235 232 / 0.45);
+  border-color: rgb(255 255 255 / 0.45);
 }
 .snf-funnel-actions__decline {
-  color: var(--snf-ink-soft, rgb(243 235 232 / 0.42));
+  color: var(--snf-ink-soft, rgb(255 255 255 / 0.42));
   font-size: 0.9rem;
   text-decoration: underline;
   text-underline-offset: 0.2em;
 }
 .snf-funnel-actions__decline:hover {
-  color: var(--snf-ink, #f3ebe8);
+  color: var(--snf-ink, #fff);
 }

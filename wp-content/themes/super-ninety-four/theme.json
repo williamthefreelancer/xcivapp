@@ -57,17 +57,17 @@
         {
           "slug": "ink",
           "name": "Ink",
-          "color": "#f3ebe8"
+          "color": "#ffffff"
         },
         {
           "slug": "ink-muted",
           "name": "Ink muted",
-          "color": "rgba(243, 235, 232, 0.72)"
+          "color": "rgba(255, 255, 255, 0.72)"
         },
         {
           "slug": "ink-soft",
           "name": "Ink soft",
-          "color": "rgba(243, 235, 232, 0.42)"
+          "color": "rgba(255, 255, 255, 0.42)"
         },
         {
           "slug": "grad-top",
@@ -92,7 +92,7 @@
         {
           "slug": "surface-border",
           "name": "Surface border",
-          "color": "rgba(243, 235, 232, 0.18)"
+          "color": "rgba(255, 255, 255, 0.18)"
         },
         {
           "slug": "white",
@@ -119,14 +119,14 @@
         {
           "slug": "ink-fade",
           "name": "Ink fade",
-          "gradient": "linear-gradient(180deg, rgba(243, 235, 232, 0.18) 0%, rgba(243, 235, 232, 0) 100%)"
+          "gradient": "linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 100%)"
         }
       ],
       "duotone": [
         {
           "slug": "ink-on-brand",
           "name": "Ink on brand",
-          "colors": ["#1B1313", "#f3ebe8"]
+          "colors": ["#1B1313", "#ffffff"]
         },
         {
           "slug": "brand-duotone",
