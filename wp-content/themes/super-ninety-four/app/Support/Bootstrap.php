@@ -53,6 +53,7 @@ final class Bootstrap {
 		'theme-menus.php',
 		'x-ads-pixel.php',
 		'seo-meta.php',
+		'newsletter.php',
 	);
 
 	/**
