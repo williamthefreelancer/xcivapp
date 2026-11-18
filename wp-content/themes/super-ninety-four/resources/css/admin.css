@@ -51,7 +51,9 @@
   #snf-admin-settings-pulse {
     --snf-admin-cream: #f3ebe8;
     --snf-admin-on-dark: #ffffff;
-    --snf-admin-ink: #1b1313;
+    /* Legacy text colour used by assets/css/admin-dashboard.css element rules.
+       Keep it white so headings/paragraphs stay legible on the dark gradient. */
+    --snf-admin-ink: #ffffff;
     --snf-admin-gap: clamp(1rem, 2vw, 1.35rem);
     --snf-grad-top: #815b5a;
     --snf-grad-bottom: #1b1313;
