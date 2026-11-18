@@ -12,6 +12,7 @@ body.snf-admin-home #screen-meta {
 .snf-admin {
 	--snf-admin-ink: #1b1313;
 	--snf-admin-cream: #f3ebe8;
+	--snf-admin-on-dark: #ffffff;
 	--snf-admin-accent: #815b5a;
 	--snf-admin-accent-soft: rgba(129, 91, 90, 0.14);
 	--snf-admin-line: rgba(27, 19, 19, 0.12);
@@ -65,7 +66,7 @@ body.snf-admin-home #screen-meta {
 	background:
 		radial-gradient(120% 140% at 100% 0%, rgba(243, 235, 232, 0.18), transparent 55%),
 		linear-gradient(135deg, #815b5a 0%, #1b1313 78%);
-	color: var(--snf-admin-cream);
+	color: var(--snf-admin-on-dark);
 	margin-bottom: 1.25rem;
 	animation: snf-admin-fade-up 0.45s ease both;
 }
@@ -86,12 +87,13 @@ body.snf-admin-home #screen-meta {
 	letter-spacing: 0.14em;
 	text-transform: uppercase;
 	opacity: 0.78;
+	color: var(--snf-admin-on-dark);
 }
 
 .snf-admin__hero h1 {
 	margin: 0 0 0.4rem;
 	padding: 0;
-	color: var(--snf-admin-cream);
+	color: var(--snf-admin-on-dark);
 	font-size: clamp(1.55rem, 2.2vw, 1.95rem);
 	font-weight: 650;
 	letter-spacing: -0.02em;
@@ -130,13 +132,13 @@ body.snf-admin-home #screen-meta {
 }
 
 .snf-admin__nav a:hover {
-	background: var(--snf-admin-accent-soft);
-	color: var(--snf-admin-ink);
+	background: var(--snf-admin-ink);
+	color: var(--snf-admin-on-dark);
 }
 
 .snf-admin__nav a.is-active {
 	background: var(--snf-admin-ink);
-	color: var(--snf-admin-cream);
+	color: var(--snf-admin-on-dark);
 }
 
 .snf-admin__grid {
@@ -205,6 +207,28 @@ body.snf-admin-home #screen-meta {
 	font-size: 1.08rem;
 	font-weight: 700;
 	letter-spacing: -0.01em;
+	color: var(--snf-admin-ink);
+}
+
+/* Dark panels / inverted surfaces inside the light admin chrome */
+.snf-admin__panel--dark,
+.snf-admin__stat--dark {
+	background: var(--snf-admin-ink);
+	border-color: transparent;
+	color: var(--snf-admin-on-dark);
+}
+
+.snf-admin__panel--dark h2,
+.snf-admin__panel--dark .snf-admin__subhead,
+.snf-admin__panel--dark .snf-admin__stat-value,
+.snf-admin__stat--dark .snf-admin__stat-value {
+	color: var(--snf-admin-on-dark);
+}
+
+.snf-admin__panel--dark .snf-admin__panel-desc,
+.snf-admin__panel--dark .snf-admin__muted,
+.snf-admin__stat--dark .snf-admin__stat-label {
+	color: rgba(255, 255, 255, 0.72);
 }
 
 .snf-admin__form h2 + .snf-admin__panel-desc,
@@ -245,7 +269,7 @@ body.snf-admin-home #screen-meta {
 	padding: 0.55rem 0.95rem;
 	border: 1px solid var(--snf-admin-ink);
 	background: var(--snf-admin-ink);
-	color: var(--snf-admin-cream) !important;
+	color: var(--snf-admin-on-dark) !important;
 	text-decoration: none !important;
 	font-weight: 600;
 	font-size: 13px;
@@ -258,7 +282,7 @@ body.snf-admin-home #screen-meta {
 .snf-admin__btn:hover {
 	background: var(--snf-admin-accent);
 	border-color: var(--snf-admin-accent);
-	color: var(--snf-admin-cream) !important;
+	color: var(--snf-admin-on-dark) !important;
 }
 
 .snf-admin__btn--ghost {
@@ -315,11 +339,20 @@ body.snf-admin-home #screen-meta {
 	padding: 0.18rem 0.5rem;
 	border: 1px solid var(--snf-admin-line);
 	background: var(--snf-admin-surface);
+	color: var(--snf-admin-ink);
 	font-size: 11px;
 	font-weight: 650;
 	letter-spacing: 0.03em;
 	text-transform: uppercase;
 	white-space: nowrap;
+	transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.snf-admin__pill:hover,
+.snf-admin__pill:focus-visible {
+	background: var(--snf-admin-ink);
+	border-color: var(--snf-admin-ink);
+	color: var(--snf-admin-on-dark);
 }
 
 .snf-admin__pill--ok {
@@ -328,16 +361,37 @@ body.snf-admin-home #screen-meta {
 	color: var(--snf-admin-ok);
 }
 
+.snf-admin__pill--ok:hover,
+.snf-admin__pill--ok:focus-visible {
+	background: var(--snf-admin-ok);
+	border-color: var(--snf-admin-ok);
+	color: var(--snf-admin-on-dark);
+}
+
 .snf-admin__pill--warn {
 	border-color: rgba(183, 110, 0, 0.5);
 	background: rgba(183, 110, 0, 0.12);
 	color: var(--snf-admin-warn);
 }
 
+.snf-admin__pill--warn:hover,
+.snf-admin__pill--warn:focus-visible {
+	background: var(--snf-admin-warn);
+	border-color: var(--snf-admin-warn);
+	color: var(--snf-admin-on-dark);
+}
+
 .snf-admin__pill--bad {
 	border-color: rgba(160, 40, 40, 0.45);
 	background: rgba(160, 40, 40, 0.1);
 	color: var(--snf-admin-bad);
+}
+
+.snf-admin__pill--bad:hover,
+.snf-admin__pill--bad:focus-visible {
+	background: var(--snf-admin-bad);
+	border-color: var(--snf-admin-bad);
+	color: var(--snf-admin-on-dark);
 }
 
 .snf-admin__form .form-table {

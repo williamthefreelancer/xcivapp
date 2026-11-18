@@ -118,6 +118,7 @@
   font-size: clamp(1.5rem, 2vw, 2rem);
   letter-spacing: 0.02em;
   text-transform: uppercase;
+  color: #fff;
 }
 .snf-community__excerpt,
 .snf-community__meta {
@@ -151,6 +152,7 @@
   font-family: var(--font-display, "League Gothic", sans-serif);
   text-transform: uppercase;
   letter-spacing: 0.03em;
+  color: #fff;
 }
 .snf-rfq__intro {
   margin: 0 0 1rem;

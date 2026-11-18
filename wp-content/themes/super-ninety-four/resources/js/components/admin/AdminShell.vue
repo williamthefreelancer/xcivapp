@@ -27,15 +27,15 @@ defineProps({
 
 <template>
   <header
-    class="snf-admin-shell__hero relative mb-5 overflow-hidden rounded-lg px-6 py-7 text-[var(--snf-admin-cream,#f3ebe8)]"
+    class="snf-admin-shell__hero relative mb-5 overflow-hidden rounded-lg px-6 py-7 text-snf-admin-on-dark"
   >
-    <p class="mb-2 text-[11px] font-medium uppercase tracking-[0.14em] opacity-75">
+    <p class="mb-2 text-[11px] font-medium uppercase tracking-[0.14em] text-white/75">
       {{ brand }}
     </p>
-    <h1 class="m-0 mb-2 text-[clamp(1.55rem,2.2vw,1.95rem)] font-semibold leading-tight tracking-tight">
+    <h1 class="m-0 mb-2 text-[clamp(1.55rem,2.2vw,1.95rem)] font-semibold leading-tight tracking-tight text-snf-admin-on-dark">
       {{ title }}
     </h1>
-    <p v-if="lede" class="m-0 max-w-2xl text-[0.98rem] opacity-80">
+    <p v-if="lede" class="m-0 max-w-2xl text-[0.98rem] text-white/80">
       {{ lede }}
     </p>
   </header>
@@ -53,8 +53,8 @@ defineProps({
         cn(
           'inline-flex items-center rounded-md px-3.5 py-2 text-[13px] font-semibold no-underline transition-colors',
           active === item.slug
-            ? 'bg-foreground text-background'
-            : 'text-foreground hover:bg-muted'
+            ? 'bg-snf-admin-ink text-snf-admin-on-dark'
+            : 'text-foreground hover:bg-snf-admin-ink hover:text-snf-admin-on-dark'
         )
       "
     >

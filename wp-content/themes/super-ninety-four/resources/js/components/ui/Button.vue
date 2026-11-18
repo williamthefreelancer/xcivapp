@@ -35,10 +35,10 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground hover:opacity-90',
-        secondary: 'bg-secondary text-secondary-foreground hover:opacity-90',
-        outline: 'border border-border bg-transparent hover:bg-muted',
-        ghost: 'hover:bg-muted',
+        default: 'bg-primary text-snf-admin-on-dark hover:bg-snf-admin-ink hover:text-snf-admin-on-dark',
+        secondary: 'bg-secondary text-secondary-foreground hover:bg-snf-admin-ink hover:text-snf-admin-on-dark',
+        outline: 'border border-border bg-transparent text-foreground hover:bg-snf-admin-ink hover:text-snf-admin-on-dark hover:border-snf-admin-ink',
+        ghost: 'text-foreground hover:bg-snf-admin-ink hover:text-snf-admin-on-dark',
         link: 'text-primary underline-offset-4 hover:underline',
       },
       size: {
