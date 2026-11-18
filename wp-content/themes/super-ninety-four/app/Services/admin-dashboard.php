@@ -1,6 +1,6 @@
 <?php
 /**
- * SNF Club wp-admin dashboards for Events, Circles, Videos & Audio, and critical settings.
+ * SNF Club wp-admin dashboards for Events, Circles, Videos & Audio, Marketplace RFQs, and critical settings.
  *
  * @package Super_Ninety_Four
  */
@@ -101,6 +101,10 @@ function snf_admin_dashboard_pages() {
 			'title' => __( 'Videos & Audio', 'super-ninety-four' ),
 			'label' => __( 'Videos & Audio', 'super-ninety-four' ),
 		),
+		'snf-club-rfqs'     => array(
+			'title' => __( 'Marketplace RFQs', 'super-ninety-four' ),
+			'label' => __( 'Marketplace RFQs', 'super-ninety-four' ),
+		),
 		'snf-club-settings' => array(
 			'title' => __( 'Critical settings', 'super-ninety-four' ),
 			'label' => __( 'Critical settings', 'super-ninety-four' ),
@@ -134,7 +138,7 @@ function snf_admin_dashboard_enqueue( $hook_suffix ) {
 
 	if ( ! $load ) {
 		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
-		$types  = array( 'event', 'snf_circle', 'snf_video', 'snf_audio', 'snf_reservation' );
+		$types  = array( 'event', 'snf_circle', 'snf_video', 'snf_audio', 'snf_reservation', 'snf_rfq' );
 		if ( ! $screen || ! in_array( $screen->post_type, $types, true ) ) {
 			return;
 		}
@@ -178,6 +182,8 @@ function snf_admin_dashboard_menu() {
 			$callback = 'snf_admin_render_circles';
 		} elseif ( 'snf-club-media' === $slug ) {
 			$callback = 'snf_admin_render_media';
+		} elseif ( 'snf-club-rfqs' === $slug ) {
+			$callback = 'snf_admin_render_rfqs';
 		} elseif ( 'snf-club-settings' === $slug ) {
 			$callback = 'snf_admin_render_critical_settings';
 		}
@@ -339,8 +345,10 @@ function snf_admin_render_overview() {
 	snf_admin_render_shell_start(
 		'snf-club',
 		__( 'Club operations', 'super-ninety-four' ),
-		__( 'Dashboards for Events, Circles, Videos & Audio, plus the settings those surfaces depend on.', 'super-ninety-four' )
+		__( 'Dashboards for Events, Circles, Videos & Audio, Marketplace RFQs, plus the settings those surfaces depend on.', 'super-ninety-four' )
 	);
+
+	$rfq_count = snf_admin_count_posts( 'snf_rfq', 'private' ) + snf_admin_count_posts( 'snf_rfq', 'publish' );
 
 	$stats = array(
 		array( snf_admin_count_posts( 'event' ), __( 'Published events', 'super-ninety-four' ) ),
@@ -348,7 +356,7 @@ function snf_admin_render_overview() {
 		array( snf_admin_count_posts( 'snf_video' ), __( 'Videos', 'super-ninety-four' ) ),
 		array( snf_admin_count_posts( 'snf_audio' ), __( 'Audio', 'super-ninety-four' ) ),
 		array( snf_admin_count_posts( 'snf_reservation', 'publish' ) + snf_admin_count_posts( 'snf_reservation', 'pending' ), __( 'Reservations', 'super-ninety-four' ) ),
-		array( snf_admin_count_posts( 'snf_rfq' ), __( 'RFQs', 'super-ninety-four' ) ),
+		array( $rfq_count, __( 'RFQs', 'super-ninety-four' ) ),
 	);
 	?>
 	<div class="snf-admin__grid snf-admin__grid--stats">
@@ -371,6 +379,8 @@ function snf_admin_render_overview() {
 				<a class="snf-admin__btn snf-admin__btn--ghost" href="<?php echo esc_url( admin_url( 'edit.php?post_type=snf_circle' ) ); ?>"><?php esc_html_e( 'All circles', 'super-ninety-four' ); ?></a>
 				<a class="snf-admin__btn" href="<?php echo esc_url( admin_url( 'admin.php?page=snf-club-media' ) ); ?>"><?php esc_html_e( 'Media dashboard', 'super-ninety-four' ); ?></a>
 				<a class="snf-admin__btn snf-admin__btn--ghost" href="<?php echo esc_url( admin_url( 'edit.php?post_type=snf_video' ) ); ?>"><?php esc_html_e( 'All videos', 'super-ninety-four' ); ?></a>
+				<a class="snf-admin__btn" href="<?php echo esc_url( admin_url( 'admin.php?page=snf-club-rfqs' ) ); ?>"><?php esc_html_e( 'RFQ dashboard', 'super-ninety-four' ); ?></a>
+				<a class="snf-admin__btn snf-admin__btn--ghost" href="<?php echo esc_url( admin_url( 'edit.php?post_type=snf_rfq' ) ); ?>"><?php esc_html_e( 'All RFQs', 'super-ninety-four' ); ?></a>
 			</div>
 		</section>
 
@@ -885,6 +895,232 @@ function snf_admin_render_media() {
 }
 
 /**
+ * Marketplace RFQs dashboard.
+ */
+function snf_admin_render_rfqs() {
+	if ( ! current_user_can( 'edit_posts' ) ) {
+		return;
+	}
+
+	snf_admin_render_shell_start(
+		'snf-club-rfqs',
+		__( 'Marketplace RFQs', 'super-ninety-four' ),
+		__( 'Expo / B2B quote inbox, field requirements, and staff notification settings.', 'super-ninety-four' )
+	);
+
+	$settings = function_exists( 'snf_get_rfq_settings' ) ? snf_get_rfq_settings() : array();
+	$private  = snf_admin_count_posts( 'snf_rfq', 'private' );
+	$publish  = snf_admin_count_posts( 'snf_rfq', 'publish' );
+	$recent   = get_posts(
+		array(
+			'post_type'      => 'snf_rfq',
+			'post_status'    => array( 'private', 'publish' ),
+			'posts_per_page' => 12,
+			'orderby'        => 'date',
+			'order'          => 'DESC',
+		)
+	);
+	$audiences = function_exists( 'snf_rfq_audience_choices' ) ? snf_rfq_audience_choices() : array();
+	?>
+	<div class="snf-admin__grid snf-admin__grid--stats">
+		<div class="snf-admin__stat">
+			<span class="snf-admin__stat-value"><?php echo esc_html( (string) ( $private + $publish ) ); ?></span>
+			<span class="snf-admin__stat-label"><?php esc_html_e( 'Total RFQs', 'super-ninety-four' ); ?></span>
+		</div>
+		<div class="snf-admin__stat">
+			<span class="snf-admin__stat-value"><?php echo esc_html( (string) $private ); ?></span>
+			<span class="snf-admin__stat-label"><?php esc_html_e( 'Inbox (private)', 'super-ninety-four' ); ?></span>
+		</div>
+		<div class="snf-admin__stat">
+			<span class="snf-admin__stat-value"><?php echo ! empty( $settings['enabled'] ) ? 'ON' : 'OFF'; ?></span>
+			<span class="snf-admin__stat-label"><?php esc_html_e( 'Form enabled', 'super-ninety-four' ); ?></span>
+		</div>
+		<div class="snf-admin__stat">
+			<span class="snf-admin__stat-value"><?php echo ! empty( $settings['require_company'] ) ? 'REQ' : 'OPT'; ?></span>
+			<span class="snf-admin__stat-label"><?php esc_html_e( 'Company field', 'super-ninety-four' ); ?></span>
+		</div>
+		<div class="snf-admin__stat">
+			<span class="snf-admin__stat-value"><?php echo ! empty( $settings['members_only'] ) ? 'YES' : 'NO'; ?></span>
+			<span class="snf-admin__stat-label"><?php esc_html_e( 'Members only', 'super-ninety-four' ); ?></span>
+		</div>
+	</div>
+
+	<div class="snf-admin__grid snf-admin__grid--panels">
+		<section class="snf-admin__panel">
+			<h2><?php esc_html_e( 'Quick actions', 'super-ninety-four' ); ?></h2>
+			<p class="snf-admin__panel-desc"><?php esc_html_e( 'Open the RFQ inbox or front-end Expo surface where quotes are collected.', 'super-ninety-four' ); ?></p>
+			<div class="snf-admin__actions">
+				<a class="snf-admin__btn" href="<?php echo esc_url( admin_url( 'edit.php?post_type=snf_rfq' ) ); ?>"><?php esc_html_e( 'All RFQs', 'super-ninety-four' ); ?></a>
+				<?php
+				$expo = get_page_by_path( 'expo' );
+				if ( $expo ) :
+					?>
+					<a class="snf-admin__btn snf-admin__btn--ghost" href="<?php echo esc_url( get_permalink( $expo ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'View Expo', 'super-ninety-four' ); ?></a>
+				<?php else : ?>
+					<span class="snf-admin__pill snf-admin__pill--bad"><?php esc_html_e( 'Expo page missing', 'super-ninety-four' ); ?></span>
+				<?php endif; ?>
+			</div>
+		</section>
+
+		<section class="snf-admin__panel">
+			<h2><?php esc_html_e( 'Requirements pulse', 'super-ninety-four' ); ?></h2>
+			<p class="snf-admin__panel-desc"><?php esc_html_e( 'Live validation rules enforced by REST intake and the Expo form.', 'super-ninety-four' ); ?></p>
+			<ul class="snf-admin__list">
+				<li>
+					<span><?php esc_html_e( 'Company required', 'super-ninety-four' ); ?></span>
+					<span class="snf-admin__pill <?php echo ! empty( $settings['require_company'] ) ? 'snf-admin__pill--ok' : ''; ?>">
+						<?php echo ! empty( $settings['require_company'] ) ? esc_html__( 'Yes', 'super-ninety-four' ) : esc_html__( 'Optional', 'super-ninety-four' ); ?>
+					</span>
+				</li>
+				<li>
+					<span><?php esc_html_e( 'Product listing required', 'super-ninety-four' ); ?></span>
+					<span class="snf-admin__pill <?php echo ! empty( $settings['require_product'] ) ? 'snf-admin__pill--ok' : ''; ?>">
+						<?php echo ! empty( $settings['require_product'] ) ? esc_html__( 'Yes', 'super-ninety-four' ) : esc_html__( 'Optional', 'super-ninety-four' ); ?>
+					</span>
+				</li>
+				<li>
+					<span><?php esc_html_e( 'Max message length', 'super-ninety-four' ); ?></span>
+					<span class="snf-admin__pill"><?php echo esc_html( (string) max( 200, (int) ( $settings['max_message_length'] ?? 4000 ) ) ); ?></span>
+				</li>
+				<li>
+					<span><?php esc_html_e( 'Notify email', 'super-ninety-four' ); ?></span>
+					<span class="snf-admin__pill <?php echo ! empty( $settings['notify_email'] ) ? 'snf-admin__pill--ok' : 'snf-admin__pill--warn'; ?>">
+						<?php echo ! empty( $settings['notify_email'] ) ? esc_html( (string) $settings['notify_email'] ) : esc_html__( 'Admin email', 'super-ninety-four' ); ?>
+					</span>
+				</li>
+			</ul>
+		</section>
+
+		<section class="snf-admin__panel snf-admin__panel--wide">
+			<h2><?php esc_html_e( 'Recent RFQs', 'super-ninety-four' ); ?></h2>
+			<p class="snf-admin__panel-desc"><?php esc_html_e( 'Newest quote requests from the Expo marketplace form.', 'super-ninety-four' ); ?></p>
+			<table class="snf-admin__table">
+				<thead>
+					<tr>
+						<th><?php esc_html_e( 'RFQ', 'super-ninety-four' ); ?></th>
+						<th><?php esc_html_e( 'Contact', 'super-ninety-four' ); ?></th>
+						<th><?php esc_html_e( 'Company', 'super-ninety-four' ); ?></th>
+						<th><?php esc_html_e( 'Audience', 'super-ninety-four' ); ?></th>
+						<th><?php esc_html_e( 'Date', 'super-ninety-four' ); ?></th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php if ( ! $recent ) : ?>
+						<tr><td colspan="5" class="snf-admin__muted"><?php esc_html_e( 'No RFQs yet.', 'super-ninety-four' ); ?></td></tr>
+					<?php endif; ?>
+					<?php foreach ( $recent as $rfq ) : ?>
+						<?php
+						$name     = (string) get_post_meta( $rfq->ID, '_snf_rfq_name', true );
+						$email    = (string) get_post_meta( $rfq->ID, '_snf_rfq_email', true );
+						$company  = (string) get_post_meta( $rfq->ID, '_snf_rfq_company', true );
+						$audience = (string) get_post_meta( $rfq->ID, '_snf_rfq_audience', true );
+						?>
+						<tr>
+							<td><a href="<?php echo esc_url( get_edit_post_link( $rfq->ID ) ); ?>"><?php echo esc_html( get_the_title( $rfq ) ); ?></a></td>
+							<td>
+								<?php echo esc_html( $name ?: '—' ); ?>
+								<?php if ( $email ) : ?>
+									<br><span class="snf-admin__muted"><?php echo esc_html( $email ); ?></span>
+								<?php endif; ?>
+							</td>
+							<td><?php echo esc_html( $company ?: '—' ); ?></td>
+							<td><span class="snf-admin__pill"><?php echo esc_html( $audiences[ $audience ] ?? ( $audience ?: '—' ) ); ?></span></td>
+							<td><?php echo esc_html( get_the_date( '', $rfq ) ); ?></td>
+						</tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
+		</section>
+
+		<?php if ( current_user_can( 'manage_options' ) && function_exists( 'snf_get_rfq_settings' ) ) : ?>
+		<section class="snf-admin__panel snf-admin__panel--wide">
+			<h2><?php esc_html_e( 'RFQ settings & requirements', 'super-ninety-four' ); ?></h2>
+			<p class="snf-admin__panel-desc"><?php esc_html_e( 'Control who can submit, which fields are required, copy on the Expo form, and where staff get notified.', 'super-ninety-four' ); ?></p>
+			<form class="snf-admin__form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+				<input type="hidden" name="action" value="snf_rfq_save_settings">
+				<?php wp_nonce_field( 'snf_rfq_settings', 'snf_rfq_settings_nonce' ); ?>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row"><?php esc_html_e( 'Intake', 'super-ninety-four' ); ?></th>
+						<td>
+							<label>
+								<input type="checkbox" name="enabled" value="1" <?php checked( ! empty( $settings['enabled'] ) ); ?>>
+								<?php esc_html_e( 'Enable marketplace RFQ form and REST endpoint', 'super-ninety-four' ); ?>
+							</label>
+							<br>
+							<label>
+								<input type="checkbox" name="members_only" value="1" <?php checked( ! empty( $settings['members_only'] ) ); ?>>
+								<?php esc_html_e( 'Members only (require club member access)', 'super-ninety-four' ); ?>
+							</label>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><?php esc_html_e( 'Field requirements', 'super-ninety-four' ); ?></th>
+						<td>
+							<label>
+								<input type="checkbox" name="require_company" value="1" <?php checked( ! empty( $settings['require_company'] ) ); ?>>
+								<?php esc_html_e( 'Require company', 'super-ninety-four' ); ?>
+							</label>
+							<br>
+							<label>
+								<input type="checkbox" name="require_product" value="1" <?php checked( ! empty( $settings['require_product'] ) ); ?>>
+								<?php esc_html_e( 'Require a product / listing ID', 'super-ninety-four' ); ?>
+							</label>
+							<p class="description"><?php esc_html_e( 'Name, email, and message stay required. Product requirement is for listing-scoped RFQs.', 'super-ninety-four' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="snf_rfq_max_message"><?php esc_html_e( 'Max message length', 'super-ninety-four' ); ?></label></th>
+						<td>
+							<input type="number" id="snf_rfq_max_message" name="max_message_length" value="<?php echo esc_attr( (string) max( 200, (int) $settings['max_message_length'] ) ); ?>" min="200" max="20000" step="1">
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="snf_rfq_default_audience"><?php esc_html_e( 'Default audience', 'super-ninety-four' ); ?></label></th>
+						<td>
+							<select name="default_audience" id="snf_rfq_default_audience">
+								<?php foreach ( $audiences as $value => $label ) : ?>
+									<option value="<?php echo esc_attr( $value ); ?>" <?php selected( $settings['default_audience'], $value ); ?>><?php echo esc_html( $label ); ?></option>
+								<?php endforeach; ?>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="snf_rfq_notify_email"><?php esc_html_e( 'Notify email', 'super-ninety-four' ); ?></label></th>
+						<td>
+							<input type="email" class="regular-text" id="snf_rfq_notify_email" name="notify_email" value="<?php echo esc_attr( (string) $settings['notify_email'] ); ?>" placeholder="<?php echo esc_attr( (string) get_option( 'admin_email' ) ); ?>">
+							<p class="description"><?php esc_html_e( 'Leave blank to use the WordPress admin email.', 'super-ninety-four' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="snf_rfq_form_title"><?php esc_html_e( 'Form title', 'super-ninety-four' ); ?></label></th>
+						<td>
+							<input type="text" class="regular-text" id="snf_rfq_form_title" name="form_title" value="<?php echo esc_attr( (string) $settings['form_title'] ); ?>">
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="snf_rfq_form_intro"><?php esc_html_e( 'Form intro', 'super-ninety-four' ); ?></label></th>
+						<td>
+							<textarea name="form_intro" id="snf_rfq_form_intro" class="large-text" rows="3"><?php echo esc_textarea( (string) $settings['form_intro'] ); ?></textarea>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="snf_rfq_success"><?php esc_html_e( 'Success message', 'super-ninety-four' ); ?></label></th>
+						<td>
+							<textarea name="success_message" id="snf_rfq_success" class="large-text" rows="2"><?php echo esc_textarea( (string) $settings['success_message'] ); ?></textarea>
+						</td>
+					</tr>
+				</table>
+				<?php submit_button( __( 'Save RFQ settings', 'super-ninety-four' ), 'primary', 'submit', false ); ?>
+			</form>
+		</section>
+		<?php endif; ?>
+	</div>
+	<?php
+	snf_admin_render_shell_end();
+}
+
+/**
  * Critical settings dashboard.
  */
 function snf_admin_render_critical_settings() {
@@ -1055,6 +1291,50 @@ function snf_admin_handle_circle_settings_save() {
 	exit;
 }
 add_action( 'admin_post_snf_circle_save_settings', 'snf_admin_handle_circle_settings_save' );
+
+/**
+ * Save Marketplace RFQ settings.
+ */
+function snf_admin_handle_rfq_settings_save() {
+	if ( ! isset( $_POST['snf_rfq_settings_nonce'] ) ) {
+		return;
+	}
+	check_admin_referer( 'snf_rfq_settings', 'snf_rfq_settings_nonce' );
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_die( esc_html__( 'Forbidden.', 'super-ninety-four' ) );
+	}
+	if ( ! function_exists( 'snf_get_rfq_settings' ) || ! defined( 'SNF_RFQ_SETTINGS_OPTION' ) ) {
+		wp_die( esc_html__( 'RFQ settings unavailable.', 'super-ninety-four' ) );
+	}
+
+	$current   = snf_get_rfq_settings();
+	$audiences = function_exists( 'snf_rfq_audience_choices' ) ? snf_rfq_audience_choices() : array();
+	$audience  = isset( $_POST['default_audience'] ) ? sanitize_key( wp_unslash( $_POST['default_audience'] ) ) : $current['default_audience'];
+
+	$current['enabled']            = isset( $_POST['enabled'] ) ? 1 : 0;
+	$current['members_only']       = isset( $_POST['members_only'] ) ? 1 : 0;
+	$current['require_company']    = isset( $_POST['require_company'] ) ? 1 : 0;
+	$current['require_product']    = isset( $_POST['require_product'] ) ? 1 : 0;
+	$current['max_message_length'] = isset( $_POST['max_message_length'] ) ? max( 200, min( 20000, absint( $_POST['max_message_length'] ) ) ) : 4000;
+	$current['default_audience']   = isset( $audiences[ $audience ] ) ? $audience : 'public';
+	$current['notify_email']       = isset( $_POST['notify_email'] ) ? sanitize_email( wp_unslash( $_POST['notify_email'] ) ) : '';
+	$current['form_title']         = isset( $_POST['form_title'] ) ? sanitize_text_field( wp_unslash( $_POST['form_title'] ) ) : $current['form_title'];
+	$current['form_intro']         = isset( $_POST['form_intro'] ) ? sanitize_textarea_field( wp_unslash( $_POST['form_intro'] ) ) : '';
+	$current['success_message']    = isset( $_POST['success_message'] ) ? sanitize_textarea_field( wp_unslash( $_POST['success_message'] ) ) : $current['success_message'];
+
+	if ( '' === $current['form_title'] ) {
+		$current['form_title'] = __( 'Request a quote', 'super-ninety-four' );
+	}
+	if ( '' === $current['success_message'] ) {
+		$current['success_message'] = __( 'Request received. Concierge will follow up.', 'super-ninety-four' );
+	}
+
+	update_option( SNF_RFQ_SETTINGS_OPTION, $current, false );
+
+	wp_safe_redirect( admin_url( 'admin.php?page=snf-club-rfqs&updated=1' ) );
+	exit;
+}
+add_action( 'admin_post_snf_rfq_save_settings', 'snf_admin_handle_rfq_settings_save' );
 
 /**
  * Save critical settings (Mapbox).
