@@ -29,7 +29,7 @@
 	--snf-font-nav: "Open Sans", "Avenir Next", "Segoe UI", sans-serif;
 	--snf-space-x: clamp(1rem, 4vw, 3rem);
 	--snf-space-y: clamp(0.95rem, 2.6vw, 2rem);
-	--snf-header-offset: clamp(5.75rem, 11vw, 7.5rem);
+	--snf-header-offset: clamp(7.5rem, 13vw, 9rem);
 	--snf-section-gap: clamp(1.35rem, 2.8vw, 2rem);
 	--snf-section-space-y: clamp(1.25rem, 3vw, 2.5rem);
 	--snf-title-display: clamp(2rem, 5vw, 3.25rem);
@@ -47,7 +47,6 @@
 	:root {
 		--snf-frame-h: min(49.4375rem, 100dvh);
 		--snf-search-h: 4rem;
-		--snf-header-offset: clamp(5rem, 14vw, 6.25rem);
 	}
 }
 
@@ -144,10 +143,11 @@ button {
 	word-wrap: normal !important;
 }
 
+/* Page frame: gutters are subtracted from the width so the right gutter can
+ * never overflow the viewport (previously min(100%, frame) + side margins). */
 .snf-container {
-	width: min(100%, var(--snf-frame-w));
+	width: min(calc(100% - (2 * var(--snf-space-x))), var(--snf-frame-w));
 	margin-inline: auto;
-	margin-inline: max(var(--snf-space-x), env(safe-area-inset-left, 0)) max(var(--snf-space-x), env(safe-area-inset-right, 0));
 }
 
 /* Header */
@@ -722,8 +722,7 @@ body.snf-nav-open {
 	justify-content: flex-start;
 	gap: clamp(1.15rem, 2.6vw, 1.65rem);
 	position: relative;
-	margin-block: calc(var(--snf-header-offset) + clamp(1rem, 2.5vw, 1.75rem))
-		clamp(1.5rem, 4vw, 2.5rem);
+	margin-block: var(--snf-header-offset) clamp(1.5rem, 4vw, 2.5rem);
 }
 
 .snf-hero__brand {
@@ -749,7 +748,7 @@ body.snf-nav-open {
 	flex-direction: row;
 	align-items: center;
 	gap: 0.5rem;
-	margin: 0.625rem 0.625rem 0.625rem 1.375rem;
+	margin: 0.625rem 0;
 	border: 0.0625rem solid var(--snf-surface-border);
 	border-radius: 62.4375rem;
 	background: var(--snf-surface);
@@ -900,7 +899,6 @@ body.snf-nav-open {
 }
 
 .snf-home-spotlight__inner {
-	width: 100%;
 	min-height: 0;
 	margin: clamp(1.5rem, 3.5vw, 2.25rem) clamp(1.5rem, 4vw, 2.5rem);
 	border-radius: 1rem;
@@ -1036,9 +1034,8 @@ body.snf-nav-open {
 }
 
 .snf-home-cta {
-	width: min(100%, 61.125rem);
-	margin: 0 auto clamp(1.5rem, 3vw, 2rem);
-	margin: clamp(1.25rem, 3vw, 1.85rem);
+	max-width: 61.125rem;
+	margin: clamp(1.25rem, 3vw, 1.85rem) auto;
 	border-radius: 1rem;
 	background: #1a1a1a;
 	display: flex;
@@ -1103,9 +1100,8 @@ body.snf-nav-open {
 }
 
 .snf-home-membership__initiation {
-	width: min(100%, 61.125rem);
-	margin: 0 auto clamp(1.25rem, 3vw, 1.75rem);
-	margin: 0.95rem 1.25rem;
+	max-width: 61.125rem;
+	margin: 0.95rem auto;
 	border-radius: 0.75rem;
 	border: 0.0625rem solid var(--snf-surface-border);
 	background: rgba(26, 26, 26, 0.65);
@@ -1543,10 +1539,11 @@ body.snf-nav-open {
 
 	.snf-home-cta__action {
 		width: 100%;
+		margin-inline: 0;
 	}
 
 	.snf-search {
-		margin: 0.5rem 0.5rem 0.5rem 0.875rem;
+		margin: 0.5rem 0;
 	}
 
 	.snf-search__submit {
@@ -1890,8 +1887,6 @@ body.snf-no-header.admin-bar {
 }
 
 .snf-workshop__countdown {
-	width: 100%;
-	margin: 0 0 2.25rem;
 	margin: 0.95rem 1.25rem;
 	border: 0;
 	border-bottom: 0.0625rem solid rgba(255, 255, 255, 0.55);
@@ -1932,7 +1927,7 @@ body.snf-no-header.admin-bar {
 .snf-workshop__hero,
 .snf-workshop__body,
 .snf-workshop__cta {
-	width: min(100%, 61.25rem);
+	max-width: 61.25rem;
 	margin-inline: auto;
 }
 
@@ -2156,7 +2151,8 @@ body.snf-no-header.admin-bar {
 	align-items: center;
 	justify-content: center;
 	min-height: 3.375rem;
-	margin: 0.9rem 1.6rem;
+	margin: 0;
+	padding-inline: clamp(1rem, 2.5vw, 1.6rem);
 	border: 0.0625rem solid rgba(255, 255, 255, 0.35);
 	border-radius: 0.5rem;
 	background: rgba(27, 19, 19, 0.72);
@@ -2437,7 +2433,7 @@ body.snf-no-header.admin-bar {
 
 /* Community dashboard — centered shell + listing sliders */
 .snf-dashboard-shell {
-	width: min(100%, var(--snf-frame-w));
+	max-width: var(--snf-frame-w);
 	margin-inline: auto;
 	display: grid;
 	gap: var(--snf-section-gap);
@@ -2452,7 +2448,7 @@ body.snf-no-header.admin-bar {
 }
 
 .snf-dashboard__shell {
-	width: min(100%, 62.4375rem);
+	max-width: 62.4375rem;
 	display: grid;
 	gap: var(--snf-section-gap);
 	margin-bottom: 2.5rem;
@@ -3198,14 +3194,15 @@ a.snf-panel-card:focus-visible {
 
 /* Account / hospitality hub — shared Figma-ready components */
 .snf-hub__shell {
-	width: min(100%, 67.5rem);
+	max-width: 67.5rem;
 	display: grid;
 	gap: var(--snf-section-gap);
+	grid-template-columns: minmax(0, 1fr);
 	margin-block: 0 var(--snf-section-space-y);
 }
 
 .snf-hub__shell--narrow {
-	width: min(100%, 45rem);
+	max-width: 45rem;
 }
 
 .snf-hub__hero {
@@ -3282,7 +3279,8 @@ a.snf-panel-card:focus-visible {
 	align-items: center;
 	justify-content: center;
 	min-height: 2.625rem;
-	margin: 0.55rem 1rem;
+	margin: 0;
+	padding-inline: clamp(1rem, 2.5vw, 1.35rem);
 	border: 0.0625rem solid var(--snf-surface-border);
 	border-radius: 62.4375rem;
 	background: transparent;
@@ -3792,9 +3790,9 @@ body:has(.snf-hub--apply) .snf-header__apply {
 }
 
 .snf-apply {
-	width: min(100%, 45rem);
+	width: min(calc(100% - (2 * var(--snf-space-x))), 45rem);
 	margin-inline: auto;
-	margin: calc(var(--snf-header-offset) + clamp(1.25rem, 3vw, 2rem)) var(--snf-space-x) clamp(2rem, 5vh, 3.5rem);
+	margin-block: var(--snf-header-offset) clamp(2rem, 5vh, 3.5rem);
 	display: grid;
 	justify-items: center;
 	gap: var(--snf-section-gap);
@@ -4184,7 +4182,7 @@ body:has(.snf-hub--apply) .snf-header__apply {
 
 /* Live Instagram-style messages */
 .snf-hub__shell--messages {
-	width: min(100%, 73.75rem);
+	max-width: 73.75rem;
 }
 
 .snf-hub__layout--messages {
@@ -4718,7 +4716,7 @@ body:has(.snf-hub--apply) .snf-header__apply {
 .snf-quote__hero,
 .snf-quote__section,
 .snf-quote__pricing {
-	width: min(100%, 57rem);
+	max-width: 57rem;
 	margin-inline: auto;
 }
 
@@ -5444,7 +5442,7 @@ body.snf-no-header .snf-event {
 }
 
 .snf-event__shell {
-	width: min(100%, 67.5rem);
+	max-width: 67.5rem;
 }
 
 .snf-event__frame {
@@ -7686,7 +7684,7 @@ body.snf-no-header.snf-is-product .snf-header {
 
 .snf-cart__frame,
 .snf-checkout-page__frame {
-	width: min(100%, 42rem);
+	max-width: 42rem;
 	margin-inline: auto;
 	margin-block: clamp(1.5rem, 4vw, 2.75rem) clamp(2.5rem, 6vw, 4rem);
 }
@@ -8002,17 +8000,20 @@ body.snf-no-header.snf-is-product .snf-header {
 }
 
 .snf-product-single__frame {
-	width: min(100%, 52rem);
+	max-width: 52rem;
 	margin-inline: auto;
 	margin-block: clamp(1.5rem, 4vw, 2.75rem) clamp(2.5rem, 6vw, 4rem);
 	display: grid;
+	grid-template-columns: minmax(0, 1fr);
 	gap: 1.5rem;
 }
 
 .snf-product-single__summary,
 .snf-product-single__after,
 .snf-product-single__intro {
-	margin: 1.15rem 1.2rem 1.35rem;
+	min-width: 0;
+	margin: 1.15rem 0 1.35rem;
+	padding: 0 1.2rem;
 	border: 0.0625rem solid rgba(243, 235, 232, 0.1);
 	border-radius: 1.25rem;
 	background: rgba(18, 12, 12, 0.42);
@@ -8167,9 +8168,9 @@ body:has(.snf-hub--connect) .snf-header__apply {
 }
 
 .snf-connect {
-	width: min(100%, 45rem);
+	width: min(calc(100% - (2 * var(--snf-space-x))), 45rem);
 	margin-inline: auto;
-	margin: calc(var(--snf-header-offset) + clamp(1.25rem, 3vw, 2rem)) var(--snf-space-x) clamp(2rem, 5vh, 3.5rem);
+	margin-block: var(--snf-header-offset) clamp(2rem, 5vh, 3.5rem);
 	display: grid;
 	justify-items: center;
 	gap: var(--snf-section-gap);
