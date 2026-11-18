@@ -147,26 +147,27 @@ jobs:
           remote_theme="${DREAMHOST_THEME_PATH%/}"
           remote_wp="${remote_theme%/wp-content/themes/super-ninety-four}"
 
-          ssh -i "${HOME}/.ssh/dreamhost_deploy" -o IdentitiesOnly=yes -o BatchMode=yes \
+          # Keep activate lean: style reset is available in SNF Club → Critical settings.
+          ssh -i "${HOME}/.ssh/dreamhost_deploy" \
+            -o IdentitiesOnly=yes \
+            -o BatchMode=yes \
+            -o ConnectTimeout=20 \
+            -o ServerAliveInterval=15 \
+            -o ServerAliveCountMax=4 \
             "${DREAMHOST_USERNAME}@${DREAMHOST_HOST}" \
             "cd '${remote_wp}' && \
              if command -v wp >/dev/null 2>&1; then \
                wp plugin activate snf-payments --quiet || true; \
                wp plugin deactivate buddypress --quiet || true; \
-               wp plugin delete buddypress --quiet || true; \
                wp plugin deactivate bp-classic --quiet || true; \
-               wp plugin delete bp-classic --quiet || true; \
                wp plugin deactivate sureforms --quiet || true; \
-               wp plugin delete sureforms --quiet || true; \
                wp plugin deactivate suretriggers --quiet || true; \
-               wp plugin delete suretriggers --quiet || true; \
                wp option update woocommerce_cart_checkout_blocks_enabled no --quiet || true; \
                wp theme activate super-ninety-four --quiet || true; \
                wp rewrite flush --quiet || true; \
                wp eval-file wp-content/themes/super-ninety-four/bin/snf-production-bootstrap.php || true; \
-               wp eval-file wp-content/themes/super-ninety-four/bin/snf-reset-global-styles.php || true; \
                wp eval-file wp-content/themes/super-ninety-four/bin/snf-verify-club-stack.php || true; \
-               echo 'wp-cli: snf-payments on; BuddyPress/SureForms/OttoKit removed; club stack bootstrapped; global styles reset'; \
+               echo 'wp-cli: snf-payments on; club stack bootstrapped'; \
              else \
-               echo 'wp-cli not found; activate snf-payments and remove SureForms/OttoKit manually in WP Admin'; \
+               echo 'wp-cli not found; activate snf-payments manually in WP Admin'; \
              fi"
