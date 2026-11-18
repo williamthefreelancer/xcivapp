@@ -365,9 +365,21 @@
     },
     "custom": {
       "snf": {
-        "frame-w": "1400px",
+        "frame-w": "87.5rem",
         "header-offset": "clamp(5.75rem, 11vw, 7.5rem)",
-        "pad-x": "clamp(1rem, 4vw, 3rem)"
+        "space-x": "clamp(1rem, 4vw, 3rem)",
+        "space-y": "clamp(0.95rem, 2.6vw, 2rem)",
+        "section-gap": "clamp(1.35rem, 2.8vw, 2rem)",
+        "section-space-y": "clamp(1.25rem, 3vw, 2.5rem)",
+        "title-display": "clamp(2rem, 5vw, 3.25rem)",
+        "title-hub": "clamp(1.75rem, 3.2vw, 2.35rem)",
+        "title-section": "clamp(1.25rem, 2.2vw, 1.65rem)",
+        "touch-min": "2.75rem",
+        "bp-nav": "80rem",
+        "bp-wide": "68.75rem",
+        "bp-tablet": "56.25rem",
+        "bp-narrow": "45rem",
+        "bp-phone": "40rem"
       }
     },
     "blocks": {
@@ -792,9 +804,9 @@
       "blockGap": "1.5rem",
       "padding": {
         "top": "0",
-        "right": "var(--wp--custom--snf--pad-x)",
+        "right": "var(--wp--custom--snf--space-x)",
         "bottom": "0",
-        "left": "var(--wp--custom--snf--pad-x)"
+        "left": "var(--wp--custom--snf--space-x)"
       }
     },
     "typography": {

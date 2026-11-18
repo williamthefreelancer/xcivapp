@@ -10,51 +10,85 @@
  * Units: rem / em / vh|dvh only. Prefer margin + gap over padding.
  */
 :root {
-	--snf-grad-top: #815B5A;
-	--snf-grad-bottom: #1B1313;
-	--snf-frame-w: 87.5rem;
-	--snf-frame-h: 49.4375rem;
-	--snf-search-w: 42.6875rem;
-	--snf-search-h: 5.125rem;
-	--snf-ink: #ffffff;
-	--snf-ink-muted: rgba(255, 255, 255, 0.72);
-	--snf-ink-soft: rgba(255, 255, 255, 0.42);
-	--snf-ink-on-light: #1b1313;
-	--snf-cream: #f3ebe8;
-	--snf-surface: rgba(27, 19, 19, 0.42);
-	--snf-surface-strong: rgba(27, 19, 19, 0.72);
-	--snf-surface-border: rgba(255, 255, 255, 0.18);
-	--snf-font-display: "League Gothic", "Arial Narrow", Impact, sans-serif;
-	--snf-font-body: "Open Sans", "Avenir Next", "Segoe UI", sans-serif;
-	--snf-font-nav: "Open Sans", "Avenir Next", "Segoe UI", sans-serif;
-	--snf-space-x: clamp(1rem, 4vw, 3rem);
-	--snf-space-y: clamp(0.95rem, 2.6vw, 2rem);
-	--snf-header-offset: clamp(5.75rem, 11vw, 7.5rem);
-	--snf-section-gap: clamp(1.35rem, 2.8vw, 2rem);
-	--snf-section-space-y: clamp(1.25rem, 3vw, 2.5rem);
-	--snf-title-display: clamp(2rem, 5vw, 3.25rem);
-	--snf-title-hub: clamp(1.75rem, 3.2vw, 2.35rem);
-	--snf-title-section: clamp(1.25rem, 2.2vw, 1.65rem);
-	--snf-touch-min: 2.75rem;
-	--snf-bp-nav: 80rem;
-	--snf-bp-wide: 68.75rem;
-	--snf-bp-tablet: 56.25rem;
-	--snf-bp-narrow: 45rem;
-	--snf-bp-phone: 40rem;
+	/* WP theme.json generated variables (source of truth for block editor) */
+	--wp--custom--snf--frame-w: 87.5rem;
+	--wp--custom--snf--frame-h: 49.4375rem;
+	--wp--custom--snf--search-w: 42.6875rem;
+	--wp--custom--snf--search-h: 5.125rem;
+	--wp--custom--snf--grad-top: #815B5A;
+	--wp--custom--snf--grad-bottom: #1B1313;
+	--wp--custom--snf--ink: #ffffff;
+	--wp--custom--snf--ink-muted: rgba(255, 255, 255, 0.72);
+	--wp--custom--snf--ink-soft: rgba(255, 255, 255, 0.42);
+	--wp--custom--snf--ink-on-light: #1b1313;
+	--wp--custom--snf--cream: #f3ebe8;
+	--wp--custom--snf--surface: rgba(27, 19, 19, 0.42);
+	--wp--custom--snf--surface-strong: rgba(27, 19, 19, 0.72);
+	--wp--custom--snf--surface-border: rgba(255, 255, 255, 0.18);
+	--wp--custom--snf--font-display: "League Gothic", "Arial Narrow", Impact, sans-serif;
+	--wp--custom--snf--font-body: "Open Sans", "Avenir Next", "Segoe UI", sans-serif;
+	--wp--custom--snf--font-nav: "Open Sans", "Avenir Next", "Segoe UI", sans-serif;
+	--wp--custom--snf--space-x: clamp(1rem, 4vw, 3rem);
+	--wp--custom--snf--space-y: clamp(0.95rem, 2.6vw, 2rem);
+	--wp--custom--snf--header-offset: clamp(5.75rem, 11vw, 7.5rem);
+	--wp--custom--snf--section-gap: clamp(1.35rem, 2.8vw, 2rem);
+	--wp--custom--snf--section-space-y: clamp(1.25rem, 3vw, 2.5rem);
+	--wp--custom--snf--title-display: clamp(2rem, 5vw, 3.25rem);
+	--wp--custom--snf--title-hub: clamp(1.75rem, 3.2vw, 2.35rem);
+	--wp--custom--snf--title-section: clamp(1.25rem, 2.2vw, 1.65rem);
+	--wp--custom--snf--touch-min: 2.75rem;
+	--wp--custom--snf--bp-nav: 80rem;
+	--wp--custom--snf--bp-wide: 68.75rem;
+	--wp--custom--snf--bp-tablet: 56.25rem;
+	--wp--custom--snf--bp-narrow: 45rem;
+	--wp--custom--snf--bp-phone: 40rem;
+
+	/* Legacy --snf-* aliases for backward compatibility */
+	--snf-grad-top: var(--wp--custom--snf--grad-top);
+	--snf-grad-bottom: var(--wp--custom--snf--grad-bottom);
+	--snf-frame-w: var(--wp--custom--snf--frame-w);
+	--snf-frame-h: var(--wp--custom--snf--frame-h);
+	--snf-search-w: var(--wp--custom--snf--search-w);
+	--snf-search-h: var(--wp--custom--snf--search-h);
+	--snf-ink: var(--wp--custom--snf--ink);
+	--snf-ink-muted: var(--wp--custom--snf--ink-muted);
+	--snf-ink-soft: var(--wp--custom--snf--ink-soft);
+	--snf-ink-on-light: var(--wp--custom--snf--ink-on-light);
+	--snf-cream: var(--wp--custom--snf--cream);
+	--snf-surface: var(--wp--custom--snf--surface);
+	--snf-surface-strong: var(--wp--custom--snf--surface-strong);
+	--snf-surface-border: var(--wp--custom--snf--surface-border);
+	--snf-font-display: var(--wp--custom--snf--font-display);
+	--snf-font-body: var(--wp--custom--snf--font-body);
+	--snf-font-nav: var(--wp--custom--snf--font-nav);
+	--snf-space-x: var(--wp--custom--snf--space-x);
+	--snf-space-y: var(--wp--custom--snf--space-y);
+	--snf-header-offset: var(--wp--custom--snf--header-offset);
+	--snf-section-gap: var(--wp--custom--snf--section-gap);
+	--snf-section-space-y: var(--wp--custom--snf--section-space-y);
+	--snf-title-display: var(--wp--custom--snf--title-display);
+	--snf-title-hub: var(--wp--custom--snf--title-hub);
+	--snf-title-section: var(--wp--custom--snf--title-section);
+	--snf-touch-min: var(--wp--custom--snf--touch-min);
+	--snf-bp-nav: var(--wp--custom--snf--bp-nav);
+	--snf-bp-wide: var(--wp--custom--snf--bp-wide);
+	--snf-bp-tablet: var(--wp--custom--snf--bp-tablet);
+	--snf-bp-narrow: var(--wp--custom--snf--bp-narrow);
+	--snf-bp-phone: var(--wp--custom--snf--bp-phone);
 }
 
 @media (max-width: 56.25rem) {
 	:root {
-		--snf-frame-h: min(49.4375rem, 100dvh);
-		--snf-search-h: 4rem;
-		--snf-header-offset: clamp(5rem, 14vw, 6.25rem);
+		--wp--custom--snf--frame-h: min(49.4375rem, 100dvh);
+		--wp--custom--snf--search-h: 4rem;
+		--wp--custom--snf--header-offset: clamp(5rem, 14vw, 6.25rem);
 	}
 }
 
 @media (max-width: 40rem) {
 	:root {
-		--snf-search-h: 3.5rem;
-		--snf-space-x: clamp(0.85rem, 4.5vw, 1.25rem);
+		--wp--custom--snf--search-h: 3.5rem;
+		--wp--custom--snf--space-x: clamp(0.85rem, 4.5vw, 1.25rem);
 	}
 }
 
