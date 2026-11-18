@@ -1,5 +1,5 @@
 (() => {
-  const cfg = window.snfExpo || null;
+const cfg = window.snfExpo || null;
   if (!cfg) return;
 
   const mapEl = document.getElementById("snf-expo-map");
@@ -71,6 +71,10 @@
 
   function drawRoute(route) {
     if (!map || !route) return;
+    if (!map.isStyleLoaded()) {
+      map.once("load", () => drawRoute(route));
+      return;
+    }
     const sourceId = "snf-route";
     const data = routeLineGeoJSON(route);
 
@@ -137,6 +141,19 @@
 
     map.addControl(new mapboxgl.NavigationControl({ visualizePitch: false }), "top-right");
 
+    map.on("error", (event) => {
+      const err = (event && event.error) || {};
+      const status = err.status || (err.response && err.response.status);
+      const message = String(err.message || "");
+      if (
+        status === 401 ||
+        status === 403 ||
+        /access token|unauthorized|forbidden/i.test(message)
+      ) {
+        showFallback(cfg.i18n.mapError || cfg.i18n.noToken);
+      }
+    });
+
     map.on("load", () => {
       drawRoute(route);
       if (route && route.coordinates && route.coordinates[0]) {
@@ -148,7 +165,9 @@
   function selectRoute(id) {
     activeRouteId = id;
     chips.forEach((chip) => {
-      chip.classList.toggle("is-active", chip.dataset.routeId === id);
+      const active = chip.dataset.routeId === id;
+      chip.classList.toggle("is-active", active);
+      chip.setAttribute("aria-pressed", active ? "true" : "false");
     });
     drawRoute(findRoute(id));
   }
@@ -161,7 +180,10 @@
   if (chips.length) {
     const initial =
       chips.find((c) => c.dataset.routeId === activeRouteId) || chips[0];
-    if (initial) initial.classList.add("is-active");
+    if (initial) {
+      initial.classList.add("is-active");
+      initial.setAttribute("aria-pressed", "true");
+    }
   }
 
   async function fetchPosition() {
@@ -226,8 +248,7 @@
       () => {
         if (broadcastBtn) {
           broadcastBtn.classList.remove("is-live");
-          broadcastBtn.textContent =
-            "Broadcast my position as lead rider";
+          broadcastBtn.textContent = cfg.i18n.broadcast;
         }
         broadcasting = false;
         window.alert(cfg.i18n.geoDenied);
@@ -511,6 +532,9 @@
 
   const root = document.querySelector(".snf-expo");
   if (root) {
-    requestAnimationFrame(() => root.classList.add("is-ready"));
+    requestAnimationFrame(() => {
+      root.classList.add("is-ready");
+      if (map) map.resize();
+    });
   }
 })();
