@@ -40,7 +40,8 @@ function snf_newsletter_register_subscriber_cpt() {
 			),
 			'public'              => false,
 			'show_ui'             => true,
-			'show_in_menu'        => 'snf-club',
+			// The branded Newsletter Subscribers dashboard replaces the stock CPT list.
+			'show_in_menu'        => false,
 			'capability_type'     => 'post',
 			'map_meta_cap'        => true,
 			'supports'            => array( 'title' ),
@@ -50,6 +51,80 @@ function snf_newsletter_register_subscriber_cpt() {
 	);
 }
 add_action( 'init', 'snf_newsletter_register_subscriber_cpt', 8 );
+
+/**
+ * Send the stock subscriber list URL to the branded dashboard.
+ *
+ * The classic list stays available at edit.php?post_type=snf_subscriber&snf_classic=1
+ * (and from the dashboard's Quick actions panel).
+ */
+function snf_newsletter_subscribers_dashboard_redirect() {
+	global $pagenow;
+	if ( 'edit.php' !== $pagenow || ! current_user_can( 'edit_posts' ) ) {
+		return;
+	}
+
+	$type = isset( $_GET['post_type'] ) ? sanitize_key( wp_unslash( $_GET['post_type'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	if ( 'snf_subscriber' !== $type || isset( $_GET['snf_classic'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		return;
+	}
+
+	// Let filtered / paginated list views load normally.
+	$extra = array_diff( array_keys( (array) $_GET ), array( 'post_type' ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	if ( $extra ) {
+		return;
+	}
+
+	wp_safe_redirect( admin_url( 'admin.php?page=snf-club-subscribers' ) );
+	exit;
+}
+add_action( 'admin_init', 'snf_newsletter_subscribers_dashboard_redirect' );
+
+/**
+ * Stream the newsletter subscribers as a CSV download.
+ */
+function snf_newsletter_export_subscribers() {
+	if ( ! current_user_can( 'edit_posts' ) ) {
+		wp_die( esc_html__( 'You are not allowed to export newsletter subscribers.', 'super-ninety-four' ) );
+	}
+	check_admin_referer( 'snf_subscribers_export', 'snf_subscribers_export_nonce' );
+
+	$subscribers = get_posts(
+		array(
+			'post_type'      => 'snf_subscriber',
+			'post_status'    => 'publish',
+			'posts_per_page' => -1,
+			'orderby'        => 'date',
+			'order'          => 'DESC',
+		)
+	);
+
+	$filename = 'snf-newsletter-subscribers-' . gmdate( 'Y-m-d' ) . '.csv';
+	nocache_headers();
+	header( 'Content-Type: text/csv; charset=utf-8' );
+	header( 'Content-Disposition: attachment; filename="' . $filename . '"' );
+	header( 'Pragma: no-cache' );
+	header( 'Expires: 0' );
+
+	$handle = fopen( 'php://output', 'w' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
+	fputcsv( $handle, array( 'Name', 'Email', 'Source', 'User ID', 'Subscribed', 'Post ID' ) );
+	foreach ( $subscribers as $subscriber ) {
+		fputcsv(
+			$handle,
+			array(
+				get_the_title( $subscriber ),
+				(string) get_post_meta( $subscriber->ID, '_snf_newsletter_email', true ),
+				(string) get_post_meta( $subscriber->ID, '_snf_newsletter_source', true ),
+				(string) get_post_meta( $subscriber->ID, '_snf_newsletter_user_id', true ),
+				(string) get_post_meta( $subscriber->ID, '_snf_newsletter_subscribed_at', true ),
+				(int) $subscriber->ID,
+			)
+		);
+	}
+	fclose( $handle ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+	exit;
+}
+add_action( 'admin_post_snf_subscribers_export', 'snf_newsletter_export_subscribers' );
 
 /**
  * Admin list columns for the subscriber inbox.

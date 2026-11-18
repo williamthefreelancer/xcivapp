@@ -102,6 +102,14 @@ function snf_admin_dashboard_pages() {
 			'title' => __( 'Videos & Audio', 'super-ninety-four' ),
 			'label' => __( 'Videos & Audio', 'super-ninety-four' ),
 		),
+		'snf-club-subscribers' => array(
+			'title' => __( 'Newsletter Subscribers', 'super-ninety-four' ),
+			'label' => __( 'Newsletter Subscribers', 'super-ninety-four' ),
+		),
+		'snf-club-x-daily'  => array(
+			'title' => __( 'X Daily Post', 'super-ninety-four' ),
+			'label' => __( 'X Daily Post', 'super-ninety-four' ),
+		),
 		'snf-club-rfqs'     => array(
 			'title' => __( 'Marketplace RFQs', 'super-ninety-four' ),
 			'label' => __( 'Marketplace RFQs', 'super-ninety-four' ),
@@ -303,6 +311,23 @@ function snf_admin_collect_notices() {
 		}
 	}
 
+	// X Daily Post uses a redirect-after-post flow so results render in the shared shell.
+	if ( isset( $_GET['snf_x_posted'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$notices[] = array(
+			'type'    => 'success',
+			'message' => __( 'Posted to X. The run was added to the history below.', 'super-ninety-four' ),
+		);
+	}
+	if ( isset( $_GET['snf_x_error'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$key = 'snf_x_daily_post_error_' . get_current_user_id();
+		$err = get_transient( $key );
+		$notices[] = array(
+			'type'    => 'error',
+			'message' => ( is_string( $err ) && $err ) ? $err : __( 'The X post could not be published.', 'super-ninety-four' ),
+		);
+		// Leave the transient to expire — notices are collected more than once per request.
+	}
+
 	return $notices;
 }
 
@@ -347,6 +372,9 @@ function snf_admin_vue_nav_from_pages( $pages ) {
 			continue;
 		}
 		if ( 'snf-stripe' === $slug && ! current_user_can( 'manage_woocommerce' ) ) {
+			continue;
+		}
+		if ( 'snf-club-x-daily' === $slug && ! current_user_can( 'manage_options' ) ) {
 			continue;
 		}
 		$items[] = array(
@@ -566,6 +594,22 @@ function snf_admin_vue_bootstrap( $page = 'overview' ) {
 			'listLabel'      => __( 'All videos', 'super-ninety-four' ),
 		),
 		array(
+			'id'             => 'subscribers',
+			'label'          => __( 'Newsletter', 'super-ninety-four' ),
+			'dashboardHref'  => admin_url( 'admin.php?page=snf-club-subscribers' ),
+			'dashboardLabel' => __( 'Subscribers dashboard', 'super-ninety-four' ),
+			'listHref'       => admin_url( 'edit.php?post_type=snf_subscriber&snf_classic=1' ),
+			'listLabel'      => __( 'Classic list', 'super-ninety-four' ),
+		),
+		array(
+			'id'             => 'x-daily',
+			'label'          => __( 'X Daily Post', 'super-ninety-four' ),
+			'dashboardHref'  => admin_url( 'admin.php?page=snf-club-x-daily' ),
+			'dashboardLabel' => __( 'X Daily Post desk', 'super-ninety-four' ),
+			'listHref'       => '',
+			'listLabel'      => '',
+		),
+		array(
 			'id'             => 'rfqs',
 			'label'          => __( 'Marketplace RFQs', 'super-ninety-four' ),
 			'dashboardHref'  => admin_url( 'admin.php?page=snf-club-rfqs' ),
@@ -610,7 +654,7 @@ function snf_admin_dashboard_enqueue( $hook_suffix ) {
 
 	if ( ! $load ) {
 		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
-		$types  = array( 'event', 'snf_circle', 'snf_video', 'snf_audio', 'snf_reservation', 'snf_rfq' );
+		$types  = array( 'event', 'snf_circle', 'snf_video', 'snf_audio', 'snf_reservation', 'snf_rfq', 'snf_subscriber' );
 		$tax    = $screen && ! empty( $screen->taxonomy ) ? (string) $screen->taxonomy : '';
 		if ( ! $screen || ( ! in_array( $screen->post_type, $types, true ) && 'snf_ticket_addon_kind' !== $tax ) ) {
 			return;
@@ -780,11 +824,15 @@ function snf_admin_dashboard_menu() {
 			$callback = 'snf_admin_render_rfqs';
 		} elseif ( 'snf-club-addons' === $slug ) {
 			$callback = 'snf_admin_render_addon_kinds';
+		} elseif ( 'snf-club-subscribers' === $slug ) {
+			$callback = 'snf_admin_render_subscribers';
+		} elseif ( 'snf-club-x-daily' === $slug ) {
+			$callback = 'snf_x_daily_admin_page';
 		} elseif ( 'snf-club-settings' === $slug ) {
 			$callback = 'snf_admin_render_critical_settings';
 		}
 
-		$cap = ( 'snf-club-settings' === $slug ) ? 'manage_options' : 'edit_posts';
+		$cap = in_array( $slug, array( 'snf-club-settings', 'snf-club-x-daily' ), true ) ? 'manage_options' : 'edit_posts';
 
 		add_submenu_page(
 			'snf-club',
@@ -975,6 +1023,9 @@ function snf_admin_render_shell_start( $active, $title, $lede, $nav_pages = null
 				if ( 'snf-stripe' === $slug && ! current_user_can( 'manage_woocommerce' ) ) {
 					continue;
 				}
+				if ( 'snf-club-x-daily' === $slug && ! current_user_can( 'manage_options' ) ) {
+					continue;
+				}
 				$href = ( 'snf-club' === $slug )
 					? admin_url( 'index.php' )
 					: admin_url( 'admin.php?page=' . $slug );
@@ -1156,6 +1207,10 @@ function snf_admin_render_overview() {
 				<a class="snf-admin__btn snf-admin__btn--ghost" href="<?php echo esc_url( admin_url( 'edit.php?post_type=snf_circle' ) ); ?>"><?php esc_html_e( 'All circles', 'super-ninety-four' ); ?></a>
 				<a class="snf-admin__btn" href="<?php echo esc_url( admin_url( 'admin.php?page=snf-club-media' ) ); ?>"><?php esc_html_e( 'Media dashboard', 'super-ninety-four' ); ?></a>
 				<a class="snf-admin__btn snf-admin__btn--ghost" href="<?php echo esc_url( admin_url( 'edit.php?post_type=snf_video' ) ); ?>"><?php esc_html_e( 'All videos', 'super-ninety-four' ); ?></a>
+				<a class="snf-admin__btn" href="<?php echo esc_url( admin_url( 'admin.php?page=snf-club-subscribers' ) ); ?>"><?php esc_html_e( 'Subscribers dashboard', 'super-ninety-four' ); ?></a>
+				<?php if ( current_user_can( 'manage_options' ) ) : ?>
+					<a class="snf-admin__btn" href="<?php echo esc_url( admin_url( 'admin.php?page=snf-club-x-daily' ) ); ?>"><?php esc_html_e( 'X Daily Post desk', 'super-ninety-four' ); ?></a>
+				<?php endif; ?>
 				<a class="snf-admin__btn" href="<?php echo esc_url( admin_url( 'admin.php?page=snf-club-rfqs' ) ); ?>"><?php esc_html_e( 'RFQ dashboard', 'super-ninety-four' ); ?></a>
 				<a class="snf-admin__btn snf-admin__btn--ghost" href="<?php echo esc_url( admin_url( 'edit.php?post_type=snf_rfq' ) ); ?>"><?php esc_html_e( 'All RFQs', 'super-ninety-four' ); ?></a>
 				<a class="snf-admin__btn" href="<?php echo esc_url( admin_url( 'admin.php?page=snf-club-addons' ) ); ?>"><?php esc_html_e( 'Addons & upgrades dashboard', 'super-ninety-four' ); ?></a>
@@ -1648,6 +1703,192 @@ function snf_admin_render_media() {
 			</form>
 		</section>
 		<?php endif; ?>
+	</div>
+	<?php
+	snf_admin_render_shell_end();
+}
+
+/**
+ * Count newsletter subscribers captured within the last N days.
+ *
+ * @param int $days Window length in days.
+ * @return int
+ */
+function snf_admin_subscriber_count_since( $days ) {
+	$query = new WP_Query(
+		array(
+			'post_type'      => 'snf_subscriber',
+			'post_status'    => 'publish',
+			'posts_per_page' => 1,
+			'fields'         => 'ids',
+			'no_found_rows'  => false,
+			'date_query'     => array(
+				array(
+					'after'     => gmdate( 'Y-m-d H:i:s', current_time( 'timestamp' ) - absint( $days ) * DAY_IN_SECONDS ),
+					'inclusive' => true,
+				),
+			),
+		)
+	);
+	return (int) $query->found_posts;
+}
+
+/**
+ * Newsletter Subscribers dashboard.
+ */
+function snf_admin_render_subscribers() {
+	if ( ! current_user_can( 'edit_posts' ) ) {
+		return;
+	}
+
+	snf_admin_render_shell_start(
+		'snf-club-subscribers',
+		__( 'Newsletter Subscribers', 'super-ninety-four' ),
+		__( 'Signups from the Video Newsletter page — capture health, recent subscribers, and a one-click CSV export.', 'super-ninety-four' )
+	);
+
+	$total      = snf_admin_count_posts( 'snf_subscriber', 'publish' );
+	$last_30    = snf_admin_subscriber_count_since( 30 );
+	$last_7     = snf_admin_subscriber_count_since( 7 );
+	$notify     = apply_filters( 'snf_newsletter_notify_email', get_option( 'admin_email' ) );
+	$notify_ok  = is_string( $notify ) && is_email( $notify );
+	$newsletter = function_exists( 'snf_get_page_url' ) ? snf_get_page_url( 'newsletter' ) : home_url( '/newsletter/' );
+	$newsletter_page = get_page_by_path( 'newsletter' );
+	$source_ids = get_posts(
+		array(
+			'post_type'      => 'snf_subscriber',
+			'post_status'    => 'publish',
+			'posts_per_page' => -1,
+			'fields'         => 'ids',
+			'no_found_rows'  => true,
+		)
+	);
+	$sources = array();
+	foreach ( $source_ids as $subscriber_id ) {
+		$source = (string) get_post_meta( $subscriber_id, '_snf_newsletter_source', true );
+		if ( $source ) {
+			$sources[ $source ] = true;
+		}
+	}
+
+	$recent = get_posts(
+		array(
+			'post_type'      => 'snf_subscriber',
+			'post_status'    => 'publish',
+			'posts_per_page' => 25,
+			'orderby'        => 'date',
+			'order'          => 'DESC',
+		)
+	);
+	?>
+	<div class="snf-admin__grid snf-admin__grid--stats">
+		<div class="snf-admin__stat">
+			<span class="snf-admin__stat-value"><?php echo esc_html( (string) $total ); ?></span>
+			<span class="snf-admin__stat-label"><?php esc_html_e( 'Total subscribers', 'super-ninety-four' ); ?></span>
+		</div>
+		<div class="snf-admin__stat">
+			<span class="snf-admin__stat-value"><?php echo esc_html( (string) $last_30 ); ?></span>
+			<span class="snf-admin__stat-label"><?php esc_html_e( 'Last 30 days', 'super-ninety-four' ); ?></span>
+		</div>
+		<div class="snf-admin__stat">
+			<span class="snf-admin__stat-value"><?php echo esc_html( (string) $last_7 ); ?></span>
+			<span class="snf-admin__stat-label"><?php esc_html_e( 'Last 7 days', 'super-ninety-four' ); ?></span>
+		</div>
+		<div class="snf-admin__stat">
+			<span class="snf-admin__stat-value"><?php echo esc_html( (string) count( $sources ) ); ?></span>
+			<span class="snf-admin__stat-label"><?php esc_html_e( 'Capture sources', 'super-ninety-four' ); ?></span>
+		</div>
+		<div class="snf-admin__stat">
+			<span class="snf-admin__stat-value"><?php echo $notify_ok ? esc_html__( 'ON', 'super-ninety-four' ) : esc_html__( 'ADMIN', 'super-ninety-four' ); ?></span>
+			<span class="snf-admin__stat-label"><?php esc_html_e( 'Signup notification', 'super-ninety-four' ); ?></span>
+		</div>
+	</div>
+
+	<div class="snf-admin__grid snf-admin__grid--panels">
+		<section class="snf-admin__panel">
+			<h2><?php esc_html_e( 'Quick actions', 'super-ninety-four' ); ?></h2>
+			<p class="snf-admin__panel-desc"><?php esc_html_e( 'Open the capture page, the classic inbox, or download the list.', 'super-ninety-four' ); ?></p>
+			<div class="snf-admin__actions">
+				<a class="snf-admin__btn" href="<?php echo esc_url( $newsletter ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'View newsletter page', 'super-ninety-four' ); ?></a>
+				<a class="snf-admin__btn snf-admin__btn--ghost" href="<?php echo esc_url( admin_url( 'edit.php?post_type=snf_subscriber&snf_classic=1' ) ); ?>"><?php esc_html_e( 'Classic list', 'super-ninety-four' ); ?></a>
+				<?php if ( $newsletter_page ) : ?>
+					<a class="snf-admin__btn snf-admin__btn--ghost" href="<?php echo esc_url( get_edit_post_link( $newsletter_page->ID ) ); ?>"><?php esc_html_e( 'Edit signup form page', 'super-ninety-four' ); ?></a>
+				<?php endif; ?>
+			</div>
+			<form class="snf-admin__actions" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+				<input type="hidden" name="action" value="snf_subscribers_export">
+				<?php wp_nonce_field( 'snf_subscribers_export', 'snf_subscribers_export_nonce' ); ?>
+				<button type="submit" class="snf-admin__btn"><?php esc_html_e( 'Export subscribers as CSV', 'super-ninety-four' ); ?></button>
+			</form>
+		</section>
+
+		<section class="snf-admin__panel">
+			<h2><?php esc_html_e( 'Capture health', 'super-ninety-four' ); ?></h2>
+			<p class="snf-admin__panel-desc"><?php esc_html_e( 'How the newsletter form is wired on the front end.', 'super-ninety-four' ); ?></p>
+			<ul class="snf-admin__list">
+				<li>
+					<span><?php esc_html_e( 'Newsletter page', 'super-ninety-four' ); ?></span>
+					<?php if ( $newsletter_page ) : ?>
+						<a href="<?php echo esc_url( get_permalink( $newsletter_page ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Published', 'super-ninety-four' ); ?></a>
+					<?php else : ?>
+						<span class="snf-admin__pill snf-admin__pill--bad"><?php esc_html_e( 'Missing page', 'super-ninety-four' ); ?></span>
+					<?php endif; ?>
+				</li>
+				<li>
+					<span><?php esc_html_e( 'Notify email', 'super-ninety-four' ); ?></span>
+					<span class="snf-admin__pill <?php echo $notify_ok ? 'snf-admin__pill--ok' : 'snf-admin__pill--warn'; ?>"><?php echo esc_html( $notify_ok ? (string) $notify : __( 'Admin email fallback', 'super-ninety-four' ) ); ?></span>
+				</li>
+				<li>
+					<span><?php esc_html_e( 'Video source', 'super-ninety-four' ); ?></span>
+					<span class="snf-admin__pill"><?php echo esc_html( function_exists( 'snf_newsletter_youtube_url' ) ? (string) snf_newsletter_youtube_url() : '' ); ?></span>
+				</li>
+				<li>
+					<span><?php esc_html_e( 'Spam protection', 'super-ninety-four' ); ?></span>
+					<span class="snf-admin__pill snf-admin__pill--ok"><?php esc_html_e( 'Nonce + honeypot + duplicate check', 'super-ninety-four' ); ?></span>
+				</li>
+			</ul>
+		</section>
+
+		<section class="snf-admin__panel snf-admin__panel--wide">
+			<h2><?php esc_html_e( 'Recent subscribers', 'super-ninety-four' ); ?></h2>
+			<p class="snf-admin__panel-desc"><?php esc_html_e( 'Newest signups first. Names link to the subscriber record in WordPress.', 'super-ninety-four' ); ?></p>
+			<table class="snf-admin__table">
+				<thead>
+					<tr>
+						<th><?php esc_html_e( 'Name', 'super-ninety-four' ); ?></th>
+						<th><?php esc_html_e( 'Email', 'super-ninety-four' ); ?></th>
+						<th><?php esc_html_e( 'Source', 'super-ninety-four' ); ?></th>
+						<th><?php esc_html_e( 'User', 'super-ninety-four' ); ?></th>
+						<th><?php esc_html_e( 'Subscribed', 'super-ninety-four' ); ?></th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php if ( ! $recent ) : ?>
+						<tr><td colspan="5" class="snf-admin__muted"><?php esc_html_e( 'No subscribers yet. New signups from the Newsletter page will appear here.', 'super-ninety-four' ); ?></td></tr>
+					<?php endif; ?>
+					<?php foreach ( $recent as $subscriber ) : ?>
+						<?php
+						$email      = (string) get_post_meta( $subscriber->ID, '_snf_newsletter_email', true );
+						$source     = (string) get_post_meta( $subscriber->ID, '_snf_newsletter_source', true );
+						$user_id    = (int) get_post_meta( $subscriber->ID, '_snf_newsletter_user_id', true );
+						$subscribed = (string) get_post_meta( $subscriber->ID, '_snf_newsletter_subscribed_at', true );
+						$user_label = __( 'Guest', 'super-ninety-four' );
+						if ( $user_id ) {
+							$user = get_userdata( $user_id );
+							$user_label = $user ? $user->display_name : sprintf( '#%d', $user_id );
+						}
+						?>
+						<tr>
+							<td><a href="<?php echo esc_url( get_edit_post_link( $subscriber->ID ) ); ?>"><?php echo esc_html( get_the_title( $subscriber ) ?: $email ); ?></a></td>
+							<td><?php echo $email ? esc_html( $email ) : '—'; ?></td>
+							<td><span class="snf-admin__pill"><?php echo esc_html( $source ?: '—' ); ?></span></td>
+							<td><?php echo esc_html( $user_label ); ?></td>
+							<td><?php echo esc_html( $subscribed ?: get_the_date( '', $subscriber ) ); ?></td>
+						</tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
+		</section>
 	</div>
 	<?php
 	snf_admin_render_shell_end();
