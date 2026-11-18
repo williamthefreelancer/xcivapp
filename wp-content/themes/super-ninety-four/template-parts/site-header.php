@@ -10,9 +10,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 $snf_primary_items = snf_primary_menu_items();
-$snf_is_member     = is_user_logged_in();
+$snf_logged_in     = is_user_logged_in();
+$snf_is_member     = function_exists( 'snf_user_can_access_member_areas' ) && snf_user_can_access_member_areas();
 ?>
-<header class="snf-header snf-header--with-nav<?php echo $snf_is_member ? ' snf-header--member' : ' snf-header--guest'; ?>">
+<header class="snf-header snf-header--with-nav<?php echo $snf_logged_in ? ' snf-header--member' : ' snf-header--guest'; ?>">
 	<div class="snf-container snf-header__container">
 		<a class="snf-header__logo" href="<?php echo esc_url( home_url( '/' ) ); ?>">
 			<img
@@ -114,14 +115,14 @@ $snf_is_member     = is_user_logged_in();
 					</a>
 				<?php endif; ?>
 			</div>
-			<?php if ( ! $snf_is_member ) : ?>
+			<?php if ( ! $snf_logged_in ) : ?>
 				<a class="snf-header__apply" href="<?php echo esc_url( snf_get_page_url( 'apply' ) ); ?>">
 					<?php esc_html_e( 'Apply', 'super-ninety-four' ); ?>
 				</a>
 			<?php endif; ?>
 
-			<div class="snf-account<?php echo $snf_is_member ? '' : ' snf-account--login'; ?>">
-				<?php if ( $snf_is_member ) : ?>
+			<div class="snf-account<?php echo $snf_logged_in ? '' : ' snf-account--login'; ?>">
+				<?php if ( $snf_logged_in ) : ?>
 					<button
 						class="snf-account__toggle"
 						type="button"

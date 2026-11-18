@@ -21,6 +21,7 @@ wp-content/plugins/woocommerce/
 wp-content/plugins/sureforms/
 wp-content/plugins/surecontact/
 wp-content/plugins/suretriggers/
+wp-content/plugins/buddypress/
 
 # Dependencies / local tooling
 /vendor/

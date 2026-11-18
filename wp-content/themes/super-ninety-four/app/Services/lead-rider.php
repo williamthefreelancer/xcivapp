@@ -134,7 +134,7 @@ function snf_get_expo_js_bootstrap( $audience = 'members' ) {
 		? snf_media_get_ice_servers()
 		: array( array( 'urls' => 'stun:stun.l.google.com:19302' ) );
 
-	return array(
+	$boot = array(
 		'audience'       => $audience,
 		'mapboxToken'    => snf_get_mapbox_token(),
 		'leadRiderName'  => 'William A. Johnson',
@@ -163,6 +163,14 @@ function snf_get_expo_js_bootstrap( $audience = 'members' ) {
 			'walkieHint'    => __( 'Walkie works on iPhone, iPad, and Android over HTTPS.', 'super-ninety-four' ),
 		),
 	);
+
+	/**
+	 * Filter Expo / lead-rider JS bootstrap (B2B RFQ fields attach here).
+	 *
+	 * @param array  $boot     Bootstrap payload.
+	 * @param string $audience Audience key.
+	 */
+	return apply_filters( 'snf_expo_js_bootstrap', $boot, $audience );
 }
 
 /**

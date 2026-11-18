@@ -152,9 +152,16 @@ jobs:
             "cd '${remote_wp}' && \
              if command -v wp >/dev/null 2>&1; then \
                wp plugin activate snf-payments --quiet || true; \
+               wp plugin deactivate buddypress --quiet || true; \
+               wp plugin delete buddypress --quiet || true; \
+               wp plugin deactivate bp-classic --quiet || true; \
+               wp plugin delete bp-classic --quiet || true; \
                wp option update woocommerce_cart_checkout_blocks_enabled no --quiet || true; \
+               wp theme activate super-ninety-four --quiet || true; \
                wp rewrite flush --quiet || true; \
-               echo 'wp-cli: activated snf-payments / classic cart-checkout'; \
+               wp eval-file wp-content/themes/super-ninety-four/bin/snf-production-bootstrap.php || true; \
+               wp eval-file wp-content/themes/super-ninety-four/bin/snf-verify-club-stack.php || true; \
+               echo 'wp-cli: snf-payments on, BuddyPress removed, club stack bootstrapped'; \
              else \
-               echo 'wp-cli not found; activate snf-payments manually in WP Admin'; \
+               echo 'wp-cli not found; activate snf-payments and remove BuddyPress manually in WP Admin'; \
              fi"

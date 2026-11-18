@@ -3,7 +3,7 @@ Contributors: superninetyfour
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 8.3
-Stable tag: 2.32.0
+Stable tag: 2.33.0
 License: GNU General Public License v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,9 +12,9 @@ Custom Super Ninety Four theme for events, service inquiries, memberships, and r
 == Description ==
 
 Homepage search for events and services, Lifestyle Concierge workshop landing,
-community dashboard listings, WooCommerce account hub, BuddyPress profile shell,
-Messages desk, Stripe Checkout + Supabase catalog bridge, and Expo Marketplace
-lead-rider map.
+community dashboard listings, WooCommerce account hub (BuddyPress-free),
+Messages desk + peer DMs, private circles, Stripe Checkout + Supabase catalog
+bridge, Expo Marketplace lead-rider map, and B2B RFQ intake.
 
 Build asynchronous behaviors with jQuery and taxonomies while extending the
 WordPress REST API functionality to turn this theme into the web app I want it
@@ -24,6 +24,11 @@ the WooCommerce sales funnel via the theme funnel API (leads, quote cart,
 workshop interest, reciprocal / apply deep-links).
 
 == Changelog ==
+
+= 2.33.0 =
+* BuddyPress-free club stack: community circles, peer DM REST, B2B RFQ
+* Primary + Account menus wired to Expo, Events, Community, Messages
+* Harden messages REST to member roles; deploy deactivates BuddyPress
 
 = 2.32.0 =
 * Align theme headers: Requires PHP 8.3, License + License URI in style.css

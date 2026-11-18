@@ -28,6 +28,8 @@ final class Bootstrap {
 		'access-control.php',
 		'plugin-integrations.php',
 		'messages.php',
+		'community.php',
+		'b2b-marketplace.php',
 		'reciprocal.php',
 		'membership-subscriptions.php',
 		'supabase-payments.php',
@@ -44,6 +46,7 @@ final class Bootstrap {
 		'service-quotes.php',
 		'schema.php',
 		'performance.php',
+		'theme-menus.php',
 	);
 
 	/**

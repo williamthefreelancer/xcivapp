@@ -73,6 +73,14 @@ async function boot() {
     loaders.push(import('./islands/messages.js').then((m) => m.initMessages()));
   }
 
+  if (document.getElementById('snf-community') && window.snfCommunity) {
+    loaders.push(import('./islands/community.js').then((m) => m.initCommunity()));
+  }
+
+  if (window.snfExpo?.rfqUrl || window.snfMarketplace?.rfqUrl) {
+    loaders.push(import('./islands/rfq.js').then((m) => m.initMarketplaceRfq()));
+  }
+
   if (document.querySelector('.snf-quote')) {
     loaders.push(
       import('./islands/service-quote.js').then((m) => m.initServiceQuote())

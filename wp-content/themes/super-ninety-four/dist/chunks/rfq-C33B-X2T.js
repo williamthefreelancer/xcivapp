@@ -1,0 +1,11 @@
+function c(){const t=window.snfExpo||window.snfMarketplace;if(!t||!t.rfqUrl)return;let e=document.getElementById("snf-marketplace-rfq");if(!e){const s=document.querySelector(".snf-expo__intro")||document.querySelector("#snf-marketplace-results")||document.querySelector(".snf-expo");if(!s)return;const a=t.rfqI18n||{};e=document.createElement("form"),e.id="snf-marketplace-rfq",e.className="snf-rfq",e.setAttribute("novalidate","novalidate"),e.innerHTML=`
+      <h2 class="snf-rfq__title">${o(a.title||"Request a quote")}</h2>
+      <div class="snf-rfq__grid">
+        <label class="snf-rfq__field"><span>Name</span><input name="name" type="text" required autocomplete="name"></label>
+        <label class="snf-rfq__field"><span>Email</span><input name="email" type="email" required autocomplete="email"></label>
+        <label class="snf-rfq__field snf-rfq__field--full"><span>Company</span><input name="company" type="text" autocomplete="organization"></label>
+        <label class="snf-rfq__field snf-rfq__field--full"><span>Message</span><textarea name="message" rows="4" required></textarea></label>
+      </div>
+      <p class="snf-rfq__status" id="snf-rfq-status" role="status" hidden></p>
+      <button class="snf-rfq__submit" type="submit">${o(a.submit||"Send RFQ")}</button>
+    `,s.appendChild(e)}const n=e.querySelector("#snf-rfq-status")||e.querySelector(".snf-rfq__status"),l=t.rfqI18n||{};e.addEventListener("submit",async s=>{s.preventDefault();const a=new FormData(e),f={name:String(a.get("name")||"").trim(),email:String(a.get("email")||"").trim(),company:String(a.get("company")||"").trim(),message:String(a.get("message")||"").trim(),audience:t.audience||"public",productId:0};n&&(n.hidden=!1,n.textContent="…");try{const r=await fetch(t.rfqUrl,{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json","X-WP-Nonce":t.rfqNonce||t.nonce||""},body:JSON.stringify(f)}),i=await r.json().catch(()=>({}));if(!r.ok)throw new Error(i&&i.message||l.error||"Error");n&&(n.textContent=i.message||l.success||"Sent"),e.reset()}catch(r){n&&(n.textContent=r.message||l.error||"Error")}})}function o(t){return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}export{c as initMarketplaceRfq};

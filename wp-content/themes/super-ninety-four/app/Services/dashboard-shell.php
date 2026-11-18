@@ -1,6 +1,6 @@
 <?php
 /**
- * Hybrid member dashboard: sidebar nav, Woo sliders, BP/Woo destinations.
+ * Hybrid member dashboard: sidebar nav, Woo sliders, theme destinations (no BuddyPress required).
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -41,7 +41,7 @@ function snf_get_woo_account_url( $endpoint = '' ) {
 }
 
 /**
- * Messages hub URL — always the theme Messages page (BuddyPress-backed UI stays here).
+ * Messages hub URL — theme Messages page (BuddyPress not required).
  *
  * @return string
  */
@@ -50,23 +50,13 @@ function snf_get_bp_messages_url() {
 }
 
 /**
- * BuddyPress profile URL for the current (or given) user.
+ * Member profile URL — Woo edit-account (BuddyPress optional legacy only).
  *
  * @param int $user_id Optional user ID.
  * @return string
  */
 function snf_get_bp_profile_url( $user_id = 0 ) {
-	$user_id = $user_id ? (int) $user_id : get_current_user_id();
-	$ctx     = snf_get_hub_member_context();
-
-	if ( $user_id && ! empty( $ctx['profile_url'] ) && (int) $ctx['user_id'] === $user_id ) {
-		return $ctx['profile_url'];
-	}
-
-	if ( snf_buddypress_active() && $user_id && function_exists( 'bp_members_get_user_url' ) ) {
-		return bp_members_get_user_url( $user_id );
-	}
-
+	unset( $user_id );
 	return snf_get_woo_account_url( 'edit-account' );
 }
 
@@ -84,6 +74,18 @@ function snf_get_account_hub_nav() {
 			'label' => __( 'Dashboard', 'super-ninety-four' ),
 			'url'   => snf_get_dashboard_url(),
 			'group' => 'home',
+		),
+		array(
+			'slug'  => 'expo',
+			'label' => __( 'Expo', 'super-ninety-four' ),
+			'url'   => snf_get_page_url( 'expo' ),
+			'group' => 'catalog',
+		),
+		array(
+			'slug'  => 'events',
+			'label' => __( 'Select Events', 'super-ninety-four' ),
+			'url'   => snf_get_page_url( 'select-events-by-members' ),
+			'group' => 'catalog',
 		),
 		array(
 			'slug'  => 'listings',
@@ -114,6 +116,12 @@ function snf_get_account_hub_nav() {
 			'label' => __( 'Billing', 'super-ninety-four' ),
 			'url'   => snf_get_woo_account_url( 'edit-address' ),
 			'group' => 'commerce',
+		),
+		array(
+			'slug'  => 'community',
+			'label' => __( 'Community', 'super-ninety-four' ),
+			'url'   => snf_get_page_url( 'community' ),
+			'group' => 'social',
 		),
 		array(
 			'slug'  => 'messages',
@@ -151,6 +159,18 @@ function snf_get_account_hub_nav() {
 function snf_get_account_nav_current_slug() {
 	if ( function_exists( 'is_shop' ) && ( is_shop() || is_product_taxonomy() ) ) {
 		return 'listings';
+	}
+
+	if ( is_page( 'expo' ) || ( function_exists( 'snf_is_expo_marketplace_page' ) && snf_is_expo_marketplace_page() ) ) {
+		return 'expo';
+	}
+
+	if ( is_page( 'select-events-by-members' ) || is_page( 'select-events-by-non-members' ) ) {
+		return 'events';
+	}
+
+	if ( is_page( 'community' ) || ( function_exists( 'snf_is_community_page' ) && snf_is_community_page() ) ) {
+		return 'community';
 	}
 
 	if ( function_exists( 'is_account_page' ) && is_account_page() ) {

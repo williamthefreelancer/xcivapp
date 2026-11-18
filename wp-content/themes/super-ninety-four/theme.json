@@ -196,6 +196,11 @@
       "postTypes": ["page"]
     },
     {
+      "name": "community",
+      "title": "Community Hub",
+      "postTypes": ["page"]
+    },
+    {
       "name": "public-content",
       "title": "Public Content",
       "postTypes": ["page"]

@@ -72,6 +72,10 @@ add_action( 'template_redirect', 'snf_guard_sureforms_host_pages_remain_public',
  * - snf_workshop_reservation_created   (reservation_id, event_id, email, payload)
  * - snf_service_quote_added_to_cart    (product_id, product_slug, quantity, user_id)
  * - snf_stripe_webhook_handled         (event, result) — already in inc/stripe.php
+ * - snf_marketplace_rfq_submitted      (rfq_id, payload)
+ * - snf_circle_joined / snf_circle_left (circle_id, user_id)
+ * - snf_messages_sent                  (thread_id, user_id, payload)
+ * - snf_membership_activated           (user_id, plan_slug, args)
  *
  * Apply / workshop / quote / reciprocal / member-login stay theme PHP — do not
  * replace them with SureForms. SureForms belongs on blank-canvas marketing pages.
@@ -84,6 +88,11 @@ function snf_get_ottokit_action_catalog() {
 		'snf_workshop_reservation_created'  => 'Fired after a Lifestyle Concierge workshop seat reservation is stored.',
 		'snf_service_quote_added_to_cart'   => 'Fired when a service-quote product is added to the WooCommerce cart.',
 		'snf_stripe_webhook_handled'        => 'Fired after a verified Stripe webhook is processed.',
+		'snf_marketplace_rfq_submitted'     => 'Fired when an Expo / marketplace RFQ is stored.',
+		'snf_circle_joined'                 => 'Fired when a member joins a private circle.',
+		'snf_circle_left'                   => 'Fired when a member leaves a private circle.',
+		'snf_messages_sent'                 => 'Fired after a member message is stored.',
+		'snf_membership_activated'          => 'Fired when membership activates and assigns club role.',
 	);
 }
 

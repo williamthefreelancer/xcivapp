@@ -71,10 +71,12 @@ function snf_get_protected_page_slugs() {
 	$slugs = array(
 		'billing-details',
 		'messages',
+		'community',
+		'select-events-by-members',
+		// Legacy BuddyPress directory slugs (if plugin pages still exist).
 		'members',
 		'activity',
 		'groups',
-		'select-events-by-members',
 	);
 
 	if ( function_exists( 'wc_get_page_id' ) ) {
@@ -103,9 +105,11 @@ function snf_get_protected_page_slugs() {
 function snf_get_protected_page_templates() {
 	$templates = array(
 		'messages',
+		'community',
 		'billing-details',
 		'woocommerce-account',
 		'page-templates/messages.php',
+		'page-templates/community.php',
 		'page-templates/billing-details.php',
 		'page-templates/woocommerce-account.php',
 	);

@@ -133,6 +133,7 @@ final class Assets {
 			'page-templates/member-login.php',
 			'page-templates/apply.php',
 			'page-templates/messages.php',
+			'page-templates/community.php',
 			'page-templates/public-content.php',
 			'page-templates/under-consideration.php',
 		);
@@ -141,6 +142,7 @@ final class Assets {
 			'member-login',
 			'apply',
 			'messages',
+			'community',
 			'inquiries',
 			'under-consideration',
 		);
@@ -172,6 +174,11 @@ final class Assets {
 		$is_messages = snf_is_page_template( 'page-templates/messages.php' ) || is_page( 'messages' );
 		if ( $is_messages && function_exists( 'snf_messages_get_bootstrap' ) ) {
 			wp_localize_script( 'snf-main', 'snfMessages', snf_messages_get_bootstrap() );
+		}
+
+		$is_community = snf_is_page_template( 'page-templates/community.php' ) || is_page( 'community' );
+		if ( $is_community && function_exists( 'snf_community_get_bootstrap' ) ) {
+			wp_localize_script( 'snf-main', 'snfCommunity', snf_community_get_bootstrap() );
 		}
 
 		$uses_media       = function_exists( 'snf_is_media_library_request' ) && snf_is_media_library_request();

@@ -578,7 +578,7 @@ function snf_get_marketplace_js_bootstrap() {
 		)
 	);
 
-	return array(
+	$boot = array(
 		'restUrl'   => esc_url_raw( rest_url( 'snf/v1/marketplace' ) ),
 		'nonce'     => wp_create_nonce( 'wp_rest' ),
 		'shopUrl'   => $payload['shopUrl'],
@@ -596,6 +596,13 @@ function snf_get_marketplace_js_bootstrap() {
 			'viewListing'  => __( 'View listing', 'super-ninety-four' ),
 		),
 	);
+
+	/**
+	 * Filter marketplace JS bootstrap (B2B RFQ fields attach here).
+	 *
+	 * @param array $boot Bootstrap payload.
+	 */
+	return apply_filters( 'snf_marketplace_js_bootstrap', $boot );
 }
 
 /**

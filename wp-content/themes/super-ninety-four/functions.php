@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'SNF_VERSION', '2.32.0' );
+define( 'SNF_VERSION', '2.33.0' );
 
 $snf_autoload = get_template_directory() . '/vendor/autoload.php';
 if ( file_exists( $snf_autoload ) ) {
@@ -137,6 +137,10 @@ function snf_get_site_pages() {
 		'expo' => array(
 			'title'    => 'Expo',
 			'template' => 'expo-marketplace',
+		),
+		'community' => array(
+			'title'    => 'Community',
+			'template' => 'community',
 		),
 		'privacy-policy' => array(
 			'title'    => 'Privacy Policy',
@@ -763,11 +767,13 @@ function snf_get_service_inquiry( $slug = '' ) {
 }
 
 /**
- * Center header navigation for logged-out visitors.
+ * Center header navigation (audience-aware; BuddyPress-free).
  *
  * @return array<int, array<string, mixed>>
  */
 function snf_primary_menu_items() {
+	$is_member = function_exists( 'snf_user_can_access_member_areas' ) && snf_user_can_access_member_areas();
+
 	$inquiry_children = array(
 		array(
 			'type'    => 'heading',
@@ -791,23 +797,33 @@ function snf_primary_menu_items() {
 		}
 	}
 
-	$workshop_url = snf_get_workshop_landing_url();
+	$events_url = $is_member
+		? snf_get_page_url( 'select-events-by-members' )
+		: snf_get_page_url( 'select-events-by-non-members' );
+	$expo_url   = snf_get_page_url( 'expo' );
 
-	return array(
+	$items = array(
+		array(
+			'type'    => 'link',
+			'label'   => __( 'Expo', 'super-ninety-four' ),
+			'url'     => $expo_url,
+			'current' => is_page( 'expo' )
+				|| ( function_exists( 'snf_is_expo_marketplace_page' ) && snf_is_expo_marketplace_page() ),
+		),
+		array(
+			'type'    => 'link',
+			'label'   => __( 'Events', 'super-ninety-four' ),
+			'url'     => $events_url,
+			'current' => is_page( 'select-events-by-members' )
+				|| is_page( 'select-events-by-non-members' )
+				|| ( function_exists( 'snf_url_matches_request' ) && snf_url_matches_request( $events_url ) ),
+		),
 		array(
 			'type'     => 'dropdown',
 			'label'    => __( 'Inquiries', 'super-ninety-four' ),
 			'url'      => snf_get_page_url( 'inquiries' ),
 			'current'  => is_page( 'inquiries' ) || snf_primary_menu_has_current_child( $inquiry_children ),
 			'children' => $inquiry_children,
-		),
-		array(
-			'type'    => 'link',
-			'label'   => __( 'Events', 'super-ninety-four' ),
-			'url'     => $workshop_url,
-			'current' => function_exists( 'snf_url_matches_request' )
-				? snf_url_matches_request( $workshop_url )
-				: false,
 		),
 		array(
 			'type'    => 'link',
@@ -837,6 +853,29 @@ function snf_primary_menu_items() {
 			'current' => is_page( 'newsletter' ),
 		),
 	);
+
+	if ( $is_member ) {
+		array_splice(
+			$items,
+			2,
+			0,
+			array(
+				array(
+					'type'    => 'link',
+					'label'   => __( 'Community', 'super-ninety-four' ),
+					'url'     => snf_get_page_url( 'community' ),
+					'current' => is_page( 'community' ),
+				),
+			)
+		);
+	}
+
+	/**
+	 * Filter primary header menu items.
+	 *
+	 * @param array $items Menu items.
+	 */
+	return apply_filters( 'snf_primary_menu_items', $items );
 }
 
 /**

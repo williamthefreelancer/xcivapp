@@ -40,6 +40,12 @@
       "_runtime-core.esm-bundler-b0Zs5vMb.js"
     ]
   },
+  "resources/js/islands/community.js": {
+    "file": "chunks/community-H8-UjqnZ.js",
+    "name": "community",
+    "src": "resources/js/islands/community.js",
+    "isDynamicEntry": true
+  },
   "resources/js/islands/dashboard.js": {
     "file": "chunks/dashboard-Cffvo1d3.js",
     "name": "dashboard",
@@ -85,6 +91,12 @@
     "src": "resources/js/islands/messages.js",
     "isDynamicEntry": true
   },
+  "resources/js/islands/rfq.js": {
+    "file": "chunks/rfq-C33B-X2T.js",
+    "name": "rfq",
+    "src": "resources/js/islands/rfq.js",
+    "isDynamicEntry": true
+  },
   "resources/js/islands/service-quote.js": {
     "file": "chunks/service-quote-pGWJwNXZ.js",
     "name": "service-quote",
@@ -115,6 +127,8 @@
       "resources/js/islands/dashboard.js",
       "resources/js/islands/hub.js",
       "resources/js/islands/messages.js",
+      "resources/js/islands/community.js",
+      "resources/js/islands/rfq.js",
       "resources/js/islands/service-quote.js",
       "resources/js/islands/workshop.js",
       "resources/js/islands/event-single.js"

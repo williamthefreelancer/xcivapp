@@ -37,12 +37,9 @@ function snf_get_hub_member_context() {
 		}
 	}
 
-	$profile_url = home_url( '/' );
-	if ( snf_buddypress_active() && $user_id && function_exists( 'bp_members_get_user_url' ) ) {
-		$profile_url = bp_members_get_user_url( $user_id );
-	} elseif ( snf_buddypress_active() && $user_id && function_exists( 'bp_core_get_user_domain' ) ) {
-		$profile_url = bp_core_get_user_domain( $user_id );
-	}
+	$profile_url = function_exists( 'snf_get_woo_account_url' )
+		? snf_get_woo_account_url( 'edit-account' )
+		: home_url( '/my-account/edit-account/' );
 
 	$membership_label = __( 'Guest preview', 'super-ninety-four' );
 	$status_label     = $user_id ? __( 'Signed in', 'super-ninety-four' ) : __( 'Preview', 'super-ninety-four' );

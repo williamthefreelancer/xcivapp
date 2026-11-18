@@ -1,7 +1,7 @@
 <?php
 /**
  * Live member messaging (Instagram-style inbox).
- * BuddyPress-ready: uses custom tables until BP Messages is present.
+ * Theme-native custom tables — BuddyPress is not required.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -585,7 +585,7 @@ function snf_messages_send( $thread_id, $user_id, $body ) {
 }
 
 /**
- * REST permission: logged-in members only.
+ * REST permission: club member-area roles only (not applicants).
  *
  * @return bool|WP_Error
  */
@@ -593,7 +593,142 @@ function snf_messages_rest_can_access() {
 	if ( ! is_user_logged_in() ) {
 		return new WP_Error( 'snf_auth', __( 'Sign in to use messages.', 'super-ninety-four' ), array( 'status' => 401 ) );
 	}
+	if ( ! function_exists( 'snf_user_can_access_member_areas' ) || ! snf_user_can_access_member_areas() ) {
+		return new WP_Error( 'snf_forbidden', __( 'Messages are for club members.', 'super-ninety-four' ), array( 'status' => 403 ) );
+	}
 	return true;
+}
+
+/**
+ * Get or create a peer DM thread between two members.
+ *
+ * @param int $user_a User ID.
+ * @param int $user_b User ID.
+ * @return int|WP_Error Thread ID.
+ */
+function snf_messages_get_or_create_peer_thread( $user_a, $user_b ) {
+	$user_a = absint( $user_a );
+	$user_b = absint( $user_b );
+
+	if ( ! $user_a || ! $user_b || $user_a === $user_b ) {
+		return new WP_Error( 'snf_peer_invalid', __( 'Choose another member.', 'super-ninety-four' ), array( 'status' => 400 ) );
+	}
+
+	$a = get_userdata( $user_a );
+	$b = get_userdata( $user_b );
+	if ( ! $a || ! $b ) {
+		return new WP_Error( 'snf_peer_missing', __( 'Member not found.', 'super-ninety-four' ), array( 'status' => 404 ) );
+	}
+
+	$low  = min( $user_a, $user_b );
+	$high = max( $user_a, $user_b );
+	$slug = 'peer-' . $low . '-' . $high;
+
+	global $wpdb;
+	$threads_table = $wpdb->prefix . 'snf_message_threads';
+	$parts_table   = $wpdb->prefix . 'snf_message_participants';
+	$now           = current_time( 'mysql' );
+
+	$thread_id = (int) $wpdb->get_var(
+		$wpdb->prepare(
+			"SELECT id FROM {$threads_table} WHERE slug = %s AND is_system = 0 LIMIT 1",
+			$slug
+		)
+	);
+
+	if ( $thread_id ) {
+		foreach ( array( $user_a, $user_b ) as $uid ) {
+			$exists = (int) $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT id FROM {$parts_table} WHERE thread_id = %d AND user_id = %d LIMIT 1",
+					$thread_id,
+					$uid
+				)
+			);
+			if ( ! $exists ) {
+				$wpdb->insert(
+					$parts_table,
+					array(
+						'thread_id'    => $thread_id,
+						'user_id'      => $uid,
+						'last_read_id' => 0,
+						'joined_at'    => $now,
+					),
+					array( '%d', '%d', '%d', '%s' )
+				);
+			}
+		}
+		return $thread_id;
+	}
+
+	$other_name = ( $user_a === get_current_user_id() ) ? $b->display_name : $a->display_name;
+	$title      = $other_name ? $other_name : __( 'Direct message', 'super-ninety-four' );
+
+	$wpdb->insert(
+		$threads_table,
+		array(
+			'slug'        => $slug,
+			'title'       => $title,
+			'subtitle'    => __( 'Private member message', 'super-ninety-four' ),
+			'avatar_kind' => 'peer',
+			'is_system'   => 0,
+			'updated_at'  => $now,
+			'created_at'  => $now,
+		),
+		array( '%s', '%s', '%s', '%s', '%d', '%s', '%s' )
+	);
+
+	$thread_id = (int) $wpdb->insert_id;
+	if ( ! $thread_id ) {
+		return new WP_Error( 'snf_db', __( 'Could not open conversation.', 'super-ninety-four' ), array( 'status' => 500 ) );
+	}
+
+	foreach ( array( $user_a, $user_b ) as $uid ) {
+		$wpdb->insert(
+			$parts_table,
+			array(
+				'thread_id'    => $thread_id,
+				'user_id'      => $uid,
+				'last_read_id' => 0,
+				'joined_at'    => $now,
+			),
+			array( '%d', '%d', '%d', '%s' )
+		);
+	}
+
+	return $thread_id;
+}
+
+/**
+ * REST: open or resume a peer DM.
+ *
+ * @param WP_REST_Request $request Request.
+ * @return WP_REST_Response|WP_Error
+ */
+function snf_messages_rest_open_peer( WP_REST_Request $request ) {
+	$peer_id = absint( $request->get_param( 'userId' ) );
+	$user_id = get_current_user_id();
+	$body    = trim( (string) $request->get_param( 'body' ) );
+
+	$thread_id = snf_messages_get_or_create_peer_thread( $user_id, $peer_id );
+	if ( is_wp_error( $thread_id ) ) {
+		return $thread_id;
+	}
+
+	$payload = array(
+		'threadId' => $thread_id,
+		'threads'  => snf_messages_get_threads_for_user( $user_id ),
+	);
+
+	if ( '' !== $body ) {
+		$sent = snf_messages_send( $thread_id, $user_id, $body );
+		if ( is_wp_error( $sent ) ) {
+			return $sent;
+		}
+		$payload['send'] = $sent;
+	}
+
+	return rest_ensure_response( $payload );
 }
 
 /**
@@ -627,6 +762,28 @@ function snf_messages_register_rest_routes() {
 					'type'              => 'integer',
 					'default'           => 0,
 					'sanitize_callback' => 'absint',
+				),
+			),
+		)
+	);
+
+	register_rest_route(
+		'snf/v1',
+		'/messages/peer',
+		array(
+			'methods'             => WP_REST_Server::CREATABLE,
+			'callback'            => 'snf_messages_rest_open_peer',
+			'permission_callback' => 'snf_messages_rest_can_access',
+			'args'                => array(
+				'userId' => array(
+					'type'              => 'integer',
+					'required'          => true,
+					'sanitize_callback' => 'absint',
+				),
+				'body'   => array(
+					'type'              => 'string',
+					'default'           => '',
+					'sanitize_callback' => 'sanitize_textarea_field',
 				),
 			),
 		)
@@ -777,17 +934,21 @@ function snf_messages_get_bootstrap() {
 		$threads = snf_messages_get_threads_for_user( $user_id );
 	}
 
+	$can_member = $user_id && function_exists( 'snf_user_can_access_member_areas' ) && snf_user_can_access_member_areas();
+
 	return array(
-		'restUrl'   => esc_url_raw( untrailingslashit( rest_url( 'snf/v1/messages' ) ) ),
-		'nonce'     => wp_create_nonce( 'wp_rest' ),
-		'loggedIn'  => (bool) $user_id,
-		'loginUrl'  => snf_get_page_url( 'member-login' ),
-		'userId'    => $user_id,
-		'userName'  => $member['name'],
-		'userAvatar'=> $member['avatar'],
-		'pollMs'    => 2500,
-		'threads'   => $threads,
-		'i18n'      => array(
+		'restUrl'     => esc_url_raw( untrailingslashit( rest_url( 'snf/v1/messages' ) ) ),
+		'nonce'       => wp_create_nonce( 'wp_rest' ),
+		'loggedIn'    => (bool) $user_id,
+		'canMember'   => (bool) $can_member,
+		'loginUrl'    => snf_get_page_url( 'member-login' ),
+		'communityUrl'=> snf_get_page_url( 'community' ),
+		'userId'      => $user_id,
+		'userName'    => $member['name'],
+		'userAvatar'  => $member['avatar'],
+		'pollMs'      => 2500,
+		'threads'     => $can_member ? $threads : array(),
+		'i18n'        => array(
 			'placeholder'   => __( 'Message…', 'super-ninety-four' ),
 			'send'          => __( 'Send', 'super-ninety-four' ),
 			'emptyThread'   => __( 'No messages yet. Say hello.', 'super-ninety-four' ),
@@ -799,6 +960,7 @@ function snf_messages_get_bootstrap() {
 			'search'        => __( 'Search messages', 'super-ninety-four' ),
 			'inbox'         => __( 'Inbox', 'super-ninety-four' ),
 			'newMessage'    => __( 'New message', 'super-ninety-four' ),
+			'peerHint'      => __( 'Peer DMs use member user IDs via REST /messages/peer.', 'super-ninety-four' ),
 		),
 	);
 }

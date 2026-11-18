@@ -133,14 +133,34 @@ Use the installed plugins — do not rebuild these in the theme:
 
 Club roles (`snf_member`, `snf_reciprocal`, `snf_staff`, `snf_applicant`) and member-area redirects live in the theme (`app/Services/access-control.php`). Content Control and Code Snippets are not required.
 
+**BuddyPress is not required.** Community, messages, Expo marketplace, and membership gating are theme-native (`community.php`, `messages.php`, `b2b-marketplace.php`, `memberships.php`). Deploy deactivates BuddyPress when WP-CLI is available.
+
 Transactional Apply / workshop checkout / Woo cart stay theme-owned; SureForms stays on blank-canvas marketing pages.
+
+### Club hubs (custom, no BuddyPress)
+
+| Surface | URL | Gate |
+|---------|-----|------|
+| Expo marketplace + RFQ | `/expo/` | Public; catalog/RFQ audience-aware |
+| Select events (members) | `/select-events-by-members/` | Member roles |
+| Select events (public) | `/select-events-by-non-members/` | Public |
+| Community circles | `/community/` | Member roles |
+| Messages (desk + peer DM REST) | `/messages/` | Member roles |
+| Membership / tickets | Woo My Account | Member roles |
+
+Verify locally or on production:
+
+```bash
+wp eval-file wp-content/themes/super-ninety-four/bin/snf-verify-club-stack.php
+```
 
 ### After deploy
 
 1. Confirm `SNF_STRIPE_*` (and optional Supabase/Mapbox / `SNF_FUNNEL_WEBHOOK_SECRET`) exist in DreamHost `wp-config.php`.
-2. Confirm theme `vendor/autoload.php` exists (or run `composer install` on the theme path).
-3. Visit **Settings → Permalinks** and Save once (or load any page so the theme flushes Woo endpoints).
-4. Smoke-test Apply → Checkout, `/contact/` (SureForms), **WooCommerce → SNF Funnel** mapping, and a member page (`/messages/`, `/my-account/`).
+2. Confirm theme `vendor/autoload.php` and `dist/main.js` / `dist/main.css` exist (CI builds them).
+3. Confirm **SUPER NINETY FOUR Payments** is active and **BuddyPress** is inactive.
+4. Visit **Settings → Permalinks** and Save once (or rely on deploy `wp rewrite flush`).
+5. Smoke-test Apply → Checkout, `/expo/` RFQ, `/community/` join, `/messages/`, `/my-account/membership/`, and Select Events.
 
 ### Videos & Audio library
 
