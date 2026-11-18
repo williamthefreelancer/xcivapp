@@ -22,6 +22,8 @@ wp-content/plugins/sureforms/
 wp-content/plugins/surecontact/
 wp-content/plugins/suretriggers/
 wp-content/plugins/buddypress/
+# Removed from the stack — keep ignore so reinstalls stay out of git
+# sureforms + suretriggers (OttoKit) deleted on deploy
 
 # Dependencies / local tooling
 /vendor/

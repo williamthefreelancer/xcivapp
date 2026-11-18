@@ -239,7 +239,7 @@ function snf_request_requires_member_access() {
 		return false;
 	}
 
-	if ( function_exists( 'snf_is_sureforms_host_page' ) && snf_is_sureforms_host_page() ) {
+	if ( function_exists( 'snf_is_marketing_host_page' ) && snf_is_marketing_host_page() ) {
 		return false;
 	}
 

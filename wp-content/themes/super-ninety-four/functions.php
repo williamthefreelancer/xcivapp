@@ -351,7 +351,7 @@ function snf_get_blank_canvas_starter_content( $slug ) {
 		return <<<'HTML'
 <!-- wp:snf/page-hero {"title":"Contact","lede":"Reach SUPER NINETY FOUR - membership, events, and concierge questions."} /-->
 
-<!-- wp:snf/form-slot {"heading":"Send a message","hint":"Insert a SureForms form block here."} -->
+<!-- wp:snf/form-slot {"heading":"Send a message","hint":"Add a form or shortcode block here."} -->
 <!-- wp:paragraph -->
 <p></p>
 <!-- /wp:paragraph -->
@@ -365,7 +365,7 @@ HTML;
 		return <<<'HTML'
 <!-- wp:snf/page-hero {"title":"Newsletter","lede":"Updates on Expo gatherings, reciprocal clubs, and member events."} /-->
 
-<!-- wp:snf/form-slot {"heading":"Subscribe","hint":"Insert a SureForms form block here."} -->
+<!-- wp:snf/form-slot {"heading":"Subscribe","hint":"Add a form or shortcode block here."} -->
 <!-- wp:paragraph -->
 <p></p>
 <!-- /wp:paragraph -->

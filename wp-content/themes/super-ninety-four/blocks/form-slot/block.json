@@ -4,7 +4,7 @@
   "title": "SNF Form Slot",
   "category": "snf",
   "icon": "feedback",
-  "description": "Styled wrapper that hosts a SureForms block for Contact or Newsletter.",
+  "description": "Styled wrapper for Contact or Newsletter form blocks.",
   "textdomain": "super-ninety-four",
   "attributes": {
     "heading": {

@@ -123,19 +123,16 @@ Point Stripe Dashboard → Developers → Webhooks at:
 
 Events: `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `payment_intent.succeeded`, `charge.refunded`.
 
-### Marketing plugins (forms / CRM / automation)
+### Marketing / CRM
 
-Use the installed plugins — do not rebuild these in the theme:
-
-- **SureForms** — Contact / Newsletter embeds on Blank Canvas pages
-- **SureContact** — CRM inbox
-- **OttoKit** (`suretriggers`) — automations; theme fires `snf_*` actions for Apply → Stripe, workshop reservations, and Stripe webhooks
+- **SureContact** (optional) — CRM inbox if installed on the host
+- **SureForms** and **OttoKit** (`suretriggers`) are **not** part of the stack; deploy deletes them when WP-CLI is available
 
 Club roles (`snf_member`, `snf_reciprocal`, `snf_staff`, `snf_applicant`) and member-area redirects live in the theme (`app/Services/access-control.php`). Content Control and Code Snippets are not required.
 
 **BuddyPress is not required.** Community, messages, Expo marketplace, and membership gating are theme-native (`community.php`, `messages.php`, `b2b-marketplace.php`, `memberships.php`). Deploy deactivates BuddyPress when WP-CLI is available.
 
-Transactional Apply / workshop checkout / Woo cart stay theme-owned; SureForms stays on blank-canvas marketing pages.
+Transactional Apply / workshop checkout / Woo cart stay theme-owned. Contact / Newsletter use blank-canvas + `snf/form-slot` for editor-managed forms.
 
 ### Club hubs (custom, no BuddyPress)
 

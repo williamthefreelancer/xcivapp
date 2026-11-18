@@ -36,7 +36,6 @@ $about_body   = ! empty( $club['about_body'] ) ? (string) $club['about_body'] : 
 $limited_sub  = ! empty( $club['limited_sub'] ) ? (string) $club['limited_sub'] : __( 'Invite windows close when the desk fills.', 'super-ninety-four' );
 $hero_heading = ! empty( $club['hero_heading'] ) ? (string) $club['hero_heading'] : snf_get_reciprocal_hero_heading();
 $hero_lede    = ! empty( $club['hero_lede'] ) ? (string) $club['hero_lede'] : (string) $club['lede'];
-$sureforms    = function_exists( 'snf_render_sureforms_embed' ) ? snf_render_sureforms_embed( 'reciprocal' ) : '';
 ?>
 <main
 	class="snf-page snf-reciprocal snf-reciprocal--inquiry"
@@ -65,11 +64,6 @@ $sureforms    = function_exists( 'snf_render_sureforms_embed' ) ? snf_render_sur
 					<p class="snf-reciprocal__hero-lede"><?php echo esc_html( $hero_lede ); ?></p>
 				</div>
 
-				<?php if ( $sureforms ) : ?>
-					<div class="snf-reciprocal__form snf-reciprocal__form--sureforms" data-figma-slot="capture-form">
-						<?php echo $sureforms; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SureForms markup. ?>
-					</div>
-				<?php else : ?>
 				<form
 					class="snf-reciprocal__form"
 					action="<?php echo esc_url( $apply_url ); ?>"
@@ -104,7 +98,6 @@ $sureforms    = function_exists( 'snf_render_sureforms_embed' ) ? snf_render_sur
 						<?php esc_html_e( 'Yes, Send Me Those Inquiries', 'super-ninety-four' ); ?>
 					</button>
 				</form>
-				<?php endif; ?>
 			</div>
 		</div>
 	</section>

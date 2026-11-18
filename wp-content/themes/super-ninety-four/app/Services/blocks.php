@@ -226,7 +226,7 @@ function snf_render_block_listing_grid( $attrs ) {
 }
 
 /**
- * Render snf/form-slot (wrapper for SureForms blocks).
+ * Render snf/form-slot (wrapper for contact / newsletter form blocks).
  *
  * @param array<string, mixed> $attrs      Attributes.
  * @param string               $content    Inner blocks HTML.
@@ -253,7 +253,7 @@ function snf_render_block_form_slot( $attrs, $content = '' ) {
 				echo esc_html(
 					$hint
 						? $hint
-						: __( 'Insert a SureForms block here (srfm/form) to collect Contact or Newsletter submissions.', 'super-ninety-four' )
+						: __( 'Add a form or shortcode block here for Contact or Newsletter submissions.', 'super-ninety-four' )
 				);
 				?>
 			</p>

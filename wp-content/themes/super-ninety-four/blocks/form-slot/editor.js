@@ -47,8 +47,8 @@
             "div",
             { className: "snf-block-form-slot__inner" },
             el(InnerBlocks, {
-              allowedBlocks: ["srfm/form", "core/shortcode", "core/paragraph", "core/heading"],
-              template: [["core/paragraph", { placeholder: __("Insert a SureForms form block here…", "super-ninety-four") }]],
+              allowedBlocks: ["core/shortcode", "core/paragraph", "core/heading", "core/html"],
+              template: [["core/paragraph", { placeholder: __("Add a form or shortcode here…", "super-ninety-four") }]],
               templateLock: false,
             })
           )

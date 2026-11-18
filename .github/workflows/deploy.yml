@@ -156,12 +156,16 @@ jobs:
                wp plugin delete buddypress --quiet || true; \
                wp plugin deactivate bp-classic --quiet || true; \
                wp plugin delete bp-classic --quiet || true; \
+               wp plugin deactivate sureforms --quiet || true; \
+               wp plugin delete sureforms --quiet || true; \
+               wp plugin deactivate suretriggers --quiet || true; \
+               wp plugin delete suretriggers --quiet || true; \
                wp option update woocommerce_cart_checkout_blocks_enabled no --quiet || true; \
                wp theme activate super-ninety-four --quiet || true; \
                wp rewrite flush --quiet || true; \
                wp eval-file wp-content/themes/super-ninety-four/bin/snf-production-bootstrap.php || true; \
                wp eval-file wp-content/themes/super-ninety-four/bin/snf-verify-club-stack.php || true; \
-               echo 'wp-cli: snf-payments on, BuddyPress removed, club stack bootstrapped'; \
+               echo 'wp-cli: snf-payments on; BuddyPress/SureForms/OttoKit removed; club stack bootstrapped'; \
              else \
-               echo 'wp-cli not found; activate snf-payments and remove BuddyPress manually in WP Admin'; \
+               echo 'wp-cli not found; activate snf-payments and remove SureForms/OttoKit manually in WP Admin'; \
              fi"

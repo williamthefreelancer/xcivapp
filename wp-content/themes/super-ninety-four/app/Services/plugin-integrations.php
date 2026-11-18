@@ -1,13 +1,11 @@
 <?php
 /**
- * Marketing plugin bridges for Super Ninety Four.
+ * Marketing page helpers and theme action relays for Super Ninety Four.
  *
- * SureForms / SureContact / OttoKit (suretriggers): keep Contact + Newsletter
- * public and host marketing forms via blank-canvas the_content(). Do not
- * soft-guard those pages. Transactional Apply / workshop checkout stay theme
- * PHP — do not replace them with SureForms.
+ * Blank-canvas Contact / Newsletter stay public. Transactional Apply /
+ * workshop / quote / reciprocal flows stay theme PHP + WooCommerce.
  *
- * Club roles and member-area access live in access-control.php (theme-native).
+ * Club roles and member-area access live in access-control.php.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -15,22 +13,21 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Blank-canvas marketing pages hosted for SureForms / Gutenberg blocks.
+ * Blank-canvas / public marketing page slugs.
  *
  * @return string[]
  */
-function snf_get_sureforms_host_page_slugs() {
-	// Videos & Audio is theme-owned (CPT library hub); optional SureForms still render via the_content().
+function snf_get_marketing_host_page_slugs() {
 	return array( 'contact', 'newsletter', 'videos-audio' );
 }
 
 /**
- * Whether the current request is a SureForms / blank-canvas marketing page.
+ * Whether the current request is a public marketing / blank-canvas page.
  *
  * @return bool
  */
-function snf_is_sureforms_host_page() {
-	foreach ( snf_get_sureforms_host_page_slugs() as $slug ) {
+function snf_is_marketing_host_page() {
+	foreach ( snf_get_marketing_host_page_slugs() as $slug ) {
 		if ( is_page( $slug ) ) {
 			return true;
 		}
@@ -39,83 +36,30 @@ function snf_is_sureforms_host_page() {
 }
 
 /**
- * Keep SureForms host pages out of protected member sets.
+ * Keep marketing hosts out of protected member sets.
  *
  * @param string[] $slugs Protected page slugs.
  * @return string[]
  */
-function snf_filter_protected_slugs_exclude_sureforms_hosts( $slugs ) {
-	$hosts = snf_get_sureforms_host_page_slugs();
+function snf_filter_protected_slugs_exclude_marketing_hosts( $slugs ) {
+	$hosts = snf_get_marketing_host_page_slugs();
 	return array_values( array_diff( (array) $slugs, $hosts ) );
 }
-add_filter( 'snf_protected_page_slugs', 'snf_filter_protected_slugs_exclude_sureforms_hosts' );
+add_filter( 'snf_protected_page_slugs', 'snf_filter_protected_slugs_exclude_marketing_hosts' );
 
 /**
- * Never soft-guard Contact / Newsletter / Videos & Audio (SureForms canvases).
- */
-function snf_guard_sureforms_host_pages_remain_public() {
-	if ( is_admin() || wp_doing_ajax() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
-		return;
-	}
-	if ( ! snf_is_sureforms_host_page() ) {
-		return;
-	}
-	// Intentionally empty: these pages must render for guests so SureForms works.
-}
-add_action( 'template_redirect', 'snf_guard_sureforms_host_pages_remain_public', 1 );
-
-/**
- * OttoKit / SureTriggers bridge: document theme actions plugins can listen for.
- *
- * Actions fired elsewhere in the theme:
- * - snf_apply_stripe_checkout_started  (user_id, plan_slug, checkout_url)
- * - snf_workshop_reservation_created   (reservation_id, event_id, email, payload)
- * - snf_service_quote_added_to_cart    (product_id, product_slug, quantity, user_id)
- * - snf_stripe_webhook_handled         (event, result) — already in inc/stripe.php
- * - snf_marketplace_rfq_submitted      (rfq_id, payload)
- * - snf_circle_joined / snf_circle_left (circle_id, user_id)
- * - snf_messages_sent                  (thread_id, user_id, payload)
- * - snf_membership_activated           (user_id, plan_slug, args)
- *
- * Apply / workshop / quote / reciprocal / member-login stay theme PHP — do not
- * replace them with SureForms. SureForms belongs on blank-canvas marketing pages.
- *
- * @return array<string, string>
- */
-function snf_get_ottokit_action_catalog() {
-	return array(
-		'snf_apply_stripe_checkout_started' => 'Fired when Apply hands off to Stripe Checkout for the application SKU.',
-		'snf_workshop_reservation_created'  => 'Fired after a Lifestyle Concierge workshop seat reservation is stored.',
-		'snf_service_quote_added_to_cart'   => 'Fired when a service-quote product is added to the WooCommerce cart.',
-		'snf_stripe_webhook_handled'        => 'Fired after a verified Stripe webhook is processed.',
-		'snf_marketplace_rfq_submitted'     => 'Fired when an Expo / marketplace RFQ is stored.',
-		'snf_circle_joined'                 => 'Fired when a member joins a private circle.',
-		'snf_circle_left'                   => 'Fired when a member leaves a private circle.',
-		'snf_messages_sent'                 => 'Fired after a member message is stored.',
-		'snf_membership_activated'          => 'Fired when membership activates and assigns club role.',
-	);
-}
-
-/**
- * Relay Apply → Stripe handoff to OttoKit-friendly action.
+ * Relay Apply → Stripe handoff.
  *
  * @param int    $user_id      User ID.
  * @param string $plan_slug    Preferred plan.
  * @param string $checkout_url Stripe Checkout URL.
  */
 function snf_fire_apply_stripe_checkout_started( $user_id, $plan_slug, $checkout_url ) {
-	/**
-	 * OttoKit: Apply started Stripe Checkout for the application fee.
-	 *
-	 * @param int    $user_id      User ID.
-	 * @param string $plan_slug    Preferred membership plan slug.
-	 * @param string $checkout_url Stripe Checkout Session URL.
-	 */
 	do_action( 'snf_apply_stripe_checkout_started', (int) $user_id, sanitize_title( (string) $plan_slug ), (string) $checkout_url );
 }
 
 /**
- * Relay workshop reservation to OttoKit-friendly action.
+ * Relay workshop reservation.
  *
  * @param int                  $reservation_id Reservation post ID.
  * @param int                  $event_id       Event/product ID.
@@ -123,19 +67,11 @@ function snf_fire_apply_stripe_checkout_started( $user_id, $plan_slug, $checkout
  * @param array<string, mixed> $payload        Extra fields.
  */
 function snf_fire_workshop_reservation_created( $reservation_id, $event_id, $email, array $payload = array() ) {
-	/**
-	 * OttoKit: Workshop seat reservation created.
-	 *
-	 * @param int                  $reservation_id Reservation post ID.
-	 * @param int                  $event_id       Related event/product ID.
-	 * @param string               $email          Email.
-	 * @param array<string, mixed> $payload        Name/phone/firm/etc.
-	 */
 	do_action( 'snf_workshop_reservation_created', (int) $reservation_id, (int) $event_id, (string) $email, $payload );
 }
 
 /**
- * Relay service-quote add-to-cart to OttoKit-friendly action.
+ * Relay service-quote add-to-cart.
  *
  * @param string $cart_item_key Cart key.
  * @param int    $product_id    Product ID.
@@ -147,15 +83,6 @@ function snf_fire_service_quote_added_to_cart( $cart_item_key, $product_id, $qua
 	}
 
 	$slug = get_post_field( 'post_name', $product_id );
-
-	/**
-	 * OttoKit: Service quote product added to cart.
-	 *
-	 * @param int    $product_id Product ID.
-	 * @param string $slug       Product slug.
-	 * @param int    $quantity   Quantity.
-	 * @param int    $user_id    Current user ID (0 if guest).
-	 */
 	do_action( 'snf_service_quote_added_to_cart', (int) $product_id, (string) $slug, (int) $quantity, get_current_user_id() );
 }
 add_action( 'woocommerce_add_to_cart', 'snf_fire_service_quote_added_to_cart', 30, 3 );

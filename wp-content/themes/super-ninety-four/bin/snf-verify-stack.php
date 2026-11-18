@@ -14,8 +14,7 @@ foreach ( array( 'snf/page-hero', 'snf/cta-button', 'snf/listing-grid', 'snf/for
 	echo $name . ':' . ( isset( $types[ $name ] ) ? 'ok' : 'missing' ) . PHP_EOL;
 }
 
-echo 'ottokit_actions:' . ( function_exists( 'snf_get_ottokit_action_catalog' ) ? (string) count( snf_get_ottokit_action_catalog() ) : '0' ) . PHP_EOL;
-echo 'sureforms_hosts:' . ( function_exists( 'snf_get_sureforms_host_page_slugs' ) ? implode( ',', snf_get_sureforms_host_page_slugs() ) : 'none' ) . PHP_EOL;
+echo 'marketing_hosts:' . ( function_exists( 'snf_get_marketing_host_page_slugs' ) ? implode( ',', snf_get_marketing_host_page_slugs() ) : 'none' ) . PHP_EOL;
 echo 'media_cpts:' . ( post_type_exists( 'snf_video' ) && post_type_exists( 'snf_audio' ) ? 'ok' : 'missing' ) . PHP_EOL;
 echo 'media_tax:' . ( taxonomy_exists( 'snf_media_topic' ) && taxonomy_exists( 'snf_audio_channel' ) && taxonomy_exists( 'snf_broadcast_format' ) ? 'ok' : 'missing' ) . PHP_EOL;
 echo 'media_settings:' . ( function_exists( 'snf_get_media_settings' ) ? 'ok' : 'missing' ) . PHP_EOL;
@@ -49,6 +48,13 @@ if ( $status instanceof WP_REST_Response ) {
 
 echo 'plugins:';
 foreach ( array( 'sureforms/sureforms.php', 'surecontact/surecontact.php', 'suretriggers/suretriggers.php' ) as $plugin ) {
-	echo ( function_exists( 'is_plugin_active' ) && is_plugin_active( $plugin ) ? basename( dirname( $plugin ) ) . '=active ' : basename( dirname( $plugin ) ) . '=off ' );
+	$label = basename( dirname( $plugin ) );
+	$on    = function_exists( 'is_plugin_active' ) && is_plugin_active( $plugin );
+	// SureForms + OttoKit should be off; SureContact optional.
+	if ( in_array( $label, array( 'sureforms', 'suretriggers' ), true ) ) {
+		echo $label . '=' . ( $on ? 'FAIL-active ' : 'off ' );
+	} else {
+		echo $label . '=' . ( $on ? 'active ' : 'off ' );
+	}
 }
 echo PHP_EOL;

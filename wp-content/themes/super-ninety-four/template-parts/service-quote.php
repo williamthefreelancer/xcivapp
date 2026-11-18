@@ -40,14 +40,6 @@ if ( ! $cta_url && function_exists( 'wc_get_cart_url' ) && get_the_ID() ) {
 if ( ! $cta_url ) {
 	$cta_url = get_permalink();
 }
-$sureforms_quote  = '';
-if ( function_exists( 'snf_render_sureforms_embed' ) ) {
-	$sureforms_quote = snf_render_sureforms_embed( 'quote_' . sanitize_title( (string) $quote_slug ) );
-	if ( ! $sureforms_quote ) {
-		$sureforms_quote = snf_render_sureforms_embed( 'quote' );
-	}
-}
-
 if ( function_exists( 'wc_get_product' ) && get_the_ID() ) {
 	$product = wc_get_product( get_the_ID() );
 	if ( $product && $product->get_price() !== '' ) {
@@ -141,10 +133,5 @@ if ( function_exists( 'wc_get_product' ) && get_the_ID() ) {
 				<?php echo esc_html( $cta_label ); ?>
 			</a>
 		</article>
-		<?php if ( $sureforms_quote ) : ?>
-			<div class="snf-quote__sureforms snf-block-form-slot" data-figma-slot="quote-sureforms">
-				<?php echo $sureforms_quote; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SureForms markup. ?>
-			</div>
-		<?php endif; ?>
 	</section>
 </main>
