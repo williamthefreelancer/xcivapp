@@ -24,10 +24,11 @@ $rules_faq   = isset( $home['rules_faq'] ) ? $home['rules_faq'] : array();
 	<section class="snf-hero" data-figma-node="2100:86" aria-label="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>">
 		<div class="snf-container snf-hero__container">
 			<div class="snf-hero__brand">
+				<h1 class="snf-hero__heading screen-reader-text"><?php bloginfo( 'name' ); ?></h1>
 				<img
 					class="snf-hero__logo"
 					src="<?php echo esc_url( get_template_directory_uri() . '/assets/icons/logo-white.svg' ); ?>"
-					alt="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>"
+					alt=""
 					width="209"
 					height="20"
 					decoding="async"
