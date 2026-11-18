@@ -422,15 +422,18 @@ add_action( 'init', 'snf_ensure_reciprocal_product_category', 28 );
 
 /**
  * Ensure a Woo product exists for each reciprocal program.
+ *
+ * @param bool $force Re-run even when the version option matches (creates missing only).
+ * @return bool True when the seed path ran.
  */
-function snf_ensure_reciprocal_program_products() {
+function snf_ensure_reciprocal_program_products( $force = false ) {
 	if ( ! class_exists( 'WooCommerce' ) || ! function_exists( 'wc_get_product' ) ) {
-		return;
+		return false;
 	}
 
 	$version = '1.0.0-reciprocal-products';
-	if ( get_option( 'snf_reciprocal_products_version' ) === $version ) {
-		return;
+	if ( ! $force && get_option( 'snf_reciprocal_products_version' ) === $version ) {
+		return false;
 	}
 
 	snf_ensure_reciprocal_product_category();
@@ -480,6 +483,8 @@ function snf_ensure_reciprocal_program_products() {
 	}
 
 	update_option( 'snf_reciprocal_products_version', $version, false );
+
+	return true;
 }
 add_action( 'init', 'snf_ensure_reciprocal_program_products', 50 );
 

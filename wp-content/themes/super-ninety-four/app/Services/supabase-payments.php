@@ -285,3 +285,26 @@ function snf_supabase_get_checkout_sessions_for_user( $user_id ) {
 
 	return array_values( $all );
 }
+
+/**
+ * Stripe subscriptions for an email (via Sync Engine service role).
+ *
+ * @param string $email Customer email.
+ * @return array<int, array<string, mixed>>|WP_Error
+ */
+function snf_supabase_get_subscriptions_by_email( $email ) {
+	$email = sanitize_email( (string) $email );
+	if ( ! is_email( $email ) ) {
+		return new WP_Error( 'snf_supabase_bad_email', __( 'Enter a valid email for subscription lookup.', 'super-ninety-four' ) );
+	}
+	if ( ! snf_supabase_payments_has_service_role() ) {
+		return new WP_Error( 'snf_supabase_no_service', __( 'Supabase service role key required for subscription lookup.', 'super-ninety-four' ) );
+	}
+
+	$rows = snf_supabase_rpc( 'get_stripe_subscriptions_by_email', array( 'email' => $email ), true );
+	if ( is_wp_error( $rows ) ) {
+		return $rows;
+	}
+
+	return is_array( $rows ) ? $rows : array();
+}

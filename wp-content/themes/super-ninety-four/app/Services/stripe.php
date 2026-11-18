@@ -1078,7 +1078,20 @@ function snf_stripe_handle_settings_save() {
 		}
 	}
 
-	// Connectivity probes (Stripe + Supabase catalog + Mapbox token presence).
+	$probe_message = snf_stripe_refresh_api_health();
+
+	wp_safe_redirect( admin_url( 'admin.php?page=snf-stripe&updated=1' . $probe_message ) );
+	exit;
+}
+add_action( 'admin_post_snf_stripe_save_settings', 'snf_stripe_handle_settings_save' );
+
+/**
+ * Probe Stripe + Supabase catalog + Mapbox and refresh the health cache.
+ *
+ * @param bool $force_catalog_refresh Bypass catalog transient.
+ * @return string Query-string fragment (leading &) for admin redirects.
+ */
+function snf_stripe_refresh_api_health( $force_catalog_refresh = true ) {
 	$probe_message = '';
 	$health        = array(
 		'checked'  => time(),
@@ -1089,11 +1102,12 @@ function snf_stripe_handle_settings_save() {
 		'messages' => array(),
 	);
 
-	if ( 'yes' === $next['enabled'] && snf_stripe_get_secret_key() ) {
+	$settings = snf_get_stripe_settings();
+	if ( 'yes' === $settings['enabled'] && snf_stripe_get_secret_key() ) {
 		$probe = snf_stripe_request( 'GET', 'account' );
 		if ( is_wp_error( $probe ) ) {
-			$probe_message       = '&stripe_probe=fail';
-			$health['stripe']    = 'fail';
+			$probe_message        = '&stripe_probe=fail';
+			$health['stripe']     = 'fail';
 			$health['messages'][] = $probe->get_error_message();
 		} else {
 			$probe_message    = '&stripe_probe=ok';
@@ -1112,7 +1126,10 @@ function snf_stripe_handle_settings_save() {
 	}
 
 	if ( function_exists( 'snf_supabase_payments_is_ready' ) && snf_supabase_payments_is_ready() && function_exists( 'snf_supabase_get_stripe_catalog' ) ) {
-		$catalog = snf_supabase_get_stripe_catalog( true );
+		if ( $force_catalog_refresh ) {
+			delete_transient( 'snf_supabase_stripe_catalog_v1' );
+		}
+		$catalog = snf_supabase_get_stripe_catalog( (bool) $force_catalog_refresh );
 		if ( is_wp_error( $catalog ) ) {
 			$health['supabase']   = 'fail';
 			$health['messages'][] = $catalog->get_error_message();
@@ -1138,10 +1155,8 @@ function snf_stripe_handle_settings_save() {
 
 	update_option( 'snf_api_health_cache', $health, false );
 
-	wp_safe_redirect( admin_url( 'admin.php?page=snf-stripe&updated=1' . $probe_message ) );
-	exit;
+	return $probe_message;
 }
-add_action( 'admin_post_snf_stripe_save_settings', 'snf_stripe_handle_settings_save' );
 
 /**
  * Settings UI.
@@ -1219,12 +1234,7 @@ function snf_stripe_render_settings_page() {
 	<div class="snf-admin__grid snf-admin__grid--panels">
 		<section class="snf-admin__panel">
 			<h2><?php esc_html_e( 'API health', 'super-ninety-four' ); ?></h2>
-			<p class="snf-admin__panel-desc"><?php esc_html_e( 'Probes refresh when you save settings below.', 'super-ninety-four' ); ?></p>
-			<?php
-			if ( function_exists( 'snf_admin_render_integrations_pulse' ) ) {
-				snf_admin_render_integrations_pulse( 'stripe' );
-			}
-			?>
+			<p class="snf-admin__panel-desc"><?php esc_html_e( 'Probes refresh when you save settings below, or via Re-probe APIs in Critical ops.', 'super-ninety-four' ); ?></p>
 			<ul class="snf-admin__list">
 				<li>
 					<span><?php esc_html_e( 'Webhook endpoint', 'super-ninety-four' ); ?></span>
@@ -1241,6 +1251,12 @@ function snf_stripe_render_settings_page() {
 					</span>
 				</li>
 				<?php endif; ?>
+				<li>
+					<span><?php esc_html_e( 'Mapbox token', 'super-ninety-four' ); ?></span>
+					<span class="snf-admin__pill <?php echo $mapbox_ok ? 'snf-admin__pill--ok' : 'snf-admin__pill--warn'; ?>">
+						<?php echo $mapbox_ok ? esc_html__( 'Present', 'super-ninety-four' ) : esc_html__( 'Missing', 'super-ninety-four' ); ?>
+					</span>
+				</li>
 			</ul>
 			<p class="snf-admin__muted"><?php esc_html_e( 'Stripe Dashboard → Developers → Webhooks. Events: checkout.session.completed, checkout.session.async_payment_succeeded, payment_intent.succeeded, charge.refunded.', 'super-ninety-four' ); ?></p>
 			<div class="snf-admin__actions">
@@ -1254,19 +1270,11 @@ function snf_stripe_render_settings_page() {
 			</div>
 		</section>
 
-		<section class="snf-admin__panel">
-			<h2><?php esc_html_e( 'Mapbox (Expo lead rider)', 'super-ninety-four' ); ?></h2>
-			<p class="snf-admin__panel-desc"><?php esc_html_e( 'Public Mapbox access token for the Expo Marketplace lead-rider map. Constant SNF_MAPBOX_TOKEN overrides when defined.', 'super-ninety-four' ); ?></p>
-			<ul class="snf-admin__list">
-				<li>
-					<span><?php esc_html_e( 'Token status', 'super-ninety-four' ); ?></span>
-					<span class="snf-admin__pill <?php echo $mapbox_ok ? 'snf-admin__pill--ok' : 'snf-admin__pill--warn'; ?>">
-						<?php echo $mapbox_ok ? esc_html__( 'Present', 'super-ninety-four' ) : esc_html__( 'Missing', 'super-ninety-four' ); ?>
-					</span>
-				</li>
-			</ul>
-			<p class="snf-admin__muted"><?php esc_html_e( 'Edit the token in the form below (password field keeps the saved value when left blank).', 'super-ninety-four' ); ?></p>
-		</section>
+		<?php
+		if ( function_exists( 'snf_admin_render_critical_ops_panels' ) ) {
+			snf_admin_render_critical_ops_panels( 'stripe' );
+		}
+		?>
 
 		<form class="snf-admin__form snf-admin__panel snf-admin__panel--wide" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 			<input type="hidden" name="action" value="snf_stripe_save_settings">

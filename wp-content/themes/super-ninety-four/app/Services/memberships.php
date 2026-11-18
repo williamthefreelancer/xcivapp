@@ -948,14 +948,17 @@ add_action( 'admin_post_snf_apply_membership', 'snf_handle_apply_membership_chec
 
 /**
  * Ensure membership product category + catalog products exist (draft-friendly publish).
+ *
+ * @param bool $force Re-run even when the one-shot seed option is set (creates missing only).
+ * @return bool True when the seed path ran.
  */
-function snf_ensure_membership_products() {
+function snf_ensure_membership_products( $force = false ) {
 	if ( ! class_exists( 'WooCommerce' ) || ! taxonomy_exists( 'product_cat' ) ) {
-		return;
+		return false;
 	}
 
-	if ( get_option( 'snf_membership_products_seeded_v1' ) ) {
-		return;
+	if ( ! $force && get_option( 'snf_membership_products_seeded_v1' ) ) {
+		return false;
 	}
 
 	if ( ! term_exists( 'memberships', 'product_cat' ) ) {
@@ -1039,6 +1042,8 @@ function snf_ensure_membership_products() {
 
 	update_option( 'snf_membership_products_seeded_v1', 1, false );
 	update_option( 'snf_membership_products_seeded_v2', 1, false );
+
+	return true;
 }
 add_action( 'init', 'snf_ensure_membership_products', 50 );
 

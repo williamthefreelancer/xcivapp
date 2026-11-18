@@ -391,6 +391,44 @@ function snf_admin_render_shell_start( $active, $title, $lede, $nav_pages = null
 				<?php esc_html_e( 'Default ticket addon kinds / experiences checked and missing terms inserted.', 'super-ninety-four' ); ?>
 			</div>
 		<?php endif; ?>
+		<?php if ( isset( $_GET['bootstrapped'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
+			<div class="snf-admin__notice snf-admin__notice--success">
+				<?php esc_html_e( 'Club bootstrap finished (roles, tables, circles, pages, menus).', 'super-ninety-four' ); ?>
+			</div>
+		<?php endif; ?>
+		<?php if ( isset( $_GET['products_ok'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
+			<div class="snf-admin__notice snf-admin__notice--success">
+				<?php
+				$kind = sanitize_key( wp_unslash( (string) $_GET['products_ok'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+				if ( 'reciprocal' === $kind ) {
+					esc_html_e( 'Reciprocal program products checked; missing products created.', 'super-ninety-four' );
+				} else {
+					esc_html_e( 'Membership catalog products checked; missing products created.', 'super-ninety-four' );
+				}
+				?>
+			</div>
+		<?php endif; ?>
+		<?php if ( isset( $_GET['lookup'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
+			<?php
+			$lookup = sanitize_key( wp_unslash( (string) $_GET['lookup'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			if ( 'ok' === $lookup ) :
+				?>
+			<div class="snf-admin__notice snf-admin__notice--success">
+				<?php esc_html_e( 'Subscription lookup completed — results below.', 'super-ninety-four' ); ?>
+			</div>
+			<?php elseif ( 'empty' === $lookup ) : ?>
+			<div class="snf-admin__notice snf-admin__notice--warn">
+				<?php esc_html_e( 'No Stripe subscriptions found for that email.', 'super-ninety-four' ); ?>
+			</div>
+			<?php elseif ( 'fail' === $lookup ) : ?>
+			<div class="snf-admin__notice snf-admin__notice--error">
+				<?php
+				$err = get_transient( 'snf_admin_lookup_error_' . get_current_user_id() );
+				echo esc_html( is_string( $err ) && $err ? $err : __( 'Subscription lookup failed.', 'super-ninety-four' ) );
+				?>
+			</div>
+			<?php endif; ?>
+		<?php endif; ?>
 		<?php if ( isset( $_GET['stripe_probe'] ) && 'ok' === $_GET['stripe_probe'] ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
 			<div class="snf-admin__notice snf-admin__notice--success">
 				<?php esc_html_e( 'Connected: Stripe API key accepted.', 'super-ninety-four' ); ?>
@@ -1549,22 +1587,78 @@ function snf_admin_render_addon_kinds() {
 }
 
 /**
- * Critical settings dashboard.
+ * Safe redirect target for shared Club / Stripe ops forms.
+ *
+ * @param string $fallback Default page slug.
+ * @return string Admin page slug.
  */
-function snf_admin_render_critical_settings() {
-	if ( ! current_user_can( 'manage_options' ) ) {
-		return;
-	}
+function snf_admin_ops_redirect_page( $fallback = 'snf-club-settings' ) {
+	$allowed = array( 'snf-club-settings', 'snf-stripe' );
+	$page    = isset( $_POST['snf_ops_redirect'] ) ? sanitize_key( wp_unslash( $_POST['snf_ops_redirect'] ) ) : $fallback; // phpcs:ignore WordPress.Security.NonceVerification.Missing
+	return in_array( $page, $allowed, true ) ? $page : $fallback;
+}
 
-	snf_admin_render_shell_start(
-		'snf-club-settings',
-		__( 'Critical settings', 'super-ninety-four' ),
-		__( 'Integrations and maintenance tools the Events, Circles, and Media stacks rely on.', 'super-ninety-four' )
+/**
+ * Run production-style club bootstrap (roles, tables, circles, pages, menus).
+ *
+ * @return array<string, bool> Step results.
+ */
+function snf_admin_run_club_bootstrap() {
+	$results = array(
+		'roles'    => false,
+		'messages' => false,
+		'community'=> false,
+		'circles'  => false,
+		'pages'    => false,
+		'menus'    => false,
 	);
 
-	$mapbox = function_exists( 'snf_get_mapbox_token' ) ? (string) snf_get_mapbox_token() : (string) get_option( 'snf_mapbox_token', '' );
-	?>
-	<div class="snf-admin__grid snf-admin__grid--panels">
+	if ( function_exists( 'snf_register_club_roles' ) ) {
+		snf_register_club_roles();
+		$results['roles'] = true;
+	}
+	if ( function_exists( 'snf_messages_install_tables' ) ) {
+		snf_messages_install_tables();
+		$results['messages'] = true;
+	}
+	if ( function_exists( 'snf_community_install_tables' ) ) {
+		snf_community_install_tables();
+		$results['community'] = true;
+	}
+	if ( function_exists( 'snf_community_ensure_default_circles' ) ) {
+		snf_community_ensure_default_circles();
+		$results['circles'] = true;
+	}
+	if ( function_exists( 'snf_ensure_site_pages' ) ) {
+		snf_ensure_site_pages();
+		$results['pages'] = true;
+	}
+	update_option( 'snf_theme_menus_force_resync', 1, false );
+	if ( function_exists( 'snf_ensure_theme_menus' ) ) {
+		snf_ensure_theme_menus();
+		$results['menus'] = true;
+	}
+
+	return $results;
+}
+
+/**
+ * Shared critical ops panels for Club Critical settings and SNF Stripe.
+ *
+ * @param string $context club|stripe.
+ */
+function snf_admin_render_critical_ops_panels( $context = 'club' ) {
+	$context      = ( 'stripe' === $context ) ? 'stripe' : 'club';
+	$redirect     = ( 'stripe' === $context ) ? 'snf-stripe' : 'snf-club-settings';
+	$can_options  = current_user_can( 'manage_options' );
+	$can_woo      = current_user_can( 'manage_woocommerce' );
+	$has_service  = function_exists( 'snf_supabase_payments_has_service_role' ) && snf_supabase_payments_has_service_role();
+	$lookup_rows  = get_transient( 'snf_admin_lookup_rows_' . get_current_user_id() );
+	$lookup_email = (string) get_transient( 'snf_admin_lookup_email_' . get_current_user_id() );
+	$mapbox       = function_exists( 'snf_get_mapbox_token' ) ? (string) snf_get_mapbox_token() : (string) get_option( 'snf_mapbox_token', '' );
+
+	if ( 'club' === $context ) :
+		?>
 		<section class="snf-admin__panel">
 			<h2><?php esc_html_e( 'Mapbox', 'super-ninety-four' ); ?></h2>
 			<p class="snf-admin__panel-desc"><?php esc_html_e( 'Lead rider / Expo map token. Constant SNF_MAPBOX_TOKEN overrides the option when defined.', 'super-ninety-four' ); ?></p>
@@ -1591,9 +1685,122 @@ function snf_admin_render_critical_settings() {
 			<p class="snf-admin__panel-desc"><?php esc_html_e( 'Stripe / Supabase live on the WooCommerce SNF Stripe screen.', 'super-ninety-four' ); ?></p>
 			<?php snf_admin_render_integrations_pulse( 'critical' ); ?>
 			<div class="snf-admin__actions">
-				<a class="snf-admin__btn" href="<?php echo esc_url( admin_url( 'admin.php?page=snf-stripe' ) ); ?>"><?php esc_html_e( 'Open SNF Stripe', 'super-ninety-four' ); ?></a>
+				<?php if ( $can_woo ) : ?>
+					<a class="snf-admin__btn" href="<?php echo esc_url( admin_url( 'admin.php?page=snf-stripe' ) ); ?>"><?php esc_html_e( 'Open SNF Stripe', 'super-ninety-four' ); ?></a>
+				<?php endif; ?>
 				<a class="snf-admin__btn snf-admin__btn--ghost" href="<?php echo esc_url( admin_url( 'admin.php?page=wc-settings&tab=checkout' ) ); ?>"><?php esc_html_e( 'Woo payments', 'super-ninety-four' ); ?></a>
 			</div>
+		</section>
+		<?php
+	endif;
+
+	if ( $can_woo ) :
+		?>
+		<section class="snf-admin__panel">
+			<h2><?php esc_html_e( 'API probe & catalog', 'super-ninety-four' ); ?></h2>
+			<p class="snf-admin__panel-desc"><?php esc_html_e( 'Re-check Stripe, refresh the Supabase price catalog cache, and update the shared health pills.', 'super-ninety-four' ); ?></p>
+			<?php if ( 'stripe' === $context ) : ?>
+				<?php snf_admin_render_integrations_pulse( 'stripe' ); ?>
+			<?php endif; ?>
+			<div class="snf-admin__actions">
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+					<input type="hidden" name="action" value="snf_ops_refresh_health">
+					<input type="hidden" name="snf_ops_redirect" value="<?php echo esc_attr( $redirect ); ?>">
+					<?php wp_nonce_field( 'snf_ops_refresh_health', 'snf_ops_refresh_health_nonce' ); ?>
+					<button type="submit" class="snf-admin__btn"><?php esc_html_e( 'Re-probe APIs', 'super-ninety-four' ); ?></button>
+				</form>
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+					<input type="hidden" name="action" value="snf_ops_refresh_catalog">
+					<input type="hidden" name="snf_ops_redirect" value="<?php echo esc_attr( $redirect ); ?>">
+					<?php wp_nonce_field( 'snf_ops_refresh_catalog', 'snf_ops_refresh_catalog_nonce' ); ?>
+					<button type="submit" class="snf-admin__btn snf-admin__btn--ghost"><?php esc_html_e( 'Refresh catalog cache', 'super-ninety-four' ); ?></button>
+				</form>
+			</div>
+		</section>
+
+		<section class="snf-admin__panel">
+			<h2><?php esc_html_e( 'Commerce catalog seed', 'super-ninety-four' ); ?></h2>
+			<p class="snf-admin__panel-desc"><?php esc_html_e( 'Create any missing membership or reciprocal Woo products without changing existing ones.', 'super-ninety-four' ); ?></p>
+			<div class="snf-admin__actions">
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+					<input type="hidden" name="action" value="snf_ops_ensure_membership_products">
+					<input type="hidden" name="snf_ops_redirect" value="<?php echo esc_attr( $redirect ); ?>">
+					<?php wp_nonce_field( 'snf_ops_ensure_membership', 'snf_ops_ensure_membership_nonce' ); ?>
+					<button type="submit" class="snf-admin__btn"><?php esc_html_e( 'Ensure membership products', 'super-ninety-four' ); ?></button>
+				</form>
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+					<input type="hidden" name="action" value="snf_ops_ensure_reciprocal_products">
+					<input type="hidden" name="snf_ops_redirect" value="<?php echo esc_attr( $redirect ); ?>">
+					<?php wp_nonce_field( 'snf_ops_ensure_reciprocal', 'snf_ops_ensure_reciprocal_nonce' ); ?>
+					<button type="submit" class="snf-admin__btn snf-admin__btn--ghost"><?php esc_html_e( 'Ensure reciprocal products', 'super-ninety-four' ); ?></button>
+				</form>
+			</div>
+		</section>
+
+		<section class="snf-admin__panel snf-admin__panel--wide">
+			<h2><?php esc_html_e( 'Subscription lookup', 'super-ninety-four' ); ?></h2>
+			<p class="snf-admin__panel-desc"><?php esc_html_e( 'Query Supabase Sync Engine for Stripe subscriptions by customer email (service role required).', 'super-ninety-four' ); ?></p>
+			<?php if ( ! $has_service ) : ?>
+				<p class="snf-admin__muted"><?php esc_html_e( 'Add a Supabase service role key on SNF Stripe (or SNF_SUPABASE_SERVICE_ROLE_KEY in wp-config) to enable lookups.', 'super-ninety-four' ); ?></p>
+			<?php endif; ?>
+			<form class="snf-admin__form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+				<input type="hidden" name="action" value="snf_ops_subscription_lookup">
+				<input type="hidden" name="snf_ops_redirect" value="<?php echo esc_attr( $redirect ); ?>">
+				<?php wp_nonce_field( 'snf_ops_subscription_lookup', 'snf_ops_subscription_lookup_nonce' ); ?>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row"><label for="snf-ops-lookup-email"><?php esc_html_e( 'Customer email', 'super-ninety-four' ); ?></label></th>
+						<td>
+							<input type="email" class="regular-text" id="snf-ops-lookup-email" name="lookup_email" value="<?php echo esc_attr( $lookup_email ); ?>" required <?php disabled( ! $has_service ); ?>>
+						</td>
+					</tr>
+				</table>
+				<button type="submit" class="snf-admin__btn" <?php disabled( ! $has_service ); ?>><?php esc_html_e( 'Look up subscriptions', 'super-ninety-four' ); ?></button>
+			</form>
+			<?php if ( is_array( $lookup_rows ) && $lookup_rows ) : ?>
+				<h3 class="snf-admin__subhead"><?php echo esc_html( sprintf( /* translators: %s: email */ __( 'Results for %s', 'super-ninety-four' ), $lookup_email ) ); ?></h3>
+				<table class="snf-admin__table">
+					<thead>
+						<tr>
+							<th><?php esc_html_e( 'Subscription', 'super-ninety-four' ); ?></th>
+							<th><?php esc_html_e( 'Status', 'super-ninety-four' ); ?></th>
+							<th><?php esc_html_e( 'Price / product', 'super-ninety-four' ); ?></th>
+							<th><?php esc_html_e( 'Customer', 'super-ninety-four' ); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+						<?php foreach ( $lookup_rows as $row ) : ?>
+							<tr>
+								<td><code><?php echo esc_html( (string) ( $row['id'] ?? $row['subscription_id'] ?? '' ) ); ?></code></td>
+								<td><?php echo esc_html( (string) ( $row['status'] ?? '' ) ); ?></td>
+								<td>
+									<?php
+									$price = (string) ( $row['price_id'] ?? $row['plan'] ?? '' );
+									$prod  = (string) ( $row['product_name'] ?? $row['product_id'] ?? '' );
+									echo esc_html( trim( $price . ( $prod ? ' — ' . $prod : '' ) ) );
+									?>
+								</td>
+								<td><?php echo esc_html( (string) ( $row['customer_email'] ?? $row['email'] ?? $lookup_email ) ); ?></td>
+							</tr>
+						<?php endforeach; ?>
+					</tbody>
+				</table>
+			<?php endif; ?>
+		</section>
+		<?php
+	endif;
+
+	if ( 'club' === $context && $can_options ) :
+		?>
+		<section class="snf-admin__panel">
+			<h2><?php esc_html_e( 'Club bootstrap', 'super-ninety-four' ); ?></h2>
+			<p class="snf-admin__panel-desc"><?php esc_html_e( 'Refresh club roles, message/community tables, default circles, auto pages, and theme menus.', 'super-ninety-four' ); ?></p>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+				<input type="hidden" name="action" value="snf_ops_club_bootstrap">
+				<input type="hidden" name="snf_ops_redirect" value="snf-club-settings">
+				<?php wp_nonce_field( 'snf_ops_club_bootstrap', 'snf_ops_club_bootstrap_nonce' ); ?>
+				<button type="submit" class="snf-admin__btn"><?php esc_html_e( 'Run club bootstrap', 'super-ninety-four' ); ?></button>
+			</form>
 		</section>
 
 		<section class="snf-admin__panel snf-admin__panel--wide">
@@ -1650,6 +1857,38 @@ function snf_admin_render_critical_settings() {
 				<a class="snf-admin__btn snf-admin__btn--ghost" href="<?php echo esc_url( admin_url( 'site-editor.php' ) ); ?>"><?php esc_html_e( 'Site Editor', 'super-ninety-four' ); ?></a>
 			</div>
 		</section>
+		<?php
+	endif;
+
+	if ( 'stripe' === $context && $can_options ) :
+		?>
+		<section class="snf-admin__panel">
+			<h2><?php esc_html_e( 'Club ops', 'super-ninety-four' ); ?></h2>
+			<p class="snf-admin__panel-desc"><?php esc_html_e( 'Roles, pages, menus, and Global Styles tools live on Club Critical settings.', 'super-ninety-four' ); ?></p>
+			<div class="snf-admin__actions">
+				<a class="snf-admin__btn snf-admin__btn--ghost" href="<?php echo esc_url( admin_url( 'admin.php?page=snf-club-settings' ) ); ?>"><?php esc_html_e( 'Open Critical settings', 'super-ninety-four' ); ?></a>
+			</div>
+		</section>
+		<?php
+	endif;
+}
+
+/**
+ * Critical settings dashboard.
+ */
+function snf_admin_render_critical_settings() {
+	if ( ! current_user_can( 'manage_options' ) ) {
+		return;
+	}
+
+	snf_admin_render_shell_start(
+		'snf-club-settings',
+		__( 'Critical settings', 'super-ninety-four' ),
+		__( 'Integrations, commerce seeds, and maintenance tools the Club and Stripe stacks rely on.', 'super-ninety-four' )
+	);
+	?>
+	<div class="snf-admin__grid snf-admin__grid--panels">
+		<?php snf_admin_render_critical_ops_panels( 'club' ); ?>
 	</div>
 	<?php
 	snf_admin_render_shell_end();
@@ -1827,6 +2066,156 @@ function snf_admin_handle_critical_save() {
 	exit;
 }
 add_action( 'admin_post_snf_club_save_critical', 'snf_admin_handle_critical_save' );
+
+/**
+ * Re-probe Stripe / Supabase / Mapbox health.
+ */
+function snf_admin_handle_ops_refresh_health() {
+	if ( ! isset( $_POST['snf_ops_refresh_health_nonce'] ) ) {
+		return;
+	}
+	check_admin_referer( 'snf_ops_refresh_health', 'snf_ops_refresh_health_nonce' );
+	if ( ! current_user_can( 'manage_woocommerce' ) ) {
+		wp_die( esc_html__( 'Forbidden.', 'super-ninety-four' ) );
+	}
+
+	$probe = function_exists( 'snf_stripe_refresh_api_health' ) ? snf_stripe_refresh_api_health( true ) : '';
+	$page  = snf_admin_ops_redirect_page( 'snf-stripe' );
+	wp_safe_redirect( admin_url( 'admin.php?page=' . $page . '&updated=1' . $probe ) );
+	exit;
+}
+add_action( 'admin_post_snf_ops_refresh_health', 'snf_admin_handle_ops_refresh_health' );
+
+/**
+ * Force-refresh Supabase catalog cache (and update health).
+ */
+function snf_admin_handle_ops_refresh_catalog() {
+	if ( ! isset( $_POST['snf_ops_refresh_catalog_nonce'] ) ) {
+		return;
+	}
+	check_admin_referer( 'snf_ops_refresh_catalog', 'snf_ops_refresh_catalog_nonce' );
+	if ( ! current_user_can( 'manage_woocommerce' ) ) {
+		wp_die( esc_html__( 'Forbidden.', 'super-ninety-four' ) );
+	}
+
+	delete_transient( 'snf_supabase_stripe_catalog_v1' );
+	$probe = function_exists( 'snf_stripe_refresh_api_health' ) ? snf_stripe_refresh_api_health( true ) : '&supabase_probe=fail';
+	$page  = snf_admin_ops_redirect_page( 'snf-stripe' );
+	wp_safe_redirect( admin_url( 'admin.php?page=' . $page . '&updated=1' . $probe ) );
+	exit;
+}
+add_action( 'admin_post_snf_ops_refresh_catalog', 'snf_admin_handle_ops_refresh_catalog' );
+
+/**
+ * Force-ensure membership Woo products.
+ */
+function snf_admin_handle_ops_ensure_membership_products() {
+	if ( ! isset( $_POST['snf_ops_ensure_membership_nonce'] ) ) {
+		return;
+	}
+	check_admin_referer( 'snf_ops_ensure_membership', 'snf_ops_ensure_membership_nonce' );
+	if ( ! current_user_can( 'manage_woocommerce' ) ) {
+		wp_die( esc_html__( 'Forbidden.', 'super-ninety-four' ) );
+	}
+
+	if ( function_exists( 'snf_ensure_membership_products' ) ) {
+		snf_ensure_membership_products( true );
+	}
+	if ( function_exists( 'snf_ensure_application_product' ) ) {
+		// Clear one-shot so missing application SKU can be created on older installs.
+		delete_option( 'snf_membership_products_seeded_v2' );
+		snf_ensure_application_product();
+	}
+
+	$page = snf_admin_ops_redirect_page( 'snf-club-settings' );
+	wp_safe_redirect( admin_url( 'admin.php?page=' . $page . '&products_ok=membership' ) );
+	exit;
+}
+add_action( 'admin_post_snf_ops_ensure_membership_products', 'snf_admin_handle_ops_ensure_membership_products' );
+
+/**
+ * Force-ensure reciprocal Woo products.
+ */
+function snf_admin_handle_ops_ensure_reciprocal_products() {
+	if ( ! isset( $_POST['snf_ops_ensure_reciprocal_nonce'] ) ) {
+		return;
+	}
+	check_admin_referer( 'snf_ops_ensure_reciprocal', 'snf_ops_ensure_reciprocal_nonce' );
+	if ( ! current_user_can( 'manage_woocommerce' ) ) {
+		wp_die( esc_html__( 'Forbidden.', 'super-ninety-four' ) );
+	}
+
+	if ( function_exists( 'snf_ensure_reciprocal_program_products' ) ) {
+		snf_ensure_reciprocal_program_products( true );
+	}
+
+	$page = snf_admin_ops_redirect_page( 'snf-club-settings' );
+	wp_safe_redirect( admin_url( 'admin.php?page=' . $page . '&products_ok=reciprocal' ) );
+	exit;
+}
+add_action( 'admin_post_snf_ops_ensure_reciprocal_products', 'snf_admin_handle_ops_ensure_reciprocal_products' );
+
+/**
+ * Lookup Stripe subscriptions by email via Supabase.
+ */
+function snf_admin_handle_ops_subscription_lookup() {
+	if ( ! isset( $_POST['snf_ops_subscription_lookup_nonce'] ) ) {
+		return;
+	}
+	check_admin_referer( 'snf_ops_subscription_lookup', 'snf_ops_subscription_lookup_nonce' );
+	if ( ! current_user_can( 'manage_woocommerce' ) ) {
+		wp_die( esc_html__( 'Forbidden.', 'super-ninety-four' ) );
+	}
+
+	$email = isset( $_POST['lookup_email'] ) ? sanitize_email( wp_unslash( (string) $_POST['lookup_email'] ) ) : '';
+	$user  = get_current_user_id();
+	$page  = snf_admin_ops_redirect_page( 'snf-stripe' );
+
+	set_transient( 'snf_admin_lookup_email_' . $user, $email, 10 * MINUTE_IN_SECONDS );
+	delete_transient( 'snf_admin_lookup_rows_' . $user );
+	delete_transient( 'snf_admin_lookup_error_' . $user );
+
+	if ( ! function_exists( 'snf_supabase_get_subscriptions_by_email' ) ) {
+		set_transient( 'snf_admin_lookup_error_' . $user, __( 'Subscription lookup helper is unavailable.', 'super-ninety-four' ), 10 * MINUTE_IN_SECONDS );
+		wp_safe_redirect( admin_url( 'admin.php?page=' . $page . '&lookup=fail' ) );
+		exit;
+	}
+
+	$rows = snf_supabase_get_subscriptions_by_email( $email );
+	if ( is_wp_error( $rows ) ) {
+		set_transient( 'snf_admin_lookup_error_' . $user, $rows->get_error_message(), 10 * MINUTE_IN_SECONDS );
+		wp_safe_redirect( admin_url( 'admin.php?page=' . $page . '&lookup=fail' ) );
+		exit;
+	}
+
+	if ( ! $rows ) {
+		wp_safe_redirect( admin_url( 'admin.php?page=' . $page . '&lookup=empty' ) );
+		exit;
+	}
+
+	set_transient( 'snf_admin_lookup_rows_' . $user, $rows, 10 * MINUTE_IN_SECONDS );
+	wp_safe_redirect( admin_url( 'admin.php?page=' . $page . '&lookup=ok' ) );
+	exit;
+}
+add_action( 'admin_post_snf_ops_subscription_lookup', 'snf_admin_handle_ops_subscription_lookup' );
+
+/**
+ * Run club bootstrap from Critical settings.
+ */
+function snf_admin_handle_ops_club_bootstrap() {
+	if ( ! isset( $_POST['snf_ops_club_bootstrap_nonce'] ) ) {
+		return;
+	}
+	check_admin_referer( 'snf_ops_club_bootstrap', 'snf_ops_club_bootstrap_nonce' );
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_die( esc_html__( 'Forbidden.', 'super-ninety-four' ) );
+	}
+
+	snf_admin_run_club_bootstrap();
+	wp_safe_redirect( admin_url( 'admin.php?page=snf-club-settings&bootstrapped=1' ) );
+	exit;
+}
+add_action( 'admin_post_snf_ops_club_bootstrap', 'snf_admin_handle_ops_club_bootstrap' );
 
 /**
  * Flush rewrites from critical settings.
