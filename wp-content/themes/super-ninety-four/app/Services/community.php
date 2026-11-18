@@ -69,7 +69,7 @@ function snf_community_register_cpt() {
 			'public'              => false,
 			'publicly_queryable'  => false,
 			'show_ui'             => true,
-			'show_in_menu'        => true,
+			'show_in_menu'        => 'snf-club',
 			'show_in_rest'        => true,
 			'menu_icon'           => 'dashicons-groups',
 			'capability_type'     => 'post',

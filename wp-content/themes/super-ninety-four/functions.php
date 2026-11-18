@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'SNF_VERSION', '2.36.0' );
+define( 'SNF_VERSION', '2.36.1' );
 
 $snf_autoload = get_template_directory() . '/vendor/autoload.php';
 if ( file_exists( $snf_autoload ) ) {
@@ -67,6 +67,7 @@ function snf_register_event_cpt() {
 			'has_archive'  => true,
 			'rewrite'      => array( 'slug' => 'events' ),
 			'menu_icon'    => 'dashicons-calendar-alt',
+			'show_in_menu' => 'snf-club',
 			'show_in_rest' => true,
 			'supports'     => array( 'title', 'editor', 'thumbnail', 'excerpt' ),
 		)
@@ -1712,7 +1713,7 @@ function snf_register_reservation_cpt() {
 			),
 			'public'       => false,
 			'show_ui'      => true,
-			'show_in_menu' => 'edit.php?post_type=event',
+			'show_in_menu' => 'snf-club',
 			'supports'     => array( 'title', 'editor' ),
 			'menu_icon'    => 'dashicons-tickets-alt',
 		)

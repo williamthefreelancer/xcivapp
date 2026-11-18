@@ -61,13 +61,13 @@ function snf_register_media_cpts() {
 				'not_found'          => __( 'No videos found.', 'super-ninety-four' ),
 				'not_found_in_trash' => __( 'No videos found in Trash.', 'super-ninety-four' ),
 				'all_items'          => __( 'All Videos', 'super-ninety-four' ),
-				'menu_name'          => __( 'Videos & Audio', 'super-ninety-four' ),
+				'menu_name'          => __( 'Videos', 'super-ninety-four' ),
 			),
 			'public'              => true,
 			'has_archive'         => 'library/videos',
 			'rewrite'             => array( 'slug' => 'library/video' ),
 			'menu_icon'           => 'dashicons-video-alt3',
-			'menu_position'       => 26,
+			'show_in_menu'        => 'snf-club',
 			'show_in_rest'        => true,
 			'supports'            => array( 'title', 'editor', 'thumbnail', 'excerpt' ),
 			'exclude_from_search' => false,
@@ -94,7 +94,7 @@ function snf_register_media_cpts() {
 			'has_archive'         => 'library/audio',
 			'rewrite'             => array( 'slug' => 'library/audio' ),
 			'menu_icon'           => 'dashicons-playlist-audio',
-			'show_in_menu'        => 'edit.php?post_type=snf_video',
+			'show_in_menu'        => 'snf-club',
 			'show_in_rest'        => true,
 			'supports'            => array( 'title', 'editor', 'thumbnail', 'excerpt' ),
 			'exclude_from_search' => false,
@@ -1448,17 +1448,17 @@ function snf_rest_media_room_signal( WP_REST_Request $request ) {
  * Admin menu: media settings under Videos & Audio.
  */
 function snf_media_admin_menu() {
-	// Legacy slug kept for bookmarks; UI now lives in SNF Club → Videos & Audio.
+	// Legacy slug kept for bookmarks; UI lives in SNF Club → Videos & Audio.
 	add_submenu_page(
-		'edit.php?post_type=snf_video',
+		'snf-club',
 		__( 'Media Settings', 'super-ninety-four' ),
-		__( 'Settings', 'super-ninety-four' ),
+		__( 'Media settings (legacy)', 'super-ninety-four' ),
 		'manage_options',
 		'snf-media-settings',
 		'snf_media_render_settings_page'
 	);
 }
-add_action( 'admin_menu', 'snf_media_admin_menu' );
+add_action( 'admin_menu', 'snf_media_admin_menu', 20 );
 
 /**
  * Save media settings.

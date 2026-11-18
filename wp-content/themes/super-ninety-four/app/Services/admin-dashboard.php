@@ -205,35 +205,16 @@ function snf_admin_dashboard_menu() {
 		},
 		999
 	);
-
-	add_submenu_page(
-		'edit.php?post_type=event',
-		__( 'Events dashboard', 'super-ninety-four' ),
-		__( 'Dashboard', 'super-ninety-four' ),
-		'edit_posts',
-		'snf-club-events',
-		'snf_admin_render_events'
-	);
-
-	add_submenu_page(
-		'edit.php?post_type=snf_circle',
-		__( 'Circles dashboard', 'super-ninety-four' ),
-		__( 'Dashboard', 'super-ninety-four' ),
-		'edit_posts',
-		'snf-club-circles',
-		'snf_admin_render_circles'
-	);
-
-	add_submenu_page(
-		'edit.php?post_type=snf_video',
-		__( 'Media dashboard', 'super-ninety-four' ),
-		__( 'Dashboard', 'super-ninety-four' ),
-		'edit_posts',
-		'snf-club-media',
-		'snf_admin_render_media'
-	);
 }
 add_action( 'admin_menu', 'snf_admin_dashboard_menu', 9 );
+
+/**
+ * Hide redundant legacy Media settings link (dashboard already covers it).
+ */
+function snf_admin_remove_legacy_media_settings_menu() {
+	remove_submenu_page( 'snf-club', 'snf-media-settings' );
+}
+add_action( 'admin_menu', 'snf_admin_remove_legacy_media_settings_menu', 99 );
 
 /**
  * Count posts by type/status.
