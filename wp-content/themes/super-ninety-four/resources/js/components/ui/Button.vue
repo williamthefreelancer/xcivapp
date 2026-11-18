@@ -35,17 +35,17 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-primary text-snf-admin-on-dark hover:bg-snf-admin-ink hover:text-snf-admin-on-dark',
-        secondary: 'bg-secondary text-secondary-foreground hover:bg-snf-admin-ink hover:text-snf-admin-on-dark',
-        outline: 'border border-border bg-transparent text-foreground hover:bg-snf-admin-ink hover:text-snf-admin-on-dark hover:border-snf-admin-ink',
-        ghost: 'text-foreground hover:bg-snf-admin-ink hover:text-snf-admin-on-dark',
-        link: 'text-primary underline-offset-4 hover:underline',
+        default: 'bg-primary text-snf-admin-on-dark hover:bg-white/15 hover:text-white',
+        secondary: 'bg-secondary text-secondary-foreground hover:bg-white/15 hover:text-white',
+        outline: 'border border-border bg-transparent text-foreground hover:bg-white/10 hover:text-white hover:border-white/40',
+        ghost: 'text-foreground hover:bg-white/10 hover:text-white',
+        link: 'text-snf-admin-cream underline-offset-4 hover:underline hover:text-white',
       },
       size: {
-        default: 'h-10 px-4 py-2',
-        sm: 'h-9 rounded-md px-3',
-        lg: 'h-11 rounded-md px-8',
-        icon: 'size-10',
+        default: 'h-11 m-[0.5rem_1rem] sm:h-10',
+        sm: 'h-11 rounded-md m-[0.35rem_0.75rem] sm:h-9',
+        lg: 'h-11 rounded-md m-[0.5rem_2rem]',
+        icon: 'size-11 sm:size-10',
       },
     },
     defaultVariants: {

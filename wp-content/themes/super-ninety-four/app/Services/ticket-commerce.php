@@ -812,7 +812,7 @@ function snf_ticket_commerce_render_admin_fields( $post_id ) {
 		name="snf_ticket_commerce_json"
 		id="snf_ticket_commerce_json"
 		rows="18"
-		style="width:100%;font-family:Consolas,Monaco,monospace;font-size:12px;"
+		style="width:100%;font-family:Consolas,Monaco,monospace;font-size:0.75rem;"
 	><?php echo esc_textarea( (string) $json ); ?></textarea>
 	<?php
 }
@@ -826,7 +826,7 @@ function snf_ticket_commerce_product_panel() {
 		return;
 	}
 	echo '<div id="snf_ticket_commerce_data" class="panel woocommerce_options_panel hidden">';
-	echo '<div class="options_group" style="padding:12px 12px 0;">';
+	echo '<div class="options_group" style="margin:0.75rem 0.75rem 0;">';
 	snf_ticket_commerce_render_admin_fields( (int) $post->ID );
 	echo '</div></div>';
 }

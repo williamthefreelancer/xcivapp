@@ -5,7 +5,6 @@
 .snf-checkout {
   max-width: 42rem;
   margin: 0 auto;
-  padding: 0;
   color: var(--snf-ink, #f3ebe8);
 }
 
@@ -37,10 +36,8 @@
   flex-wrap: wrap;
   gap: 0.5rem 1rem;
   list-style: none;
-  margin: 0;
-  padding: 0;
-  border-bottom: 1px solid var(--snf-surface-border, rgba(243, 235, 232, 0.18));
-  padding-bottom: 0.75rem;
+  margin: 0 0 0.75rem;
+  border-bottom: 0.0625rem solid var(--snf-surface-border, rgba(243, 235, 232, 0.18));
 }
 
 .snf-checkout__step-btn {
@@ -51,7 +48,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.35rem 0;
+  margin: 0.35rem 0;
   opacity: 0.45;
   font: inherit;
   color: var(--snf-ink, #f3ebe8);
@@ -67,7 +64,7 @@
   place-items: center;
   width: 1.5rem;
   height: 1.5rem;
-  border: 1px solid rgba(243, 235, 232, 0.35);
+  border: 0.0625rem solid rgba(243, 235, 232, 0.35);
   font-size: 0.75rem;
 }
 
@@ -75,7 +72,7 @@
   display: none;
   flex-direction: column;
   gap: 1rem;
-  padding: 1.25rem 0 0;
+  margin: 1.25rem 0 0;
 }
 
 .snf-checkout__panel.is-active {
@@ -99,9 +96,9 @@
 .snf-checkout__field textarea,
 .snf-checkout__field select {
   width: 100%;
-  padding: 0.75rem 0.85rem;
-  border: 1px solid var(--snf-surface-border, rgba(243, 235, 232, 0.18));
-  border-radius: 2px;
+  margin: 0.75rem 0.85rem;
+  border: 0.0625rem solid var(--snf-surface-border, rgba(243, 235, 232, 0.18));
+  border-radius: 0.125rem;
   background: rgba(27, 19, 19, 0.55);
   color: var(--snf-ink, #f3ebe8);
   font: inherit;
@@ -116,13 +113,13 @@
 
 .snf-checkout__btn {
   appearance: none;
-  border: 1px solid var(--snf-surface-border, rgba(243, 235, 232, 0.18));
+  border: 0.0625rem solid var(--snf-surface-border, rgba(243, 235, 232, 0.18));
   background: transparent;
-  padding: 0.7rem 1.15rem;
+  margin: 0.7rem 1.15rem;
   font: inherit;
   cursor: pointer;
   color: var(--snf-ink, #f3ebe8);
-  min-height: 44px;
+  min-height: 2.75rem;
 }
 
 .snf-checkout__btn--primary {
@@ -133,9 +130,8 @@
 }
 
 .snf-checkout__summary {
-  padding: 1rem 0;
-  border-top: 1px solid rgba(243, 235, 232, 0.12);
-  margin-top: 0.5rem;
+  margin: 1rem 0 0;
+  border-top: 0.0625rem solid rgba(243, 235, 232, 0.12);
 }
 
 .snf-checkout__summary-title {
@@ -150,7 +146,6 @@
 .snf-payment-element {
   min-height: 2.5rem;
   margin: 0.75rem 0 1rem;
-  padding: 0.25rem 0;
 }
 
 .snf-payment-element__placeholder {
@@ -172,10 +167,9 @@
 .snf-checkout .woocommerce-additional-fields,
 .snf-checkout .woocommerce-shipping-fields {
   position: absolute !important;
-  width: 1px !important;
-  height: 1px !important;
-  padding: 0 !important;
-  margin: -1px !important;
+  width: 0.0625rem !important;
+  height: 0.0625rem !important;
+  margin: -0.0625rem !important;
   overflow: hidden !important;
   clip: rect(0, 0, 0, 0) !important;
   white-space: nowrap !important;
@@ -185,7 +179,6 @@
 .snf-checkout #payment .payment_methods {
   list-style: none;
   margin: 0 0 1rem;
-  padding: 0;
 }
 
 .snf-checkout #payment .payment_methods li {
@@ -205,13 +198,13 @@
 
 .snf-checkout .woocommerce-checkout-review-order-table th,
 .snf-checkout .woocommerce-checkout-review-order-table td {
-  padding: 0.5rem 0;
-  border-bottom: 1px solid rgba(243, 235, 232, 0.12);
+  margin: 0.5rem 0;
+  border-bottom: 0.0625rem solid rgba(243, 235, 232, 0.12);
   text-align: left;
   color: var(--snf-ink-soft, rgba(243, 235, 232, 0.42));
 }
 
-@media (max-width: 600px) {
+@media (max-width: 37.5rem) {
   .snf-checkout__step-label {
     font-size: 0.8rem;
   }

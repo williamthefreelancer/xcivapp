@@ -27,22 +27,22 @@ defineProps({
 
 <template>
   <header
-    class="snf-admin-shell__hero relative mb-5 overflow-hidden rounded-lg px-6 py-7 text-snf-admin-on-dark"
+    class="snf-admin-shell__hero relative mb-4 overflow-hidden rounded-lg text-snf-admin-on-dark sm:mb-5"
   >
-    <p class="mb-2 text-[11px] font-medium uppercase tracking-[0.14em] text-white/75">
+    <p class="m-[1.15rem_1rem_0.5rem] text-[0.6875rem] font-medium uppercase tracking-[0.14em] text-white/75 sm:m-[1.5rem_1.5rem_0.5rem]">
       {{ brand }}
     </p>
-    <h1 class="m-0 mb-2 text-[clamp(1.55rem,2.2vw,1.95rem)] font-semibold leading-tight tracking-tight text-snf-admin-on-dark">
+    <h1 class="m-[0_1rem_0.5rem] text-[clamp(1.35rem,2.2vw,1.95rem)] font-semibold leading-tight tracking-tight text-snf-admin-on-dark sm:m-[0_1.5rem_0.5rem]">
       {{ title }}
     </h1>
-    <p v-if="lede" class="m-0 max-w-2xl text-[0.98rem] text-white/80">
+    <p v-if="lede" class="m-[0_1rem_1.15rem] max-w-2xl text-[0.95rem] text-white/80 sm:m-[0_1.5rem_1.5rem] sm:text-[0.98rem]">
       {{ lede }}
     </p>
   </header>
 
   <nav
     v-if="nav.length"
-    class="snf-admin-shell__nav mb-5 flex flex-wrap gap-1 rounded-lg border border-border bg-card p-1.5"
+    class="snf-admin-shell__nav mb-4 flex flex-wrap gap-1 rounded-lg border border-border bg-snf-surface sm:mb-5"
     :aria-label="'SNF Club sections'"
   >
     <a
@@ -51,10 +51,10 @@ defineProps({
       :href="item.href"
       :class="
         cn(
-          'inline-flex items-center rounded-md px-3.5 py-2 text-[13px] font-semibold no-underline transition-colors',
+          'inline-flex min-h-11 items-center rounded-md m-[0.35rem_0.35rem] text-[0.8125rem] font-semibold no-underline transition-colors sm:min-h-9',
           active === item.slug
-            ? 'bg-snf-admin-ink text-snf-admin-on-dark'
-            : 'text-foreground hover:bg-snf-admin-ink hover:text-snf-admin-on-dark'
+            ? 'bg-white/15 text-white'
+            : 'text-white/70 hover:bg-white/10 hover:text-white'
         )
       "
     >
@@ -65,20 +65,22 @@ defineProps({
 
 <style scoped>
 .snf-admin-shell__hero {
+  border: 0.0625rem solid rgb(255 255 255 / 0.18);
   background:
-    radial-gradient(120% 140% at 100% 0%, rgba(243, 235, 232, 0.18), transparent 55%),
+    radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--snf-admin-cream, #f3ebe8) 14%, transparent), transparent 55%),
     linear-gradient(135deg, #815b5a 0%, #1b1313 78%);
   animation: snf-admin-fade-up 0.45s ease both;
 }
 
 .snf-admin-shell__nav {
+  margin-block: 0;
   animation: snf-admin-fade-up 0.5s ease 0.05s both;
 }
 
 @keyframes snf-admin-fade-up {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(0.5rem);
   }
   to {
     opacity: 1;

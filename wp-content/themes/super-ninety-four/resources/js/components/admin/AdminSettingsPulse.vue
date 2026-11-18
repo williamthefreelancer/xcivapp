@@ -21,20 +21,20 @@ const missing = computed(() => pages.value.filter((p) => !p.ok).length);
 </script>
 
 <template>
-  <div class="snf-admin-settings-pulse mb-5 grid gap-4 lg:grid-cols-3">
-    <Card class="lg:col-span-2">
+  <div class="snf-admin-settings-pulse mb-4 grid gap-4 sm:mb-5 lg:grid-cols-3">
+    <Card class="bg-card text-card-foreground lg:col-span-2">
       <CardHeader>
-        <CardTitle>Integration status</CardTitle>
+        <CardTitle class="text-foreground">Integration status</CardTitle>
         <CardDescription>
           Live health for the services Critical settings and Stripe control.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ul class="m-0 grid list-none gap-0 p-0 sm:grid-cols-2">
+        <ul class="m-0 grid list-none gap-0 sm:grid-cols-2">
           <li
             v-for="(row, i) in pulse"
             :key="row.id || i"
-            class="flex items-center justify-between gap-3 border-b border-border px-0 py-3 sm:odd:pr-4 sm:even:pl-4"
+            class="flex items-center justify-between gap-3 border-b border-border my-3 sm:odd:mr-4 sm:even:ml-4"
           >
             <span class="text-sm font-medium">{{ row.label }}</span>
             <Badge :variant="row.status || 'outline'">{{ row.value }}</Badge>
@@ -46,20 +46,20 @@ const missing = computed(() => pages.value.filter((p) => !p.ok).length);
       </CardContent>
     </Card>
 
-    <Card>
+    <Card class="bg-card text-card-foreground">
       <CardHeader>
-        <CardTitle>Page health</CardTitle>
+        <CardTitle class="text-foreground">Page health</CardTitle>
         <CardDescription>Auto-created Club surfaces.</CardDescription>
       </CardHeader>
       <CardContent>
-        <p class="m-0 mb-3 text-[clamp(1.5rem,2vw,2rem)] font-bold tracking-tight">
+        <p class="m-0 mb-3 text-[clamp(1.35rem,2vw,2rem)] font-bold tracking-tight text-foreground">
           {{ pages.length - missing }}
           <span class="text-sm font-medium text-muted-foreground">/ {{ pages.length }} present</span>
         </p>
         <Badge :variant="missing ? 'warn' : 'ok'">
           {{ missing ? `${missing} missing` : 'All present' }}
         </Badge>
-        <ul class="mt-4 m-0 flex list-none flex-col gap-2 p-0">
+        <ul class="mt-4 m-0 flex list-none flex-col gap-2">
           <li
             v-for="page in pages.slice(0, 4)"
             :key="page.slug"

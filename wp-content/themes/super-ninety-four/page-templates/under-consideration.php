@@ -38,7 +38,7 @@ $support_email = 'support@suprxcivplatformholdings.com';
 				<?php esc_html_e( 'We review alignment before granting member access. You will hear from SUPER NINETY FOUR when a decision is ready. Full member areas stay closed until then.', 'super-ninety-four' ); ?>
 			</p>
 
-			<ul class="snf-hub__rows" style="margin: 1.5rem 0;">
+			<ul class="snf-hub__rows">
 				<li class="snf-hub__row">
 					<span><?php esc_html_e( 'Status', 'super-ninety-four' ); ?></span>
 					<strong><?php esc_html_e( 'In review', 'super-ninety-four' ); ?></strong>

@@ -63,7 +63,7 @@ function snf_editor_block_styles() {
 			'block' => 'core/separator',
 			'name'  => 'wide-brand',
 			'label' => __( 'Wide brand', 'super-ninety-four' ),
-			'inline_style' => '.wp-block-separator.is-style-wide-brand{width:100%;max-width:100%;border:none;height:1px;background:linear-gradient(90deg,transparent,rgba(129,91,90,.85),transparent)}',
+			'inline_style' => '.wp-block-separator.is-style-wide-brand{width:100%;max-width:100%;border:none;height:0.0625rem;background:linear-gradient(90deg,transparent,rgba(129,91,90,.85),transparent)}',
 		),
 		array(
 			'block' => 'core/buttons',
@@ -75,7 +75,7 @@ function snf_editor_block_styles() {
 			'block' => 'core/list',
 			'name'  => 'checklist',
 			'label' => __( 'Checklist', 'super-ninety-four' ),
-			'inline_style' => '.wp-block-list.is-style-checklist{list-style:none;padding-left:0}.wp-block-list.is-style-checklist li{position:relative;padding-left:1.5rem;margin-bottom:.65rem}.wp-block-list.is-style-checklist li::before{content:"";position:absolute;left:0;top:.45em;width:.55rem;height:.55rem;border:1px solid rgba(243,235,232,.55);border-radius:1px}',
+			'inline_style' => '.wp-block-list.is-style-checklist{list-style:none;margin-left:0}.wp-block-list.is-style-checklist li{position:relative;margin:0 0 .65rem 1.5rem}.wp-block-list.is-style-checklist li::before{content:"";position:absolute;left:0;top:.45em;width:.55rem;height:.55rem;border:0.0625rem solid rgba(243,235,232,.55);border-radius:0.0625rem}',
 		),
 		array(
 			'block' => 'core/columns',
