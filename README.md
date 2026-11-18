@@ -153,7 +153,7 @@ wp eval-file wp-content/themes/super-ninety-four/bin/snf-verify-club-stack.php
 
 ### After deploy
 
-1. Confirm `SNF_STRIPE_*` (and optional Supabase/Mapbox / `SNF_FUNNEL_WEBHOOK_SECRET`) exist in DreamHost `wp-config.php`.
+1. Confirm `SNF_STRIPE_*` (and optional Supabase/Mapbox) exist in DreamHost `wp-config.php`.
 2. Confirm theme `vendor/autoload.php` and `dist/main.js` / `dist/main.css` exist (CI builds them).
 3. Confirm **SUPER NINETY FOUR Payments** is active and **BuddyPress** is inactive.
 4. Visit **Settings → Permalinks** and Save once (or rely on deploy `wp rewrite flush`).
