@@ -200,6 +200,16 @@ function snf_community_join_circle( $circle_id, $user_id ) {
 		return new WP_Error( 'snf_forbidden', __( 'Members only.', 'super-ninety-four' ), array( 'status' => 403 ) );
 	}
 
+	$self_join = true;
+	if ( function_exists( 'snf_get_circle_settings' ) ) {
+		$circle_settings = snf_get_circle_settings();
+		$self_join       = ! empty( $circle_settings['allow_self_join'] );
+	}
+	$self_join = (bool) apply_filters( 'snf_circle_allow_self_join', $self_join, $circle_id, $user_id );
+	if ( ! $self_join ) {
+		return new WP_Error( 'snf_self_join_disabled', __( 'Circle self-join is disabled.', 'super-ninety-four' ), array( 'status' => 403 ) );
+	}
+
 	if ( snf_community_user_in_circle( $circle_id, $user_id ) ) {
 		return true;
 	}

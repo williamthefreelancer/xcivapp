@@ -1448,6 +1448,7 @@ function snf_rest_media_room_signal( WP_REST_Request $request ) {
  * Admin menu: media settings under Videos & Audio.
  */
 function snf_media_admin_menu() {
+	// Legacy slug kept for bookmarks; UI now lives in SNF Club → Videos & Audio.
 	add_submenu_page(
 		'edit.php?post_type=snf_video',
 		__( 'Media Settings', 'super-ninety-four' ),
@@ -1491,114 +1492,40 @@ function snf_media_handle_settings_save() {
 
 	update_option( SNF_MEDIA_SETTINGS_OPTION, $current, false );
 
-	wp_safe_redirect(
-		add_query_arg(
-			array(
-				'page'    => 'snf-media-settings',
-				'updated' => '1',
-			),
-			admin_url( 'edit.php?post_type=snf_video' )
-		)
-	);
+	$redirect_page = 'snf-club-media';
+	if ( isset( $_POST['snf_media_redirect'] ) ) {
+		$candidate = sanitize_key( wp_unslash( $_POST['snf_media_redirect'] ) );
+		if ( in_array( $candidate, array( 'snf-club-media', 'snf-media-settings' ), true ) ) {
+			$redirect_page = $candidate;
+		}
+	}
+
+	if ( 'snf-media-settings' === $redirect_page ) {
+		wp_safe_redirect(
+			add_query_arg(
+				array(
+					'page'    => 'snf-media-settings',
+					'updated' => '1',
+				),
+				admin_url( 'edit.php?post_type=snf_video' )
+			)
+		);
+	} else {
+		wp_safe_redirect( admin_url( 'admin.php?page=snf-club-media&updated=1' ) );
+	}
 	exit;
 }
 add_action( 'admin_post_snf_media_save_settings', 'snf_media_handle_settings_save' );
 
 /**
- * Render media settings page.
+ * Render media settings page (legacy menu → Club media dashboard).
  */
 function snf_media_render_settings_page() {
-	if ( ! current_user_can( 'manage_options' ) ) {
+	if ( function_exists( 'snf_admin_render_media' ) ) {
+		snf_admin_render_media();
 		return;
 	}
-
-	$s = snf_get_media_settings();
-	?>
-	<div class="wrap">
-		<h1><?php esc_html_e( 'Videos & Audio settings', 'super-ninety-four' ); ?></h1>
-		<?php if ( isset( $_GET['updated'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
-			<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Settings saved.', 'super-ninety-four' ); ?></p></div>
-		<?php endif; ?>
-		<p>
-			<?php esc_html_e( 'YouTube library, SiriusXM-style audio channels, and hybrid venue / webinar broadcast defaults for event products.', 'super-ninety-four' ); ?>
-		</p>
-		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
-			<input type="hidden" name="action" value="snf_media_save_settings">
-			<?php wp_nonce_field( 'snf_media_settings', 'snf_media_settings_nonce' ); ?>
-			<table class="form-table" role="presentation">
-				<tr>
-					<th scope="row"><?php esc_html_e( 'Hub intro', 'super-ninety-four' ); ?></th>
-					<td>
-						<textarea name="hub_intro" class="large-text" rows="3"><?php echo esc_textarea( (string) $s['hub_intro'] ); ?></textarea>
-						<p class="description"><?php esc_html_e( 'Optional copy under the Videos & Audio page title.', 'super-ninety-four' ); ?></p>
-					</td>
-				</tr>
-				<tr>
-					<th scope="row"><?php esc_html_e( 'YouTube privacy-enhanced embeds', 'super-ninety-four' ); ?></th>
-					<td>
-						<label>
-							<input type="checkbox" name="youtube_privacy_enhanced" value="1" <?php checked( ! empty( $s['youtube_privacy_enhanced'] ) ); ?>>
-							<?php esc_html_e( 'Use youtube-nocookie.com', 'super-ninety-four' ); ?>
-						</label>
-					</td>
-				</tr>
-				<tr>
-					<th scope="row"><?php esc_html_e( 'Default video access', 'super-ninety-four' ); ?></th>
-					<td>
-						<select name="default_video_access">
-							<?php foreach ( snf_media_access_levels() as $value => $label ) : ?>
-								<option value="<?php echo esc_attr( $value ); ?>" <?php selected( $s['default_video_access'], $value ); ?>><?php echo esc_html( $label ); ?></option>
-							<?php endforeach; ?>
-						</select>
-					</td>
-				</tr>
-				<tr>
-					<th scope="row"><?php esc_html_e( 'Default audio access', 'super-ninety-four' ); ?></th>
-					<td>
-						<select name="default_audio_access">
-							<?php foreach ( snf_media_access_levels() as $value => $label ) : ?>
-								<option value="<?php echo esc_attr( $value ); ?>" <?php selected( $s['default_audio_access'], $value ); ?>><?php echo esc_html( $label ); ?></option>
-							<?php endforeach; ?>
-						</select>
-					</td>
-				</tr>
-				<tr>
-					<th scope="row"><?php esc_html_e( 'Default live provider', 'super-ninety-four' ); ?></th>
-					<td>
-						<select name="live_provider">
-							<?php foreach ( snf_live_provider_choices() as $value => $label ) : ?>
-								<option value="<?php echo esc_attr( $value ); ?>" <?php selected( $s['live_provider'], $value ); ?>><?php echo esc_html( $label ); ?></option>
-							<?php endforeach; ?>
-						</select>
-					</td>
-				</tr>
-				<tr>
-					<th scope="row"><?php esc_html_e( 'WebRTC live audio rooms', 'super-ninety-four' ); ?></th>
-					<td>
-						<label>
-							<input type="checkbox" name="enable_live_audio_rooms" value="1" <?php checked( ! empty( $s['enable_live_audio_rooms'] ) ); ?>>
-							<?php esc_html_e( 'Enable browser audio rooms for hybrid / virtual events', 'super-ninety-four' ); ?>
-						</label>
-					</td>
-				</tr>
-				<tr>
-					<th scope="row"><?php esc_html_e( 'ICE servers (one per line)', 'super-ninety-four' ); ?></th>
-					<td>
-						<textarea name="ice_servers" class="large-text code" rows="4"><?php echo esc_textarea( (string) $s['ice_servers'] ); ?></textarea>
-						<p class="description"><?php esc_html_e( 'STUN/TURN URLs for WebRTC listen-along rooms. Add TURN credentials via a dedicated provider for production.', 'super-ninety-four' ); ?></p>
-					</td>
-				</tr>
-				<tr>
-					<th scope="row"><?php esc_html_e( 'Room signal TTL (seconds)', 'super-ninety-four' ); ?></th>
-					<td>
-						<input type="number" name="audio_room_ttl" value="<?php echo esc_attr( (string) $s['audio_room_ttl'] ); ?>" min="30" step="1">
-					</td>
-				</tr>
-			</table>
-			<?php submit_button( __( 'Save settings', 'super-ninety-four' ) ); ?>
-		</form>
-	</div>
-	<?php
+	echo '<div class="wrap"><p>' . esc_html__( 'Media dashboard unavailable.', 'super-ninety-four' ) . '</p></div>';
 }
 
 /**

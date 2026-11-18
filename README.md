@@ -27,8 +27,11 @@ WordPress stays the CMS/runtime. The custom theme is organized as:
 | Support | `app/Support/` | Bootstrap + Vite asset loader |
 | Views | `page-templates/`, `template-parts/` | PHP templates |
 | Front-end | `resources/` → `dist/` | Vite + Tailwind + Vue (shadcn-vue) islands |
+| WP Admin | **SNF Club** menu | Events / Circles / Videos & Audio dashboards + critical settings |
 
 Brand colors/fonts stay the existing `--snf-*` tokens (Tailwind maps the same palette).
+
+WP Admin → **SNF Club** covers CPT dashboards, taxonomy shortcuts, media/live-room settings, Mapbox, page health, permalink flush, and Global Styles reset. Dashboard links also appear under Events, Circles, and Videos & Audio.
 
 ### Front-end build
 

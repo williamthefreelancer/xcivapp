@@ -40,6 +40,7 @@ final class Bootstrap {
 		'ticket-commerce.php',
 		'funnels.php',
 		'media-library.php',
+		'admin-dashboard.php',
 		'expo-marketplace.php',
 		'lead-rider.php',
 		'woocommerce-serp.php',
