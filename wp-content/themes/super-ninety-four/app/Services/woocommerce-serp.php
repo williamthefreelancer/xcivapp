@@ -618,7 +618,7 @@ function snf_attach_theme_service_image( $product_id, $filename ) {
 	}
 
 	$source = get_template_directory() . '/assets/images/services/' . $filename;
-	if ( ! file_exists( $source ) ) {
+	if ( ! file_exists( $source ) || ! is_readable( $source ) ) {
 		return 0;
 	}
 
@@ -626,24 +626,43 @@ function snf_attach_theme_service_image( $product_id, $filename ) {
 	require_once ABSPATH . 'wp-admin/includes/media.php';
 	require_once ABSPATH . 'wp-admin/includes/image.php';
 
-	$tmp = wp_tempnam( $filename );
-	if ( ! $tmp || ! copy( $source, $tmp ) ) {
+	// Prefer wp_upload_bits: media_handle_sideload + wp_tempnam often yields 0-byte
+	// temps on Windows (is_uploaded_file / empty-file upload_error).
+	$bits = file_get_contents( $source );
+	if ( false === $bits || '' === $bits ) {
 		return 0;
 	}
 
-	$file_array = array(
-		'name'     => $filename,
-		'tmp_name' => $tmp,
+	$upload = wp_upload_bits( $filename, null, $bits );
+	if ( ! empty( $upload['error'] ) || empty( $upload['file'] ) ) {
+		return 0;
+	}
+
+	$filetype      = wp_check_filetype( $filename, null );
+	$attachment_id = wp_insert_attachment(
+		array(
+			'post_mime_type' => $filetype['type'] ? $filetype['type'] : 'image/jpeg',
+			'post_title'     => preg_replace( '/\.[^.]+$/', '', $filename ),
+			'post_content'   => '',
+			'post_status'    => 'inherit',
+		),
+		$upload['file'],
+		$product_id,
+		true
 	);
 
-	$attachment_id = media_handle_sideload( $file_array, $product_id );
-	if ( is_wp_error( $attachment_id ) ) {
-		@unlink( $tmp ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+	if ( is_wp_error( $attachment_id ) || ! $attachment_id ) {
 		return 0;
 	}
 
-	set_post_thumbnail( $product_id, (int) $attachment_id );
-	return (int) $attachment_id;
+	$attachment_id = (int) $attachment_id;
+	$meta          = wp_generate_attachment_metadata( $attachment_id, $upload['file'] );
+	if ( $meta ) {
+		wp_update_attachment_metadata( $attachment_id, $meta );
+	}
+
+	set_post_thumbnail( $product_id, $attachment_id );
+	return $attachment_id;
 }
 
 /**

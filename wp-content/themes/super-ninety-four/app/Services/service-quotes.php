@@ -271,9 +271,98 @@ function snf_redirect_legacy_service_quote_pages() {
 add_action( 'template_redirect', 'snf_redirect_legacy_service_quote_pages', 16 );
 
 /**
- * Ensure the line-sitting/courier quote product exists (undoes prior retirement cleanup).
+ * Numeric catalog price for a service quote (from quote price string).
+ *
+ * @param array<string, mixed> $quote Quote definition.
+ * @return string
  */
-function snf_ensure_line_sitting_courier_quote_product() {
+function snf_get_service_quote_catalog_price( $quote ) {
+	$raw = isset( $quote['price'] ) ? (string) $quote['price'] : '400';
+	if ( preg_match( '/(\d+(?:\.\d+)?)/', $raw, $m ) ) {
+		return $m[1];
+	}
+
+	return '400';
+}
+
+/**
+ * Ensure a single service quote WooCommerce product exists and is categorized.
+ *
+ * @param string $slug Product slug.
+ * @return int Product ID or 0.
+ */
+function snf_ensure_service_quote_product( $slug ) {
+	$slug = sanitize_title( (string) $slug );
+	if ( '' === $slug || ! in_array( $slug, snf_get_service_quote_product_slugs(), true ) ) {
+		return 0;
+	}
+
+	$quote = snf_get_service_quote( $slug );
+	if ( ! $quote ) {
+		return 0;
+	}
+
+	$post = get_page_by_path( $slug, OBJECT, 'product' );
+	if ( $post instanceof WP_Post ) {
+		$product_id = (int) $post->ID;
+		if ( 'publish' !== $post->post_status ) {
+			wp_update_post(
+				array(
+					'ID'          => $product_id,
+					'post_status' => 'publish',
+				)
+			);
+		}
+	} else {
+		$product_id = wp_insert_post(
+			array(
+				'post_title'   => $quote['title'],
+				'post_name'    => $slug,
+				'post_content' => $quote['card_description'],
+				'post_excerpt' => $quote['lede'],
+				'post_status'  => 'publish',
+				'post_type'    => 'product',
+			),
+			true
+		);
+
+		if ( is_wp_error( $product_id ) || ! $product_id ) {
+			return 0;
+		}
+
+		$product_id = (int) $product_id;
+		$price      = snf_get_service_quote_catalog_price( $quote );
+
+		wp_set_object_terms( $product_id, 'simple', 'product_type' );
+		update_post_meta( $product_id, '_virtual', 'yes' );
+		update_post_meta( $product_id, '_sold_individually', 'yes' );
+		update_post_meta( $product_id, '_manage_stock', 'no' );
+		update_post_meta( $product_id, '_price', $price );
+		update_post_meta( $product_id, '_regular_price', $price );
+		update_post_meta( $product_id, '_catalog_visibility', 'visible' );
+	}
+
+	if ( taxonomy_exists( 'product_cat' ) && term_exists( 'services', 'product_cat' ) ) {
+		wp_set_object_terms( $product_id, 'services', 'product_cat', true );
+	}
+
+	if ( ! has_post_thumbnail( $product_id ) && function_exists( 'snf_attach_theme_service_image' ) ) {
+		$image_map = function_exists( 'snf_get_default_service_product_images' )
+			? snf_get_default_service_product_images()
+			: array();
+		$filename  = isset( $image_map[ $slug ] ) ? $image_map[ $slug ] : '';
+		if ( $filename ) {
+			snf_attach_theme_service_image( $product_id, $filename );
+		}
+	}
+
+	return $product_id;
+}
+
+/**
+ * Ensure all service quote products exist (undoes prior retirement cleanup).
+ */
+function snf_ensure_service_quote_products() {
 	if ( ! class_exists( 'WooCommerce' ) ) {
 		return;
 	}
@@ -282,56 +371,24 @@ function snf_ensure_line_sitting_courier_quote_product() {
 		delete_option( 'snf_deleted_line_sitting_courier_product_v1' );
 	}
 
-	$slug = 'professional-line-sitting-courier-service';
-	$post = get_page_by_path( $slug, OBJECT, 'product' );
-	if ( $post instanceof WP_Post ) {
-		if ( 'publish' !== $post->post_status ) {
-			wp_update_post(
-				array(
-					'ID'          => $post->ID,
-					'post_status' => 'publish',
-				)
-			);
-		}
-		return;
+	if ( function_exists( 'snf_ensure_serp_product_categories' ) ) {
+		snf_ensure_serp_product_categories();
 	}
 
-	$quote = snf_get_service_quote( $slug );
-	if ( ! $quote ) {
-		return;
-	}
-
-	$product_id = wp_insert_post(
-		array(
-			'post_title'   => $quote['title'],
-			'post_name'    => $slug,
-			'post_content' => $quote['card_description'],
-			'post_excerpt' => $quote['lede'],
-			'post_status'  => 'publish',
-			'post_type'    => 'product',
-		),
-		true
-	);
-
-	if ( is_wp_error( $product_id ) || ! $product_id ) {
-		return;
-	}
-
-	wp_set_object_terms( $product_id, 'simple', 'product_type' );
-	update_post_meta( $product_id, '_virtual', 'yes' );
-	update_post_meta( $product_id, '_sold_individually', 'yes' );
-	update_post_meta( $product_id, '_manage_stock', 'no' );
-	update_post_meta( $product_id, '_price', '400' );
-	update_post_meta( $product_id, '_regular_price', '400' );
-	update_post_meta( $product_id, '_catalog_visibility', 'visible' );
-
-	if ( function_exists( 'snf_attach_theme_service_image' ) ) {
-		snf_attach_theme_service_image( $product_id, 'lifestyle-service-image-1.jpg' );
+	foreach ( snf_get_service_quote_product_slugs() as $slug ) {
+		snf_ensure_service_quote_product( $slug );
 	}
 }
-add_action( 'after_switch_theme', 'snf_ensure_line_sitting_courier_quote_product' );
-add_action( 'admin_init', 'snf_ensure_line_sitting_courier_quote_product', 33 );
-add_action( 'init', 'snf_ensure_line_sitting_courier_quote_product', 60 );
+add_action( 'after_switch_theme', 'snf_ensure_service_quote_products' );
+add_action( 'admin_init', 'snf_ensure_service_quote_products', 33 );
+add_action( 'init', 'snf_ensure_service_quote_products', 60 );
+
+/**
+ * Back-compat alias for the previous single-product ensure.
+ */
+function snf_ensure_line_sitting_courier_quote_product() {
+	snf_ensure_service_quote_products();
+}
 
 /**
  * Emit when a paid order includes a service quote product.

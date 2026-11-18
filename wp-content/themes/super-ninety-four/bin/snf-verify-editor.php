@@ -2,11 +2,15 @@
 /**
  * Verify block-theme editor config (theme.json, patterns, styles).
  *
- * Usage: php wp-content/themes/super-ninety-four/bin/snf-verify-editor.php
+ * Usage:
+ *   wp eval-file wp-content/themes/super-ninety-four/bin/snf-verify-editor.php
+ *   php wp-content/themes/super-ninety-four/bin/snf-verify-editor.php
  */
 
-$root = dirname( __DIR__, 4 );
-require $root . '/wp-load.php';
+if ( ! defined( 'ABSPATH' ) ) {
+	$root = dirname( __DIR__, 4 );
+	require $root . '/wp-load.php';
+}
 
 $theme_dir = get_template_directory();
 
