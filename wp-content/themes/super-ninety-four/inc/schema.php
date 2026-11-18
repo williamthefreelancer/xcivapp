@@ -493,6 +493,56 @@ function snf_schema_product_node( $post_id = null ) {
 }
 
 /**
+ * FAQPage JSON-LD from home content accordion.
+ *
+ * @return array<string, mixed>|null
+ */
+function snf_schema_home_faq_node() {
+	if ( ! is_front_page() || ! function_exists( 'snf_get_home_content' ) ) {
+		return null;
+	}
+
+	$home = snf_get_home_content();
+	$faq  = isset( $home['rules_faq']['faq'] ) ? $home['rules_faq']['faq'] : array();
+	if ( ! $faq ) {
+		return null;
+	}
+
+	$entities = array();
+	foreach ( $faq as $item ) {
+		if ( empty( $item['q'] ) || empty( $item['a'] ) ) {
+			continue;
+		}
+		$entities[] = array(
+			'@type'          => 'Question',
+			'name'           => wp_strip_all_tags( $item['q'] ),
+			'acceptedAnswer' => array(
+				'@type' => 'Answer',
+				'text'  => wp_strip_all_tags( $item['a'] ),
+			),
+		);
+	}
+
+	if ( ! $entities ) {
+		return null;
+	}
+
+	$node = array(
+		'@type'      => 'FAQPage',
+		'@id'        => snf_schema_home_url() . '/#faq',
+		'url'        => snf_schema_home_url() . '/',
+		'mainEntity' => $entities,
+	);
+
+	/**
+	 * Filter home FAQPage JSON-LD node.
+	 *
+	 * @param array<string, mixed> $node FAQ node.
+	 */
+	return apply_filters( 'snf_schema_home_faq_node', $node );
+}
+
+/**
  * Assemble @graph for the current request.
  *
  * @return array<int, array<string, mixed>>
@@ -517,6 +567,11 @@ function snf_schema_build_graph() {
 		if ( $product ) {
 			$graph[] = $product;
 		}
+	}
+
+	$home_faq = snf_schema_home_faq_node();
+	if ( $home_faq ) {
+		$graph[] = $home_faq;
 	}
 
 	/**

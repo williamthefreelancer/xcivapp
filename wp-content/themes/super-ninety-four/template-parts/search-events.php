@@ -9,7 +9,7 @@ if ( ! $shop_url ) {
 }
 $query = isset( $_GET['q'] ) ? sanitize_text_field( wp_unslash( $_GET['q'] ) ) : '';
 ?>
-<form class="snf-search" role="search" method="get" action="<?php echo esc_url( $shop_url ); ?>" aria-label="<?php esc_attr_e( 'Search events and services', 'super-ninety-four' ); ?>">
+<form id="snf-search-events" class="snf-search" role="search" method="get" action="<?php echo esc_url( $shop_url ); ?>" aria-label="<?php esc_attr_e( 'Search events and services', 'super-ninety-four' ); ?>">
 	<label class="snf-search__field snf-search__field--query">
 		<span class="screen-reader-text"><?php esc_html_e( 'Search events and services', 'super-ninety-four' ); ?></span>
 		<input class="snf-search__input" type="search" name="q" value="<?php echo esc_attr( $query ); ?>" placeholder="<?php esc_attr_e( 'Search events & services', 'super-ninety-four' ); ?>" autocomplete="off">

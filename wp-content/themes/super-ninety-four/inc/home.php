@@ -123,6 +123,185 @@ function snf_get_home_content() {
 				),
 			),
 		),
+		/* Paths after audience fit */
+		'paths'     => array(
+			'title' => __( 'Choose how you enter', 'super-ninety-four' ),
+			'lede'  => __( 'Membership is optional. Guests can attend select events; property managers and clients can open the inquiry desk for the service they need.', 'super-ninety-four' ),
+			'cta'   => array(
+				'title' => __( 'Browse select events first', 'super-ninety-four' ),
+				'body'  => __( 'Use the search bar above to find open admission and select events. You can attend without joining — admission still requires payment.', 'super-ninety-four' ),
+				'label' => __( 'Back to search events', 'super-ninety-four' ),
+				'url'   => '#snf-search-events',
+			),
+			'guest'   => array(
+				'title' => __( 'Attend without membership', 'super-ninety-four' ),
+				'body'  => __( 'You do not have to become a member. Enjoy attending select events that offer open admission — tickets and fees still apply.', 'super-ninety-four' ),
+				'label' => __( 'Search select events', 'super-ninety-four' ),
+				'url'   => '#snf-search-events',
+			),
+			'inquiry' => array(
+				'title' => __( 'Property managers & clients', 'super-ninety-four' ),
+				'body'  => __( 'Skip membership when you need a service desk. Open the inquiry that matches what you are looking for — stays, cleaning, courier, or reciprocal programs.', 'super-ninety-four' ),
+				'label' => __( 'Go to inquiries', 'super-ninety-four' ),
+				'url'   => snf_get_page_url( 'inquiries' ),
+				'cards' => array(
+					array(
+						'title' => __( 'Service inquiries', 'super-ninety-four' ),
+						'body'  => __( 'Litter pickup, line sitting & courier, and janitorial cleaning for properties on the circuit.', 'super-ninety-four' ),
+						'url'   => snf_get_page_url( 'inquiries' ),
+					),
+					array(
+						'title' => __( 'Reciprocal club inquiry', 'super-ninety-four' ),
+						'body'  => __( 'Back Creek, Badlands, Wyoma Square, and City Clubs — request a consideration window.', 'super-ninety-four' ),
+						'url'   => snf_get_page_url( 'find-other-reciprocal-programs' ),
+					),
+				),
+			),
+		),
+		'membership' => array(
+			'title'      => __( 'What you get with membership', 'super-ninety-four' ),
+			'lede'       => __( 'Each plan unlocks a private desk, reciprocal reach, and member-only select events. Initiation is required for every membership plan.', 'super-ninety-four' ),
+			'initiation' => array(
+				'label'  => __( 'Initiation fee', 'super-ninety-four' ),
+				'amount' => '$75,000.00',
+				'meta'   => __( 'Required for all membership plans', 'super-ninety-four' ),
+			),
+			'plans'      => array(
+				array(
+					'name'     => __( 'Back Creek Plan', 'super-ninety-four' ),
+					'price'    => '$1,000.00',
+					'cadence'  => __( '/mo', 'super-ninety-four' ),
+					'term'     => __( 'for 12 months', 'super-ninety-four' ),
+					'benefits' => array(
+						__( 'Regional backway immersions between Charlotte and outside of Boston', 'super-ninety-four' ),
+						__( 'Guest credentials at The Clubs at Back Creek', 'super-ninety-four' ),
+						__( 'Member select events and Lifestyle Concierge desk access', 'super-ninety-four' ),
+					),
+				),
+				array(
+					'name'     => __( 'Badlands Plan', 'super-ninety-four' ),
+					'price'    => '$2,129.00',
+					'cadence'  => __( '/mo', 'super-ninety-four' ),
+					'term'     => __( 'for 12 months', 'super-ninety-four' ),
+					'benefits' => array(
+						__( 'Private gatherings with road travel and adventurous vibes', 'super-ninety-four' ),
+						__( 'BADLANDS BRA reciprocal seat and guest windows', 'super-ninety-four' ),
+						__( 'Live lead rider & walkie on eligible member drives', 'super-ninety-four' ),
+					),
+				),
+				array(
+					'name'     => __( 'Regions NE Plan', 'super-ninety-four' ),
+					'price'    => '$2,899.00',
+					'cadence'  => __( '/mo', 'super-ninety-four' ),
+					'term'     => __( 'for 12 months', 'super-ninety-four' ),
+					'benefits' => array(
+						__( 'Northeast reciprocal square hospitality and member evenings', 'super-ninety-four' ),
+						__( 'Priority consideration for Wyoma Square immerse windows', 'super-ninety-four' ),
+						__( 'Expanded select-event calendar across the region', 'super-ninety-four' ),
+					),
+				),
+				array(
+					'name'     => __( 'City to City', 'super-ninety-four' ),
+					'price'    => '$3,649.00',
+					'cadence'  => __( '/mo', 'super-ninety-four' ),
+					'term'     => __( 'for 12 months', 'super-ninety-four' ),
+					'benefits' => array(
+						__( 'City-to-city immersions, coach travel, and reciprocal hospitality', 'super-ninety-four' ),
+						__( 'The City Clubs of SUPER NINETY FOUR circuit access', 'super-ninety-four' ),
+						__( 'Full member desk — events, clubs, and Lifestyle Concierge', 'super-ninety-four' ),
+					),
+				),
+			),
+			'cta'        => array(
+				'label' => __( 'Start application', 'super-ninety-four' ),
+				'url'   => snf_get_page_url( 'apply' ),
+			),
+		),
+		'application' => array(
+			'title' => __( 'Application process', 'super-ninety-four' ),
+			'lede'  => __( 'Private consideration — not a public checkout. High-alignment principals may be interviewed directly.', 'super-ninety-four' ),
+			'steps' => array(
+				array(
+					'num'   => '1',
+					'title' => __( 'Basics', 'super-ninety-four' ),
+					'body'  => __( 'Share your name, email, and phone so the desk can reach you.', 'super-ninety-four' ),
+				),
+				array(
+					'num'   => '2',
+					'title' => __( 'Profile', 'super-ninety-four' ),
+					'body'  => __( 'Tell us how you host, operate, or travel — reputation and fit matter.', 'super-ninety-four' ),
+				),
+				array(
+					'num'   => '3',
+					'title' => __( 'Intent', 'super-ninety-four' ),
+					'body'  => __( 'Choose a preferred membership plan and pay the application fee to enter consideration.', 'super-ninety-four' ),
+				),
+				array(
+					'num'   => '4',
+					'title' => __( 'Decision', 'super-ninety-four' ),
+					'body'  => __( 'Admissions reviews alignment. Approved applicants complete initiation and plan billing.', 'super-ninety-four' ),
+				),
+			),
+			'cta'   => array(
+				'label' => __( 'Apply now', 'super-ninety-four' ),
+				'url'   => snf_get_page_url( 'apply' ),
+			),
+		),
+		'journey'   => array(
+			'title'  => __( 'Before & after joining', 'super-ninety-four' ),
+			'lede'   => __( 'What changes when you move from guest or prospect to a seated member.', 'super-ninety-four' ),
+			'before' => array(
+				'title' => __( 'Before joining', 'super-ninety-four' ),
+				'items' => array(
+					__( 'Browse and search open admission and select events', 'super-ninety-four' ),
+					__( 'Attend eligible events with paid admission — no membership required', 'super-ninety-four' ),
+					__( 'Submit service or reciprocal club inquiries as a property manager or client', 'super-ninety-four' ),
+					__( 'Start a membership application when you are ready for the private desk', 'super-ninety-four' ),
+				),
+			),
+			'after'  => array(
+				'title' => __( 'After joining', 'super-ninety-four' ),
+				'items' => array(
+					__( 'Member select events, reciprocal clubs, and Lifestyle Concierge', 'super-ninety-four' ),
+					__( 'Live lead rider tracking and walkie on eligible road immersions', 'super-ninety-four' ),
+					__( 'Account hub for membership, tickets, billing, and messages', 'super-ninety-four' ),
+					__( 'Credentials that travel with you across the circuit', 'super-ninety-four' ),
+				),
+			),
+		),
+		'rules_faq' => array(
+			'title' => __( 'Program rules & FAQ', 'super-ninety-four' ),
+			'lede'  => __( 'Discretion, consent, and hospitality standards govern every seat and every guest window.', 'super-ninety-four' ),
+			'rules' => array(
+				__( 'Admission and partnership follow a strict hospitality bar — alignment over volume.', 'super-ninety-four' ),
+				__( 'Discretion and consent are non-negotiable at every event and reciprocal visit.', 'super-ninety-four' ),
+				__( 'Membership plans require initiation; dues renew on a 12-month term with a reminder before renewal.', 'super-ninety-four' ),
+				__( 'Guests may attend select open-admission events without joining; payment is still required.', 'super-ninety-four' ),
+				__( 'SUPER NINETY FOUR may accept, defer, or decline any application without public explanation.', 'super-ninety-four' ),
+			),
+			'faq'   => array(
+				array(
+					'q' => __( 'Do I have to become a member to attend events?', 'super-ninety-four' ),
+					'a' => __( 'No. You can enjoy attending select events with open admission without joining. You still pay for those tickets or fees. Membership unlocks the private desk, reciprocal clubs, and member-only select events.', 'super-ninety-four' ),
+				),
+				array(
+					'q' => __( 'What does membership include?', 'super-ninety-four' ),
+					'a' => __( 'Each plan includes a 12-month seat, initiation, access to member select events, reciprocal club credentials for that plan’s circuit, and Lifestyle Concierge desk access. Higher plans expand road immersions and city-to-city reach.', 'super-ninety-four' ),
+				),
+				array(
+					'q' => __( 'How does the application work?', 'super-ninety-four' ),
+					'a' => __( 'Complete Basics, Profile, and Intent on the Apply page, pay the application fee, and wait for admissions. Principals who already meet the highest standard may be interviewed directly and may forgo the standard application path.', 'super-ninety-four' ),
+				),
+				array(
+					'q' => __( 'I am a property manager or client — where do I go?', 'super-ninety-four' ),
+					'a' => __( 'Open Inquiries and choose the service or reciprocal program that matches what you need. You do not need membership to submit an inquiry; the desk routes you to the right consideration window.', 'super-ninety-four' ),
+				),
+				array(
+					'q' => __( 'What are the program rules?', 'super-ninety-four' ),
+					'a' => __( 'Meet the hospitality standard, protect discretion and consent, pay initiation and dues when seated, and honor guest credentials. Conduct that breaks the standard ends access.', 'super-ninety-four' ),
+				),
+			),
+		),
 	);
 
 	/**

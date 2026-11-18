@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'SNF_VERSION', '2.19.3' );
+define( 'SNF_VERSION', '2.20.0' );
 
 require_once get_template_directory() . '/inc/account-hub.php';
 require_once get_template_directory() . '/inc/memberships.php';
