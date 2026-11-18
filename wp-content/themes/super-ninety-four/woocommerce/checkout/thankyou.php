@@ -91,6 +91,19 @@ $orders_url      = function_exists( 'snf_get_woo_account_url' ) ? snf_get_woo_ac
 				<a class="button snf-thankyou__btn snf-thankyou__btn--primary" href="<?php echo esc_url( $tickets_url ); ?>"><?php esc_html_e( 'View tickets', 'super-ninety-four' ); ?></a>
 				<a class="button snf-thankyou__btn" href="<?php echo esc_url( $membership_url ); ?>"><?php esc_html_e( 'Membership', 'super-ninety-four' ); ?></a>
 				<a class="button snf-thankyou__btn" href="<?php echo esc_url( $orders_url ); ?>"><?php esc_html_e( 'Order history', 'super-ninety-four' ); ?></a>
+				<?php
+				if ( function_exists( 'snf_funnel_resolve_for_order' ) ) :
+					$funnel_trigger = snf_funnel_resolve_for_order( $order );
+					if ( $funnel_trigger ) :
+						$funnel_offer = snf_funnel_offer_url( (int) $funnel_trigger['config']['upsell_page_id'], $order, 'upsell' );
+						if ( $funnel_offer ) :
+							?>
+							<a class="button snf-thankyou__btn" href="<?php echo esc_url( $funnel_offer ); ?>"><?php esc_html_e( 'View special offer', 'super-ninety-four' ); ?></a>
+							<?php
+						endif;
+					endif;
+				endif;
+				?>
 			</nav>
 
 		<?php endif; ?>

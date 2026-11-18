@@ -18,7 +18,14 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return string[]
  */
 function snf_get_marketing_host_page_slugs() {
-	return array( 'contact', 'newsletter', 'videos-audio' );
+	$slugs = array( 'contact', 'newsletter', 'videos-audio' );
+
+	/**
+	 * Extra public blank-canvas / funnel page slugs.
+	 *
+	 * @param string[] $slugs Slugs.
+	 */
+	return array_values( array_unique( apply_filters( 'snf_marketing_host_page_slugs', $slugs ) ) );
 }
 
 /**

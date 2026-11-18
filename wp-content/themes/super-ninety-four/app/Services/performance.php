@@ -184,12 +184,19 @@ function snf_trim_front_assets() {
 		return;
 	}
 
-	wp_dequeue_style( 'wp-block-library' );
-	wp_dequeue_style( 'wp-block-library-theme' );
+	$keep_block_styles = ( function_exists( 'snf_is_marketing_host_page' ) && snf_is_marketing_host_page() )
+		|| ( function_exists( 'snf_is_funnel_offer_page' ) && snf_is_funnel_offer_page() )
+		|| ( function_exists( 'snf_is_page_template' ) && snf_is_page_template( array( 'page-templates/blank-canvas.php', 'blank-canvas', 'page-templates/funnel-offer.php', 'funnel-offer' ) ) );
+
+	if ( ! $keep_block_styles ) {
+		wp_dequeue_style( 'wp-block-library' );
+		wp_dequeue_style( 'wp-block-library-theme' );
+		wp_dequeue_style( 'classic-theme-styles' );
+		wp_dequeue_style( 'global-styles' );
+	}
+
 	wp_dequeue_style( 'wc-blocks-style' );
 	wp_dequeue_style( 'wc-blocks-vendors-style' );
-	wp_dequeue_style( 'classic-theme-styles' );
-	wp_dequeue_style( 'global-styles' );
 
 	if ( ! snf_needs_woocommerce_assets() ) {
 		$wc_styles = array(

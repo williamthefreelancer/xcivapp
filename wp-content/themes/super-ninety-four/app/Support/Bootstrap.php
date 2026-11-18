@@ -37,6 +37,7 @@ final class Bootstrap {
 		'home.php',
 		'events.php',
 		'ticket-commerce.php',
+		'funnels.php',
 		'media-library.php',
 		'expo-marketplace.php',
 		'lead-rider.php',

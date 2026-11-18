@@ -128,7 +128,7 @@ function snf_get_protected_page_templates() {
  * @return string[]
  */
 function snf_get_public_page_slugs() {
-	return array(
+	$slugs = array(
 		'home',
 		'about',
 		'inquiries',
@@ -146,6 +146,13 @@ function snf_get_public_page_slugs() {
 		'cookie-policy',
 		'refund_returns',
 	);
+
+	/**
+	 * Extra public funnel / marketing slugs (upsell & downsell pages).
+	 *
+	 * @param string[] $slugs Slugs.
+	 */
+	return array_values( array_unique( apply_filters( 'snf_public_page_slugs', $slugs ) ) );
 }
 
 /**

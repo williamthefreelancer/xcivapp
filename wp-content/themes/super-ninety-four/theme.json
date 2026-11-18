@@ -171,6 +171,11 @@
       "postTypes": ["page"]
     },
     {
+      "name": "funnel-offer",
+      "title": "Funnel Offer",
+      "postTypes": ["page"]
+    },
+    {
       "name": "expo-marketplace",
       "title": "Expo Marketplace",
       "postTypes": ["page"]
