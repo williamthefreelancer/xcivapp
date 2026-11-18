@@ -18,6 +18,37 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+const SNF_TICKET_ADDON_SETTINGS_OPTION = 'snf_ticket_addon_settings';
+
+/**
+ * Default Ticket Addon Kind / commerce desk settings.
+ *
+ * @return array<string, mixed>
+ */
+function snf_ticket_addon_default_settings() {
+	return array(
+		'require_kind_on_addons'          => 1,
+		'require_kind_on_upsells'         => 1,
+		'require_kind_on_interactivities' => 1,
+		'default_addon_max_qty'           => 1,
+		'auto_assign_terms'               => 1,
+		'desk_intro'                      => '',
+	);
+}
+
+/**
+ * Merged ticket addon settings.
+ *
+ * @return array<string, mixed>
+ */
+function snf_get_ticket_addon_settings() {
+	$stored = get_option( SNF_TICKET_ADDON_SETTINGS_OPTION, array() );
+	if ( ! is_array( $stored ) ) {
+		$stored = array();
+	}
+	return array_merge( snf_ticket_addon_default_settings(), $stored );
+}
+
 /**
  * Post types that accept ticket commerce config.
  *
@@ -85,6 +116,7 @@ function snf_register_ticket_commerce_taxonomies() {
 			'hierarchical'      => true,
 			'show_admin_column' => true,
 			'show_in_rest'      => true,
+			'show_in_menu'      => false,
 			'rewrite'           => array( 'slug' => 'ticket-addon' ),
 		)
 	);
@@ -123,30 +155,53 @@ function snf_ticket_commerce_default_addon_kinds() {
 }
 
 /**
- * Ensure default taxonomy terms exist once.
+ * Insert missing default experience + addon-kind terms.
+ *
+ * @param bool $force When true, ignore the one-shot seeded option.
+ * @return array{experiences:int,addons:int}
  */
-function snf_ensure_ticket_commerce_terms() {
-	if ( get_option( 'snf_ticket_commerce_terms_seeded' ) ) {
-		return;
+function snf_ticket_commerce_seed_default_terms( $force = false ) {
+	$created = array(
+		'experiences' => 0,
+		'addons'      => 0,
+	);
+
+	if ( ! $force && get_option( 'snf_ticket_commerce_terms_seeded' ) ) {
+		return $created;
 	}
 
 	if ( ! taxonomy_exists( 'snf_event_experience' ) || ! taxonomy_exists( 'snf_ticket_addon_kind' ) ) {
-		return;
+		return $created;
 	}
 
 	foreach ( snf_ticket_commerce_default_experiences() as $slug => $label ) {
 		if ( ! term_exists( $slug, 'snf_event_experience' ) ) {
-			wp_insert_term( $label, 'snf_event_experience', array( 'slug' => $slug ) );
+			$result = wp_insert_term( $label, 'snf_event_experience', array( 'slug' => $slug ) );
+			if ( ! is_wp_error( $result ) ) {
+				++$created['experiences'];
+			}
 		}
 	}
 
 	foreach ( snf_ticket_commerce_default_addon_kinds() as $slug => $label ) {
 		if ( ! term_exists( $slug, 'snf_ticket_addon_kind' ) ) {
-			wp_insert_term( $label, 'snf_ticket_addon_kind', array( 'slug' => $slug ) );
+			$result = wp_insert_term( $label, 'snf_ticket_addon_kind', array( 'slug' => $slug ) );
+			if ( ! is_wp_error( $result ) ) {
+				++$created['addons'];
+			}
 		}
 	}
 
 	update_option( 'snf_ticket_commerce_terms_seeded', 1, false );
+
+	return $created;
+}
+
+/**
+ * Ensure default taxonomy terms exist once.
+ */
+function snf_ensure_ticket_commerce_terms() {
+	snf_ticket_commerce_seed_default_terms( false );
 }
 add_action( 'init', 'snf_ensure_ticket_commerce_terms', 20 );
 
@@ -168,10 +223,11 @@ function snf_ticket_commerce_empty_config() {
 /**
  * Sanitize one commerce line item (tier / addon / upsell / interactivity).
  *
- * @param array<string, mixed> $row Raw row.
+ * @param array<string, mixed> $row   Raw row.
+ * @param string               $group Config group key.
  * @return array<string, mixed>|null
  */
-function snf_ticket_commerce_sanitize_row( $row ) {
+function snf_ticket_commerce_sanitize_row( $row, $group = '' ) {
 	if ( ! is_array( $row ) ) {
 		return null;
 	}
@@ -189,9 +245,11 @@ function snf_ticket_commerce_sanitize_row( $row ) {
 		$price = 0.0;
 	}
 
-	$max_qty = isset( $row['max_qty'] ) ? absint( $row['max_qty'] ) : 1;
+	$settings  = snf_get_ticket_addon_settings();
+	$default_q = max( 1, (int) $settings['default_addon_max_qty'] );
+	$max_qty   = isset( $row['max_qty'] ) ? absint( $row['max_qty'] ) : $default_q;
 	if ( $max_qty < 1 ) {
-		$max_qty = 1;
+		$max_qty = $default_q;
 	}
 
 	$requires = array();
@@ -212,13 +270,23 @@ function snf_ticket_commerce_sanitize_row( $row ) {
 	}
 
 	$product_id = isset( $row['product_id'] ) ? absint( $row['product_id'] ) : 0;
+	$kind       = sanitize_title( (string) ( $row['kind'] ?? '' ) );
+
+	$require_map = array(
+		'addons'          => ! empty( $settings['require_kind_on_addons'] ),
+		'upsells'         => ! empty( $settings['require_kind_on_upsells'] ),
+		'interactivities' => ! empty( $settings['require_kind_on_interactivities'] ),
+	);
+	if ( $group && ! empty( $require_map[ $group ] ) && '' === $kind ) {
+		return null;
+	}
 
 	return array(
 		'id'            => $id,
 		'label'         => sanitize_text_field( (string) ( $row['label'] ?? $id ) ),
 		'description'   => sanitize_textarea_field( (string) ( $row['description'] ?? '' ) ),
 		'price'         => $price,
-		'kind'          => sanitize_title( (string) ( $row['kind'] ?? '' ) ),
+		'kind'          => $kind,
 		'max_qty'       => $max_qty,
 		'capacity'      => isset( $row['capacity'] ) ? absint( $row['capacity'] ) : 0,
 		'upsell'        => ! empty( $row['upsell'] ),
@@ -254,7 +322,7 @@ function snf_ticket_commerce_sanitize_config( $raw ) {
 			continue;
 		}
 		foreach ( $raw[ $group ] as $row ) {
-			$clean = snf_ticket_commerce_sanitize_row( $row );
+			$clean = snf_ticket_commerce_sanitize_row( $row, $group );
 			if ( $clean ) {
 				$config[ $group ][] = $clean;
 			}
@@ -262,6 +330,68 @@ function snf_ticket_commerce_sanitize_config( $raw ) {
 	}
 
 	return $config;
+}
+
+/**
+ * Collect addon-kind slugs referenced by a commerce config.
+ *
+ * @param array<string, mixed> $config Config.
+ * @return string[]
+ */
+function snf_ticket_commerce_config_kind_slugs( $config ) {
+	$slugs = array();
+	if ( ! is_array( $config ) ) {
+		return $slugs;
+	}
+	foreach ( array( 'addons', 'upsells', 'interactivities' ) as $group ) {
+		if ( empty( $config[ $group ] ) || ! is_array( $config[ $group ] ) ) {
+			continue;
+		}
+		foreach ( $config[ $group ] as $row ) {
+			$kind = isset( $row['kind'] ) ? sanitize_title( (string) $row['kind'] ) : '';
+			if ( $kind ) {
+				$slugs[] = $kind;
+			}
+		}
+	}
+	return array_values( array_unique( $slugs ) );
+}
+
+/**
+ * Assign snf_ticket_addon_kind terms from commerce config kinds.
+ *
+ * @param int                  $post_id Post ID.
+ * @param array<string, mixed> $config  Config.
+ */
+function snf_ticket_commerce_sync_addon_kind_terms( $post_id, $config ) {
+	$settings = snf_get_ticket_addon_settings();
+	if ( empty( $settings['auto_assign_terms'] ) || ! taxonomy_exists( 'snf_ticket_addon_kind' ) ) {
+		return;
+	}
+
+	$post_id = absint( $post_id );
+	if ( ! $post_id ) {
+		return;
+	}
+
+	$slugs = snf_ticket_commerce_config_kind_slugs( $config );
+	$ids   = array();
+	foreach ( $slugs as $slug ) {
+		$term = get_term_by( 'slug', $slug, 'snf_ticket_addon_kind' );
+		if ( $term && ! is_wp_error( $term ) ) {
+			$ids[] = (int) $term->term_id;
+			continue;
+		}
+		$defaults = snf_ticket_commerce_default_addon_kinds();
+		if ( isset( $defaults[ $slug ] ) ) {
+			$created = wp_insert_term( $defaults[ $slug ], 'snf_ticket_addon_kind', array( 'slug' => $slug ) );
+			if ( ! is_wp_error( $created ) && ! empty( $created['term_id'] ) ) {
+				$ids[] = (int) $created['term_id'];
+			}
+		}
+	}
+
+	wp_set_object_terms( $post_id, $ids, 'snf_ticket_addon_kind', false );
 }
 
 /**
@@ -586,6 +716,7 @@ function snf_ticket_commerce_maybe_seed_post( $post_id ) {
 	$preset = snf_ticket_commerce_default_for_slug( $slug );
 	if ( $preset && '' === (string) get_post_meta( $post_id, snf_ticket_commerce_meta_key(), true ) ) {
 		update_post_meta( $post_id, snf_ticket_commerce_meta_key(), wp_json_encode( $preset ) );
+		snf_ticket_commerce_sync_addon_kind_terms( $post_id, $preset );
 	}
 
 	if ( taxonomy_exists( 'snf_event_experience' ) ) {
@@ -733,6 +864,7 @@ function snf_ticket_commerce_save_product_fields( $product_id ) {
 	$config['enabled'] = ! empty( $_POST['snf_ticket_commerce_enabled'] ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
 
 	update_post_meta( $product_id, snf_ticket_commerce_meta_key(), wp_json_encode( $config ) );
+	snf_ticket_commerce_sync_addon_kind_terms( $product_id, $config );
 	snf_ticket_commerce_maybe_seed_post( $product_id );
 }
 add_action( 'woocommerce_process_product_meta', 'snf_ticket_commerce_save_product_fields', 25 );
@@ -785,6 +917,7 @@ function snf_ticket_commerce_save_event_metabox( $post_id ) {
 	$config = snf_ticket_commerce_sanitize_config( $raw );
 	$config['enabled'] = ! empty( $_POST['snf_ticket_commerce_enabled'] );
 	update_post_meta( $post_id, snf_ticket_commerce_meta_key(), wp_json_encode( $config ) );
+	snf_ticket_commerce_sync_addon_kind_terms( $post_id, $config );
 }
 add_action( 'save_post_event', 'snf_ticket_commerce_save_event_metabox' );
 

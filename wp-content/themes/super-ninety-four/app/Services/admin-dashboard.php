@@ -1,6 +1,7 @@
 <?php
 /**
- * SNF Club wp-admin dashboards for Events, Circles, Videos & Audio, Marketplace RFQs, and critical settings.
+ * SNF Club wp-admin dashboards for Events, Circles, Videos & Audio, Marketplace RFQs,
+ * Ticket Addon Kinds, and critical settings.
  *
  * @package Super_Ninety_Four
  */
@@ -105,6 +106,10 @@ function snf_admin_dashboard_pages() {
 			'title' => __( 'Marketplace RFQs', 'super-ninety-four' ),
 			'label' => __( 'Marketplace RFQs', 'super-ninety-four' ),
 		),
+		'snf-club-addons'   => array(
+			'title' => __( 'Ticket Addon Kinds', 'super-ninety-four' ),
+			'label' => __( 'Ticket Addon Kinds', 'super-ninety-four' ),
+		),
 		'snf-club-settings' => array(
 			'title' => __( 'Critical settings', 'super-ninety-four' ),
 			'label' => __( 'Critical settings', 'super-ninety-four' ),
@@ -139,7 +144,8 @@ function snf_admin_dashboard_enqueue( $hook_suffix ) {
 	if ( ! $load ) {
 		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
 		$types  = array( 'event', 'snf_circle', 'snf_video', 'snf_audio', 'snf_reservation', 'snf_rfq' );
-		if ( ! $screen || ! in_array( $screen->post_type, $types, true ) ) {
+		$tax    = $screen && ! empty( $screen->taxonomy ) ? (string) $screen->taxonomy : '';
+		if ( ! $screen || ( ! in_array( $screen->post_type, $types, true ) && 'snf_ticket_addon_kind' !== $tax ) ) {
 			return;
 		}
 	}
@@ -184,6 +190,8 @@ function snf_admin_dashboard_menu() {
 			$callback = 'snf_admin_render_media';
 		} elseif ( 'snf-club-rfqs' === $slug ) {
 			$callback = 'snf_admin_render_rfqs';
+		} elseif ( 'snf-club-addons' === $slug ) {
+			$callback = 'snf_admin_render_addon_kinds';
 		} elseif ( 'snf-club-settings' === $slug ) {
 			$callback = 'snf_admin_render_critical_settings';
 		}
@@ -324,6 +332,11 @@ function snf_admin_render_shell_start( $active, $title, $lede ) {
 				<?php esc_html_e( 'Global Styles reset to theme.json defaults.', 'super-ninety-four' ); ?>
 			</div>
 		<?php endif; ?>
+		<?php if ( isset( $_GET['seeded'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
+			<div class="snf-admin__notice snf-admin__notice--success">
+				<?php esc_html_e( 'Default ticket addon kinds / experiences checked and missing terms inserted.', 'super-ninety-four' ); ?>
+			</div>
+		<?php endif; ?>
 	<?php
 }
 
@@ -345,7 +358,7 @@ function snf_admin_render_overview() {
 	snf_admin_render_shell_start(
 		'snf-club',
 		__( 'Club operations', 'super-ninety-four' ),
-		__( 'Dashboards for Events, Circles, Videos & Audio, Marketplace RFQs, plus the settings those surfaces depend on.', 'super-ninety-four' )
+		__( 'Dashboards for Events, Circles, Videos & Audio, Marketplace RFQs, Ticket Addon Kinds, plus the settings those surfaces depend on.', 'super-ninety-four' )
 	);
 
 	$rfq_count = snf_admin_count_posts( 'snf_rfq', 'private' ) + snf_admin_count_posts( 'snf_rfq', 'publish' );
@@ -381,6 +394,8 @@ function snf_admin_render_overview() {
 				<a class="snf-admin__btn snf-admin__btn--ghost" href="<?php echo esc_url( admin_url( 'edit.php?post_type=snf_video' ) ); ?>"><?php esc_html_e( 'All videos', 'super-ninety-four' ); ?></a>
 				<a class="snf-admin__btn" href="<?php echo esc_url( admin_url( 'admin.php?page=snf-club-rfqs' ) ); ?>"><?php esc_html_e( 'RFQ dashboard', 'super-ninety-four' ); ?></a>
 				<a class="snf-admin__btn snf-admin__btn--ghost" href="<?php echo esc_url( admin_url( 'edit.php?post_type=snf_rfq' ) ); ?>"><?php esc_html_e( 'All RFQs', 'super-ninety-four' ); ?></a>
+				<a class="snf-admin__btn" href="<?php echo esc_url( admin_url( 'admin.php?page=snf-club-addons' ) ); ?>"><?php esc_html_e( 'Addon kinds dashboard', 'super-ninety-four' ); ?></a>
+				<a class="snf-admin__btn snf-admin__btn--ghost" href="<?php echo esc_url( admin_url( 'edit-tags.php?taxonomy=snf_ticket_addon_kind&post_type=product' ) ); ?>"><?php esc_html_e( 'All addon kinds', 'super-ninety-four' ); ?></a>
 			</div>
 		</section>
 
@@ -477,7 +492,8 @@ function snf_admin_render_events() {
 				<a class="snf-admin__btn snf-admin__btn--ghost" href="<?php echo esc_url( admin_url( 'edit.php?post_type=snf_reservation' ) ); ?>"><?php esc_html_e( 'Reservations', 'super-ninety-four' ); ?></a>
 				<a class="snf-admin__btn snf-admin__btn--ghost" href="<?php echo esc_url( admin_url( 'edit-tags.php?taxonomy=snf_event_experience&post_type=event' ) ); ?>"><?php esc_html_e( 'Experiences', 'super-ninety-four' ); ?></a>
 				<a class="snf-admin__btn snf-admin__btn--ghost" href="<?php echo esc_url( admin_url( 'edit-tags.php?taxonomy=snf_broadcast_format&post_type=event' ) ); ?>"><?php esc_html_e( 'Formats', 'super-ninety-four' ); ?></a>
-				<a class="snf-admin__btn snf-admin__btn--ghost" href="<?php echo esc_url( admin_url( 'edit-tags.php?taxonomy=snf_ticket_addon_kind&post_type=event' ) ); ?>"><?php esc_html_e( 'Addon kinds', 'super-ninety-four' ); ?></a>
+				<a class="snf-admin__btn snf-admin__btn--ghost" href="<?php echo esc_url( admin_url( 'admin.php?page=snf-club-addons' ) ); ?>"><?php esc_html_e( 'Addon kinds desk', 'super-ninety-four' ); ?></a>
+				<a class="snf-admin__btn snf-admin__btn--ghost" href="<?php echo esc_url( admin_url( 'edit-tags.php?taxonomy=snf_ticket_addon_kind&post_type=product' ) ); ?>"><?php esc_html_e( 'Addon kinds terms', 'super-ninety-four' ); ?></a>
 			</div>
 		</section>
 
@@ -1121,6 +1137,261 @@ function snf_admin_render_rfqs() {
 }
 
 /**
+ * Ticket Addon Kinds dashboard.
+ */
+function snf_admin_render_addon_kinds() {
+	if ( ! current_user_can( 'edit_posts' ) ) {
+		return;
+	}
+
+	snf_admin_render_shell_start(
+		'snf-club-addons',
+		__( 'Ticket Addon Kinds', 'super-ninety-four' ),
+		__( 'Classify hospitality, transport, media, guest, merch, and interactivity addons used by ticket commerce.', 'super-ninety-four' )
+	);
+
+	$settings = function_exists( 'snf_get_ticket_addon_settings' ) ? snf_get_ticket_addon_settings() : array();
+	$defaults = function_exists( 'snf_ticket_commerce_default_addon_kinds' ) ? snf_ticket_commerce_default_addon_kinds() : array();
+	$terms    = taxonomy_exists( 'snf_ticket_addon_kind' )
+		? get_terms(
+			array(
+				'taxonomy'   => 'snf_ticket_addon_kind',
+				'hide_empty' => false,
+				'orderby'    => 'name',
+				'order'      => 'ASC',
+			)
+		)
+		: array();
+	if ( is_wp_error( $terms ) ) {
+		$terms = array();
+	}
+
+	$missing = array();
+	foreach ( $defaults as $slug => $label ) {
+		$found = false;
+		foreach ( $terms as $term ) {
+			if ( $slug === $term->slug ) {
+				$found = true;
+				break;
+			}
+		}
+		if ( ! $found ) {
+			$missing[ $slug ] = $label;
+		}
+	}
+
+	$enabled_commerce = 0;
+	$kind_refs        = array();
+	$posts            = get_posts(
+		array(
+			'post_type'      => array( 'product', 'event' ),
+			'post_status'    => array( 'publish', 'draft', 'private' ),
+			'posts_per_page' => 200,
+			'meta_key'       => function_exists( 'snf_ticket_commerce_meta_key' ) ? snf_ticket_commerce_meta_key() : '_snf_ticket_commerce',
+			'fields'         => 'ids',
+		)
+	);
+	foreach ( $posts as $pid ) {
+		$config = function_exists( 'snf_get_ticket_commerce_config' ) ? snf_get_ticket_commerce_config( $pid ) : array();
+		if ( ! empty( $config['enabled'] ) ) {
+			++$enabled_commerce;
+		}
+		$slugs = function_exists( 'snf_ticket_commerce_config_kind_slugs' ) ? snf_ticket_commerce_config_kind_slugs( $config ) : array();
+		foreach ( $slugs as $slug ) {
+			if ( ! isset( $kind_refs[ $slug ] ) ) {
+				$kind_refs[ $slug ] = 0;
+			}
+			++$kind_refs[ $slug ];
+		}
+	}
+	?>
+	<div class="snf-admin__grid snf-admin__grid--stats">
+		<div class="snf-admin__stat">
+			<span class="snf-admin__stat-value"><?php echo esc_html( (string) count( $terms ) ); ?></span>
+			<span class="snf-admin__stat-label"><?php esc_html_e( 'Addon kinds', 'super-ninety-four' ); ?></span>
+		</div>
+		<div class="snf-admin__stat">
+			<span class="snf-admin__stat-value"><?php echo esc_html( (string) count( $defaults ) ); ?></span>
+			<span class="snf-admin__stat-label"><?php esc_html_e( 'Default kinds', 'super-ninety-four' ); ?></span>
+		</div>
+		<div class="snf-admin__stat">
+			<span class="snf-admin__stat-value"><?php echo esc_html( (string) count( $missing ) ); ?></span>
+			<span class="snf-admin__stat-label"><?php esc_html_e( 'Missing defaults', 'super-ninety-four' ); ?></span>
+		</div>
+		<div class="snf-admin__stat">
+			<span class="snf-admin__stat-value"><?php echo esc_html( (string) $enabled_commerce ); ?></span>
+			<span class="snf-admin__stat-label"><?php esc_html_e( 'Ticket commerce on', 'super-ninety-four' ); ?></span>
+		</div>
+		<div class="snf-admin__stat">
+			<span class="snf-admin__stat-value"><?php echo ! empty( $settings['require_kind_on_addons'] ) ? 'REQ' : 'OPT'; ?></span>
+			<span class="snf-admin__stat-label"><?php esc_html_e( 'Addon kind field', 'super-ninety-four' ); ?></span>
+		</div>
+	</div>
+
+	<div class="snf-admin__grid snf-admin__grid--panels">
+		<section class="snf-admin__panel">
+			<h2><?php esc_html_e( 'Quick actions', 'super-ninety-four' ); ?></h2>
+			<p class="snf-admin__panel-desc"><?php esc_html_e( 'Manage taxonomy terms or jump into Events / Products that use ticket commerce.', 'super-ninety-four' ); ?></p>
+			<div class="snf-admin__actions">
+				<a class="snf-admin__btn" href="<?php echo esc_url( admin_url( 'edit-tags.php?taxonomy=snf_ticket_addon_kind&post_type=product' ) ); ?>"><?php esc_html_e( 'Edit addon kind terms', 'super-ninety-four' ); ?></a>
+				<a class="snf-admin__btn snf-admin__btn--ghost" href="<?php echo esc_url( admin_url( 'edit-tags.php?taxonomy=snf_event_experience&post_type=product' ) ); ?>"><?php esc_html_e( 'Event experiences', 'super-ninety-four' ); ?></a>
+				<a class="snf-admin__btn snf-admin__btn--ghost" href="<?php echo esc_url( admin_url( 'admin.php?page=snf-club-events' ) ); ?>"><?php esc_html_e( 'Events dashboard', 'super-ninety-four' ); ?></a>
+				<a class="snf-admin__btn snf-admin__btn--ghost" href="<?php echo esc_url( admin_url( 'edit.php?post_type=product' ) ); ?>"><?php esc_html_e( 'Products', 'super-ninety-four' ); ?></a>
+			</div>
+			<?php if ( current_user_can( 'manage_options' ) ) : ?>
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin-top:1rem">
+					<input type="hidden" name="action" value="snf_ticket_addon_seed_terms">
+					<?php wp_nonce_field( 'snf_ticket_addon_seed', 'snf_ticket_addon_seed_nonce' ); ?>
+					<button type="submit" class="snf-admin__btn snf-admin__btn--ghost"><?php esc_html_e( 'Reseed missing default kinds', 'super-ninety-four' ); ?></button>
+				</form>
+			<?php endif; ?>
+		</section>
+
+		<section class="snf-admin__panel">
+			<h2><?php esc_html_e( 'Requirements pulse', 'super-ninety-four' ); ?></h2>
+			<ul class="snf-admin__list">
+				<li>
+					<span><?php esc_html_e( 'Require kind on addons', 'super-ninety-four' ); ?></span>
+					<span class="snf-admin__pill <?php echo ! empty( $settings['require_kind_on_addons'] ) ? 'snf-admin__pill--ok' : 'snf-admin__pill--warn'; ?>">
+						<?php echo ! empty( $settings['require_kind_on_addons'] ) ? esc_html__( 'Required', 'super-ninety-four' ) : esc_html__( 'Optional', 'super-ninety-four' ); ?>
+					</span>
+				</li>
+				<li>
+					<span><?php esc_html_e( 'Require kind on upsells', 'super-ninety-four' ); ?></span>
+					<span class="snf-admin__pill <?php echo ! empty( $settings['require_kind_on_upsells'] ) ? 'snf-admin__pill--ok' : 'snf-admin__pill--warn'; ?>">
+						<?php echo ! empty( $settings['require_kind_on_upsells'] ) ? esc_html__( 'Required', 'super-ninety-four' ) : esc_html__( 'Optional', 'super-ninety-four' ); ?>
+					</span>
+				</li>
+				<li>
+					<span><?php esc_html_e( 'Require kind on interactivities', 'super-ninety-four' ); ?></span>
+					<span class="snf-admin__pill <?php echo ! empty( $settings['require_kind_on_interactivities'] ) ? 'snf-admin__pill--ok' : 'snf-admin__pill--warn'; ?>">
+						<?php echo ! empty( $settings['require_kind_on_interactivities'] ) ? esc_html__( 'Required', 'super-ninety-four' ) : esc_html__( 'Optional', 'super-ninety-four' ); ?>
+					</span>
+				</li>
+				<li>
+					<span><?php esc_html_e( 'Auto-assign terms on save', 'super-ninety-four' ); ?></span>
+					<span class="snf-admin__pill <?php echo ! empty( $settings['auto_assign_terms'] ) ? 'snf-admin__pill--ok' : ''; ?>">
+						<?php echo ! empty( $settings['auto_assign_terms'] ) ? esc_html__( 'On', 'super-ninety-four' ) : esc_html__( 'Off', 'super-ninety-four' ); ?>
+					</span>
+				</li>
+				<li>
+					<span><?php esc_html_e( 'Default addon max qty', 'super-ninety-four' ); ?></span>
+					<span class="snf-admin__pill"><?php echo esc_html( (string) max( 1, (int) ( $settings['default_addon_max_qty'] ?? 1 ) ) ); ?></span>
+				</li>
+			</ul>
+		</section>
+
+		<section class="snf-admin__panel snf-admin__panel--wide">
+			<h2><?php esc_html_e( 'Addon kind roster', 'super-ninety-four' ); ?></h2>
+			<p class="snf-admin__panel-desc"><?php esc_html_e( 'Taxonomy terms plus how many ticket-commerce configs currently reference each kind slug.', 'super-ninety-four' ); ?></p>
+			<?php if ( ! empty( $settings['desk_intro'] ) ) : ?>
+				<p class="snf-admin__muted"><?php echo esc_html( (string) $settings['desk_intro'] ); ?></p>
+			<?php endif; ?>
+			<table class="snf-admin__table">
+				<thead>
+					<tr>
+						<th><?php esc_html_e( 'Kind', 'super-ninety-four' ); ?></th>
+						<th><?php esc_html_e( 'Slug', 'super-ninety-four' ); ?></th>
+						<th><?php esc_html_e( 'Assigned objects', 'super-ninety-four' ); ?></th>
+						<th><?php esc_html_e( 'Config refs', 'super-ninety-four' ); ?></th>
+						<th><?php esc_html_e( 'Default', 'super-ninety-four' ); ?></th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php if ( ! $terms ) : ?>
+						<tr><td colspan="5" class="snf-admin__muted"><?php esc_html_e( 'No addon kinds yet. Reseed defaults or add terms.', 'super-ninety-four' ); ?></td></tr>
+					<?php endif; ?>
+					<?php foreach ( $terms as $term ) : ?>
+						<tr>
+							<td>
+								<a href="<?php echo esc_url( get_edit_term_link( $term, 'snf_ticket_addon_kind' ) ); ?>">
+									<?php echo esc_html( $term->name ); ?>
+								</a>
+							</td>
+							<td><code><?php echo esc_html( $term->slug ); ?></code></td>
+							<td><?php echo esc_html( (string) (int) $term->count ); ?></td>
+							<td><?php echo esc_html( (string) (int) ( $kind_refs[ $term->slug ] ?? 0 ) ); ?></td>
+							<td>
+								<?php if ( isset( $defaults[ $term->slug ] ) ) : ?>
+									<span class="snf-admin__pill snf-admin__pill--ok"><?php esc_html_e( 'Yes', 'super-ninety-four' ); ?></span>
+								<?php else : ?>
+									<span class="snf-admin__pill"><?php esc_html_e( 'Custom', 'super-ninety-four' ); ?></span>
+								<?php endif; ?>
+							</td>
+						</tr>
+					<?php endforeach; ?>
+					<?php foreach ( $missing as $slug => $label ) : ?>
+						<tr>
+							<td><?php echo esc_html( $label ); ?></td>
+							<td><code><?php echo esc_html( $slug ); ?></code></td>
+							<td>0</td>
+							<td><?php echo esc_html( (string) (int) ( $kind_refs[ $slug ] ?? 0 ) ); ?></td>
+							<td><span class="snf-admin__pill snf-admin__pill--bad"><?php esc_html_e( 'Missing', 'super-ninety-four' ); ?></span></td>
+						</tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
+		</section>
+
+		<?php if ( current_user_can( 'manage_options' ) && function_exists( 'snf_get_ticket_addon_settings' ) ) : ?>
+		<section class="snf-admin__panel snf-admin__panel--wide">
+			<h2><?php esc_html_e( 'Addon kind settings & requirements', 'super-ninety-four' ); ?></h2>
+			<p class="snf-admin__panel-desc"><?php esc_html_e( 'Control whether ticket commerce rows must declare a kind, default quantities, and automatic taxonomy assignment.', 'super-ninety-four' ); ?></p>
+			<form class="snf-admin__form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+				<input type="hidden" name="action" value="snf_ticket_addon_save_settings">
+				<?php wp_nonce_field( 'snf_ticket_addon_settings', 'snf_ticket_addon_settings_nonce' ); ?>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row"><?php esc_html_e( 'Field requirements', 'super-ninety-four' ); ?></th>
+						<td>
+							<label>
+								<input type="checkbox" name="require_kind_on_addons" value="1" <?php checked( ! empty( $settings['require_kind_on_addons'] ) ); ?>>
+								<?php esc_html_e( 'Require kind on addon rows (rows without a kind are dropped on save)', 'super-ninety-four' ); ?>
+							</label>
+							<br>
+							<label>
+								<input type="checkbox" name="require_kind_on_upsells" value="1" <?php checked( ! empty( $settings['require_kind_on_upsells'] ) ); ?>>
+								<?php esc_html_e( 'Require kind on upsell rows', 'super-ninety-four' ); ?>
+							</label>
+							<br>
+							<label>
+								<input type="checkbox" name="require_kind_on_interactivities" value="1" <?php checked( ! empty( $settings['require_kind_on_interactivities'] ) ); ?>>
+								<?php esc_html_e( 'Require kind on interactivity rows', 'super-ninety-four' ); ?>
+							</label>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><?php esc_html_e( 'Taxonomy sync', 'super-ninety-four' ); ?></th>
+						<td>
+							<label>
+								<input type="checkbox" name="auto_assign_terms" value="1" <?php checked( ! empty( $settings['auto_assign_terms'] ) ); ?>>
+								<?php esc_html_e( 'Auto-assign snf_ticket_addon_kind terms from commerce config kinds when saving products/events', 'super-ninety-four' ); ?>
+							</label>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="snf_addon_default_max_qty"><?php esc_html_e( 'Default addon max qty', 'super-ninety-four' ); ?></label></th>
+						<td>
+							<input type="number" id="snf_addon_default_max_qty" name="default_addon_max_qty" value="<?php echo esc_attr( (string) max( 1, (int) $settings['default_addon_max_qty'] ) ); ?>" min="1" max="99" step="1">
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="snf_addon_desk_intro"><?php esc_html_e( 'Desk intro', 'super-ninety-four' ); ?></label></th>
+						<td>
+							<textarea name="desk_intro" id="snf_addon_desk_intro" class="large-text" rows="3"><?php echo esc_textarea( (string) $settings['desk_intro'] ); ?></textarea>
+						</td>
+					</tr>
+				</table>
+				<?php submit_button( __( 'Save addon kind settings', 'super-ninety-four' ), 'primary', 'submit', false ); ?>
+			</form>
+		</section>
+		<?php endif; ?>
+	</div>
+	<?php
+	snf_admin_render_shell_end();
+}
+
+/**
  * Critical settings dashboard.
  */
 function snf_admin_render_critical_settings() {
@@ -1291,6 +1562,57 @@ function snf_admin_handle_circle_settings_save() {
 	exit;
 }
 add_action( 'admin_post_snf_circle_save_settings', 'snf_admin_handle_circle_settings_save' );
+
+/**
+ * Save Ticket Addon Kind settings.
+ */
+function snf_admin_handle_ticket_addon_settings_save() {
+	if ( ! isset( $_POST['snf_ticket_addon_settings_nonce'] ) ) {
+		return;
+	}
+	check_admin_referer( 'snf_ticket_addon_settings', 'snf_ticket_addon_settings_nonce' );
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_die( esc_html__( 'Forbidden.', 'super-ninety-four' ) );
+	}
+	if ( ! function_exists( 'snf_get_ticket_addon_settings' ) || ! defined( 'SNF_TICKET_ADDON_SETTINGS_OPTION' ) ) {
+		wp_die( esc_html__( 'Addon kind settings unavailable.', 'super-ninety-four' ) );
+	}
+
+	$current = snf_get_ticket_addon_settings();
+	$current['require_kind_on_addons']          = isset( $_POST['require_kind_on_addons'] ) ? 1 : 0;
+	$current['require_kind_on_upsells']         = isset( $_POST['require_kind_on_upsells'] ) ? 1 : 0;
+	$current['require_kind_on_interactivities'] = isset( $_POST['require_kind_on_interactivities'] ) ? 1 : 0;
+	$current['auto_assign_terms']               = isset( $_POST['auto_assign_terms'] ) ? 1 : 0;
+	$current['default_addon_max_qty']           = isset( $_POST['default_addon_max_qty'] ) ? max( 1, min( 99, absint( $_POST['default_addon_max_qty'] ) ) ) : 1;
+	$current['desk_intro']                      = isset( $_POST['desk_intro'] ) ? sanitize_textarea_field( wp_unslash( $_POST['desk_intro'] ) ) : '';
+
+	update_option( SNF_TICKET_ADDON_SETTINGS_OPTION, $current, false );
+
+	wp_safe_redirect( admin_url( 'admin.php?page=snf-club-addons&updated=1' ) );
+	exit;
+}
+add_action( 'admin_post_snf_ticket_addon_save_settings', 'snf_admin_handle_ticket_addon_settings_save' );
+
+/**
+ * Force-seed missing experience + addon-kind terms.
+ */
+function snf_admin_handle_ticket_addon_seed_terms() {
+	if ( ! isset( $_POST['snf_ticket_addon_seed_nonce'] ) ) {
+		return;
+	}
+	check_admin_referer( 'snf_ticket_addon_seed', 'snf_ticket_addon_seed_nonce' );
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_die( esc_html__( 'Forbidden.', 'super-ninety-four' ) );
+	}
+
+	if ( function_exists( 'snf_ticket_commerce_seed_default_terms' ) ) {
+		snf_ticket_commerce_seed_default_terms( true );
+	}
+
+	wp_safe_redirect( admin_url( 'admin.php?page=snf-club-addons&seeded=1' ) );
+	exit;
+}
+add_action( 'admin_post_snf_ticket_addon_seed_terms', 'snf_admin_handle_ticket_addon_seed_terms' );
 
 /**
  * Save Marketplace RFQ settings.
