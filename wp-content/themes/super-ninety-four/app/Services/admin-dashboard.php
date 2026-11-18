@@ -1145,9 +1145,291 @@ function snf_admin_render_integrations_pulse( $context = 'overview' ) {
 }
 
 /**
+ * Roles counted as club members (staff are shown separately in the directory).
+ *
+ * @return string[]
+ */
+function snf_admin_member_roles() {
+	return (array) apply_filters( 'snf_admin_member_roles', array( 'snf_member', 'snf_reciprocal', 'snf_applicant' ) );
+}
+
+/**
+ * Human label for a club role slug.
+ *
+ * @param string $role Role slug.
+ * @return string
+ */
+function snf_admin_role_label( $role ) {
+	$roles = function_exists( 'snf_get_club_roles' ) ? snf_get_club_roles() : array();
+	if ( isset( $roles[ $role ]['name'] ) ) {
+		return (string) $roles[ $role ]['name'];
+	}
+	return ucwords( str_replace( array( 'snf_', '_' ), array( '', ' ' ), (string) $role ) );
+}
+
+/**
+ * Upcoming events from the event CPT and dated event products, soonest first.
+ *
+ * @param int $limit Maximum rows.
+ * @return array<int, array<string,mixed>>
+ */
+function snf_admin_upcoming_events( $limit = 6 ) {
+	$posts = get_posts(
+		array(
+			'post_type'      => array( 'event', 'product' ),
+			'post_status'    => 'publish',
+			'posts_per_page' => 200,
+			'no_found_rows'  => true,
+			'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+				'relation' => 'OR',
+				array( 'key' => 'snf_event_starts_at', 'compare' => 'EXISTS' ),
+				array( 'key' => '_snf_starts_at', 'compare' => 'EXISTS' ),
+			),
+		)
+	);
+
+	$now  = current_time( 'timestamp' );
+	$rows = array();
+	foreach ( $posts as $post ) {
+		$start = (string) get_post_meta( $post->ID, 'snf_event_starts_at', true );
+		if ( ! $start ) {
+			$start = (string) get_post_meta( $post->ID, '_snf_starts_at', true );
+		}
+		$dt = $start ? date_create( $start, wp_timezone() ) : false;
+		if ( ! $dt ) {
+			continue;
+		}
+		$timestamp = (int) $dt->format( 'U' );
+		if ( $timestamp < $now ) {
+			continue;
+		}
+		$location = (string) get_post_meta( $post->ID, 'snf_event_location', true );
+		if ( ! $location ) {
+			$location = (string) get_post_meta( $post->ID, '_snf_location', true );
+		}
+		$rows[] = array(
+			'post'      => $post,
+			'timestamp' => $timestamp,
+			'location'  => $location,
+		);
+	}
+
+	usort(
+		$rows,
+		static function ( $a, $b ) {
+			return $a['timestamp'] <=> $b['timestamp'];
+		}
+	);
+
+	return array_slice( $rows, 0, max( 1, (int) $limit ) );
+}
+
+/**
+ * Shared Club panels shown at the foot of every SNF admin dashboard:
+ * upcoming events, new members, and the members directory.
+ */
+function snf_admin_render_shared_panels() {
+	if ( ! current_user_can( 'edit_posts' ) ) {
+		return;
+	}
+
+	$member_roles = snf_admin_member_roles();
+	$upcoming     = snf_admin_upcoming_events( 6 );
+	$new_members  = get_users(
+		array(
+			'role__in' => $member_roles,
+			'orderby'  => 'registered',
+			'order'    => 'DESC',
+			'number'   => 6,
+		)
+	);
+	$new_count    = count(
+		get_users(
+			array(
+				'role__in'   => $member_roles,
+				'fields'     => 'ID',
+				'date_query' => array(
+					array(
+						'after'     => '30 days ago',
+						'inclusive' => true,
+					),
+				),
+			)
+		)
+	);
+
+	$user_counts = count_users();
+	$counts      = isset( $user_counts['avail_roles'] ) ? (array) $user_counts['avail_roles'] : array();
+	$directory   = get_users(
+		array(
+			'role__in' => $member_roles,
+			'orderby'  => 'registered',
+			'order'    => 'DESC',
+			'number'   => 10,
+		)
+	);
+	$member_total = 0;
+	foreach ( $member_roles as $role ) {
+		$member_total += isset( $counts[ $role ] ) ? (int) $counts[ $role ] : 0;
+	}
+	?>
+	<div class="snf-admin__grid snf-admin__grid--panels">
+		<section class="snf-admin__panel">
+			<h2><?php esc_html_e( 'Upcoming events schedule', 'super-ninety-four' ); ?></h2>
+			<p class="snf-admin__panel-desc"><?php esc_html_e( 'Next dated Select Events and event products across the club calendar.', 'super-ninety-four' ); ?></p>
+			<table class="snf-admin__table">
+				<thead>
+					<tr>
+						<th><?php esc_html_e( 'When', 'super-ninety-four' ); ?></th>
+						<th><?php esc_html_e( 'Event', 'super-ninety-four' ); ?></th>
+						<th><?php esc_html_e( 'Location', 'super-ninety-four' ); ?></th>
+						<th><?php esc_html_e( 'In', 'super-ninety-four' ); ?></th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php if ( ! $upcoming ) : ?>
+						<tr><td colspan="4" class="snf-admin__muted"><?php esc_html_e( 'No upcoming dated events yet.', 'super-ninety-four' ); ?></td></tr>
+					<?php endif; ?>
+					<?php foreach ( $upcoming as $row ) : ?>
+						<?php
+						$event      = $row['post'];
+						$now_stamp  = current_time( 'timestamp' );
+						$days_away  = (int) round( ( $row['timestamp'] - $now_stamp ) / DAY_IN_SECONDS );
+						$relative   = $days_away <= 0
+							? __( 'today', 'super-ninety-four' )
+							: sprintf(
+								/* translators: %s: human-readable time difference */
+								__( 'in %s', 'super-ninety-four' ),
+								human_time_diff( $now_stamp, $row['timestamp'] )
+							);
+						?>
+						<tr>
+							<td>
+								<?php echo esc_html( wp_date( 'M j, Y', $row['timestamp'] ) ); ?>
+								<br><span class="snf-admin__muted"><?php echo esc_html( wp_date( 'g:i a', $row['timestamp'] ) ); ?></span>
+							</td>
+							<td>
+								<a href="<?php echo esc_url( get_edit_post_link( $event->ID ) ); ?>"><?php echo esc_html( get_the_title( $event ) ); ?></a>
+								<br><span class="snf-admin__pill"><?php echo esc_html( 'product' === $event->post_type ? __( 'Product', 'super-ninety-four' ) : __( 'Event', 'super-ninety-four' ) ); ?></span>
+							</td>
+							<td><?php echo $row['location'] ? esc_html( $row['location'] ) : '—'; ?></td>
+							<td><span class="snf-admin__pill"><?php echo esc_html( $relative ); ?></span></td>
+						</tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
+			<div class="snf-admin__actions">
+				<a class="snf-admin__btn snf-admin__btn--ghost" href="<?php echo esc_url( admin_url( 'edit.php?post_type=event' ) ); ?>"><?php esc_html_e( 'All events', 'super-ninety-four' ); ?></a>
+				<a class="snf-admin__btn snf-admin__btn--ghost" href="<?php echo esc_url( admin_url( 'edit.php?post_type=product' ) ); ?>"><?php esc_html_e( 'Event products', 'super-ninety-four' ); ?></a>
+			</div>
+		</section>
+
+		<section class="snf-admin__panel">
+			<h2><?php esc_html_e( 'New Members', 'super-ninety-four' ); ?></h2>
+			<p class="snf-admin__panel-desc">
+				<?php
+				echo esc_html(
+					sprintf(
+						/* translators: %d: number of new members in the last 30 days */
+						_n( '%d new member in the last 30 days.', '%d new members in the last 30 days.', $new_count, 'super-ninety-four' ),
+						$new_count
+					)
+				);
+				?>
+			</p>
+			<table class="snf-admin__table">
+				<thead>
+					<tr>
+						<th><?php esc_html_e( 'Member', 'super-ninety-four' ); ?></th>
+						<th><?php esc_html_e( 'Role', 'super-ninety-four' ); ?></th>
+						<th><?php esc_html_e( 'Joined', 'super-ninety-four' ); ?></th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php if ( ! $new_members ) : ?>
+						<tr><td colspan="3" class="snf-admin__muted"><?php esc_html_e( 'No club members have joined yet.', 'super-ninety-four' ); ?></td></tr>
+					<?php endif; ?>
+					<?php foreach ( $new_members as $member ) : ?>
+						<tr>
+							<td>
+								<a href="<?php echo esc_url( admin_url( 'user-edit.php?user_id=' . $member->ID ) ); ?>"><?php echo esc_html( $member->display_name ); ?></a>
+								<br><span class="snf-admin__muted"><?php echo esc_html( $member->user_email ); ?></span>
+							</td>
+							<td><span class="snf-admin__pill"><?php echo esc_html( snf_admin_role_label( isset( $member->roles[0] ) ? $member->roles[0] : '' ) ); ?></span></td>
+							<td><?php echo esc_html( wp_date( get_option( 'date_format' ), strtotime( $member->user_registered ) ) ); ?></td>
+						</tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
+			<div class="snf-admin__actions">
+				<a class="snf-admin__btn snf-admin__btn--ghost" href="<?php echo esc_url( admin_url( 'users.php?role=snf_member' ) ); ?>"><?php esc_html_e( 'All club members', 'super-ninety-four' ); ?></a>
+			</div>
+		</section>
+
+		<section class="snf-admin__panel snf-admin__panel--wide">
+			<h2><?php esc_html_e( 'Members Directory', 'super-ninety-four' ); ?></h2>
+			<p class="snf-admin__panel-desc"><?php esc_html_e( 'Role breakdown and the newest member records across the club.', 'super-ninety-four' ); ?></p>
+			<ul class="snf-admin__list">
+				<?php foreach ( $member_roles as $role ) : ?>
+					<li>
+						<span><?php echo esc_html( snf_admin_role_label( $role ) ); ?></span>
+						<a class="snf-admin__pill" href="<?php echo esc_url( admin_url( 'users.php?role=' . rawurlencode( $role ) ) ); ?>"><?php echo esc_html( (string) ( isset( $counts[ $role ] ) ? (int) $counts[ $role ] : 0 ) ); ?></a>
+					</li>
+				<?php endforeach; ?>
+				<li>
+					<span><?php echo esc_html( snf_admin_role_label( 'snf_staff' ) ); ?></span>
+					<a class="snf-admin__pill" href="<?php echo esc_url( admin_url( 'users.php?role=snf_staff' ) ); ?>"><?php echo esc_html( (string) ( isset( $counts['snf_staff'] ) ? (int) $counts['snf_staff'] : 0 ) ); ?></a>
+				</li>
+				<li>
+					<span><?php esc_html_e( 'Total club members', 'super-ninety-four' ); ?></span>
+					<span class="snf-admin__pill snf-admin__pill--ok"><?php echo esc_html( (string) $member_total ); ?></span>
+				</li>
+			</ul>
+			<table class="snf-admin__table">
+				<thead>
+					<tr>
+						<th><?php esc_html_e( 'Member', 'super-ninety-four' ); ?></th>
+						<th><?php esc_html_e( 'Role', 'super-ninety-four' ); ?></th>
+						<th><?php esc_html_e( 'Joined', 'super-ninety-four' ); ?></th>
+						<th><?php esc_html_e( 'Edit', 'super-ninety-four' ); ?></th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php if ( ! $directory ) : ?>
+						<tr><td colspan="4" class="snf-admin__muted"><?php esc_html_e( 'No member records yet.', 'super-ninety-four' ); ?></td></tr>
+					<?php endif; ?>
+					<?php foreach ( $directory as $member ) : ?>
+						<tr>
+							<td>
+								<?php echo esc_html( $member->display_name ); ?>
+								<br><span class="snf-admin__muted"><?php echo esc_html( $member->user_email ); ?></span>
+							</td>
+							<td><span class="snf-admin__pill"><?php echo esc_html( snf_admin_role_label( isset( $member->roles[0] ) ? $member->roles[0] : '' ) ); ?></span></td>
+							<td><?php echo esc_html( wp_date( get_option( 'date_format' ), strtotime( $member->user_registered ) ) ); ?></td>
+							<td><a href="<?php echo esc_url( admin_url( 'user-edit.php?user_id=' . $member->ID ) ); ?>"><?php esc_html_e( 'Open', 'super-ninety-four' ); ?></a></td>
+						</tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
+			<div class="snf-admin__actions">
+				<a class="snf-admin__btn snf-admin__btn--ghost" href="<?php echo esc_url( admin_url( 'users.php' ) ); ?>"><?php esc_html_e( 'All users', 'super-ninety-four' ); ?></a>
+				<?php
+				$community = get_page_by_path( 'community' );
+				if ( $community ) :
+					?>
+					<a class="snf-admin__btn snf-admin__btn--ghost" href="<?php echo esc_url( get_permalink( $community ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Community page', 'super-ninety-four' ); ?></a>
+				<?php endif; ?>
+			</div>
+		</section>
+	</div>
+	<?php
+}
+
+/**
  * Close dashboard shell.
  */
 function snf_admin_render_shell_end() {
+	snf_admin_render_shared_panels();
 	echo '</div>';
 }
 
@@ -1166,6 +1448,7 @@ function snf_admin_render_overview() {
 			<noscript>
 				<p><?php esc_html_e( 'Enable JavaScript to use the Club operations dashboard.', 'super-ninety-four' ); ?></p>
 			</noscript>
+			<?php snf_admin_render_shared_panels(); ?>
 		</div>
 		<?php
 		return;
