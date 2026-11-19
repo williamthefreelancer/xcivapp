@@ -17,20 +17,25 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return array{who:array{title:string,body:string},founder:array{title:string,name:string,body:string}}
  */
 function snf_get_about_content() {
-	$peer = __(
-		'Unfiltered Peer Calibration: Contribute to and collaborate inside a raw, high-energy environment built exclusively for hospitality groups, event organizers, and consultancies that live this lifestyle at the highest standard.',
+	$who_body = __(
+		'You contribute to and collaborate inside a raw, high-energy environment built exclusively for hospitality groups, event organizers, and consultancies that live this lifestyle at the highest standard. There are no spectators and no middlemen here — you calibrate directly with peers who operate at your level.',
+		'super-ninety-four'
+	);
+
+	$founder_body = __(
+		'You are led by William Antwine Johnson, the lead rider and owner of SUPR XCIV PLATFORM HOLDINGS LLC and THE SUPER NINETY FOUR EVENTS COMPANY LLC. He built this environment for operators like you: sovereign firms that own their data, their events, and their results.',
 		'super-ninety-four'
 	);
 
 	$content = array(
 		'who'     => array(
 			'title' => __( 'About Who We Are', 'super-ninety-four' ),
-			'body'  => $peer,
+			'body'  => $who_body,
 		),
 		'founder' => array(
 			'title' => __( 'Meet the Founder', 'super-ninety-four' ),
 			'name'  => __( 'William Antwine Johnson', 'super-ninety-four' ),
-			'body'  => $peer,
+			'body'  => $founder_body,
 		),
 	);
 
