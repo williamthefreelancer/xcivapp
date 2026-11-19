@@ -97,6 +97,9 @@ $cart_url = function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : home_url(
 		<p class="snf-workshop__eyebrow">
 			<?php esc_html_e( 'FOR CLUB OR HOSPITALITY MANAGEMENT FIRMS, PARTY OR EVENT ORGANIZERS & MANAGEMENT CONSULTING FIRMS.', 'super-ninety-four' ); ?>
 		</p>
+		<p class="snf-workshop__hero-lead">
+			<?php esc_html_e( 'What It Is, How It Benefits Sovereign Firms, and How to Claim 100% Ownership of Your Data & Results', 'super-ninety-four' ); ?>
+		</p>
 		<h1 class="snf-workshop__title">
 			<?php
 			printf(
