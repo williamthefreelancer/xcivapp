@@ -880,9 +880,10 @@ function snf_primary_menu_items() {
 		}
 	}
 
+	// Logged-out visitors go straight to the workshop offer; members keep the member listing.
 	$events_url = $is_member
 		? snf_get_page_url( 'select-events-by-members' )
-		: snf_get_page_url( 'select-events-by-non-members' );
+		: snf_get_workshop_landing_url();
 	$expo_url   = snf_get_page_url( 'expo' );
 
 	$items = array(
