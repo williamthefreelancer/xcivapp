@@ -22,7 +22,7 @@ $price_label = $price_html
 	? wp_strip_all_tags( $price_html )
 	: ( $event_id && get_post_meta( $event_id, 'snf_event_price', true )
 		? (string) get_post_meta( $event_id, 'snf_event_price', true )
-		: '$97' );
+		: '$97.00' );
 
 $video_url  = $event_id ? (string) get_post_meta( $event_id, 'snf_event_video', true ) : '';
 $hero_image = get_template_directory_uri() . '/assets/images/events/lifestyle-concierge-club-workshop.jpg';
@@ -98,7 +98,13 @@ $cart_url = function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : home_url(
 			<?php esc_html_e( 'FOR CLUB OR HOSPITALITY MANAGEMENT FIRMS, PARTY OR EVENT ORGANIZERS & MANAGEMENT CONSULTING FIRMS.', 'super-ninety-four' ); ?>
 		</p>
 		<h1 class="snf-workshop__title">
-			<?php esc_html_e( 'What It Is, How It Benefits Sovereign Firms, and How to Claim 100% Ownership of Your Data & Results', 'super-ninety-four' ); ?>
+			<?php
+			printf(
+				/* translators: %s: workshop price */
+				esc_html__( 'Attend this workshop for: %s', 'super-ninety-four' ),
+				esc_html( $price_label )
+			);
+			?>
 		</h1>
 		<p class="snf-workshop__watch-label"><?php esc_html_e( 'WATCH VIDEO BELOW', 'super-ninety-four' ); ?></p>
 
@@ -199,7 +205,13 @@ $cart_url = function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : home_url(
 
 	<section class="snf-workshop__cta snf-container" id="snf-workshop-reserve" data-figma-slot="workshop-purchase">
 		<h2 class="snf-workshop__title snf-workshop__title--cta">
-			<?php esc_html_e( 'What It Is, How It Benefits Sovereign Firms, and How to Claim 100% Ownership of Your Data & Results', 'super-ninety-four' ); ?>
+			<?php
+			printf(
+				/* translators: %s: workshop price */
+				esc_html__( 'Attend this workshop for: %s', 'super-ninety-four' ),
+				esc_html( $price_label )
+			);
+			?>
 		</h2>
 
 		<nav class="snf-workshop__steps" aria-label="<?php esc_attr_e( 'Workshop purchase steps', 'super-ninety-four' ); ?>">
