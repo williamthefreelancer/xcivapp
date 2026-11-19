@@ -29,6 +29,14 @@ $plan_title       = isset( $quote['plan_title'] ) ? (string) $quote['plan_title'
 $price            = isset( $quote['price'] ) ? (string) $quote['price'] : '';
 $card_description = isset( $quote['card_description'] ) ? (string) $quote['card_description'] : '';
 $cta_label        = isset( $quote['cta_label'] ) ? (string) $quote['cta_label'] : __( 'Get Quote Now', 'super-ninety-four' );
+
+/*
+ * Mark odd-length lists so the final item can stay in the normal grid flow
+ * instead of relying on a hardcoded :nth-child(5) selector.
+ */
+$can_list_class    = 0 !== count( $can_items ) % 2 ? ' snf-quote__list--odd' : '';
+$cannot_list_class = 0 !== count( $cannot_items ) % 2 ? ' snf-quote__list--odd' : '';
+
 $quote_slug       = get_post_field( 'post_name', get_the_ID() );
 $cta_url          = isset( $quote['cta_url'] ) ? (string) $quote['cta_url'] : '';
 if ( ! $cta_url && function_exists( 'snf_get_service_quote_cta_url' ) ) {
@@ -98,7 +106,7 @@ if ( function_exists( 'wc_get_product' ) && get_the_ID() ) {
 			<?php echo esc_html( $can_heading ); ?>
 		</h2>
 		<?php if ( $can_items ) : ?>
-			<ul class="snf-quote__list">
+			<ul class="snf-quote__list<?php echo esc_attr( $can_list_class ); ?>">
 				<?php foreach ( $can_items as $item ) : ?>
 					<li class="snf-quote__item"><?php echo esc_html( (string) $item ); ?></li>
 				<?php endforeach; ?>
@@ -111,7 +119,7 @@ if ( function_exists( 'wc_get_product' ) && get_the_ID() ) {
 			<?php echo esc_html( $cannot_heading ); ?>
 		</h2>
 		<?php if ( $cannot_items ) : ?>
-			<ul class="snf-quote__list">
+			<ul class="snf-quote__list<?php echo esc_attr( $cannot_list_class ); ?>">
 				<?php foreach ( $cannot_items as $item ) : ?>
 					<li class="snf-quote__item"><?php echo esc_html( (string) $item ); ?></li>
 				<?php endforeach; ?>

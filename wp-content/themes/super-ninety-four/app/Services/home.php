@@ -128,10 +128,10 @@ function snf_get_home_content() {
 			'title' => __( 'Choose how you enter', 'super-ninety-four' ),
 			'lede'  => __( 'Membership is optional. Guests can attend select events; property managers and clients can open the inquiry desk for the service they need.', 'super-ninety-four' ),
 			'cta'   => array(
-				'title' => __( 'Browse select events first', 'super-ninety-four' ),
-				'body'  => __( 'Use the search bar above to find open admission and select events. You can attend without joining — admission still requires payment.', 'super-ninety-four' ),
-				'label' => __( 'Back to search events', 'super-ninety-four' ),
-				'url'   => '#snf-search-events',
+				'title' => __( 'What It Is, How It Benefits Sovereign Firms, and How to Claim 100% Ownership of Your Data & Results', 'super-ninety-four' ),
+				'body'  => __( 'Join the live workshop on Tuesday, January 5th at 11:00 AM EST. See how a Lifestyle Concierge Club benefits sovereign firms and how to claim 100% ownership of your data and results.', 'super-ninety-four' ),
+				'label' => __( 'Attend the workshop', 'super-ninety-four' ),
+				'url'   => 'https://www.superninetyfour.com/product/the-lifestyle-concierge-club-workshop/',
 			),
 			'guest'   => array(
 				'title' => __( 'Attend without membership', 'super-ninety-four' ),
