@@ -19,8 +19,8 @@
       "_runtime-core.esm-bundler-BscDEp8V.js"
     ]
   },
-  "_ticket-commerce-DzH-mtDC.js": {
-    "file": "chunks/ticket-commerce-DzH-mtDC.js",
+  "_ticket-commerce-Dj-Eq6uP.js": {
+    "file": "chunks/ticket-commerce-Dj-Eq6uP.js",
     "name": "ticket-commerce"
   },
   "_utils-BLSKlp9E.js": {
@@ -76,12 +76,12 @@
     "isDynamicEntry": true
   },
   "resources/js/islands/event-single.js": {
-    "file": "chunks/event-single-cHuVk7h5.js",
+    "file": "chunks/event-single-DQa6Iqoo.js",
     "name": "event-single",
     "src": "resources/js/islands/event-single.js",
     "isDynamicEntry": true,
     "imports": [
-      "_ticket-commerce-DzH-mtDC.js"
+      "_ticket-commerce-Dj-Eq6uP.js"
     ]
   },
   "resources/js/islands/expo-marketplace.js": {
@@ -127,12 +127,12 @@
     "isDynamicEntry": true
   },
   "resources/js/islands/workshop.js": {
-    "file": "chunks/workshop-C0Qu2gOD.js",
+    "file": "chunks/workshop-ClPQXAAu.js",
     "name": "workshop",
     "src": "resources/js/islands/workshop.js",
     "isDynamicEntry": true,
     "imports": [
-      "_ticket-commerce-DzH-mtDC.js"
+      "_ticket-commerce-Dj-Eq6uP.js"
     ]
   },
   "resources/js/main.js": {

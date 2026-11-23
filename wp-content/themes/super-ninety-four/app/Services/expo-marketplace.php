@@ -1007,7 +1007,7 @@ function snf_get_marketplace_payload( $args = array() ) {
 		'results'     => array_values( $results ),
 		'rails'       => $rails,
 		'shopUrl'     => $shop_url ? $shop_url : home_url( '/shop/' ),
-		'expoUrl'     => snf_get_page_url( 'expo' ),
+		'expoUrl'     => function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'shop' ) : home_url( '/shop/' ),
 		'applyUrl'    => snf_get_page_url( 'apply' ),
 		'count'       => count( $results ),
 	);

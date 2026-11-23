@@ -322,6 +322,10 @@ add_action( 'woocommerce_product_options_general_product_data', 'snf_woocommerce
  * @param int $product_id Product ID.
  */
 function snf_woocommerce_save_product_serp_fields( $product_id ) {
+	if ( ! current_user_can( 'edit_post', $product_id ) ) {
+		return;
+	}
+
 	$fields = array( '_snf_location', '_snf_when', '_snf_action_label' );
 
 	foreach ( $fields as $field ) {

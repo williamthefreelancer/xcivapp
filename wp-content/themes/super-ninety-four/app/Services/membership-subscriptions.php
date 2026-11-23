@@ -570,6 +570,10 @@ add_action( 'woocommerce_product_options_general_product_data', 'snf_woocommerce
  * @param int $product_id Product ID.
  */
 function snf_woocommerce_save_reciprocal_product_fields( $product_id ) {
+	if ( ! current_user_can( 'edit_post', $product_id ) ) {
+		return;
+	}
+
 	if ( isset( $_POST[ SNF_META_PRODUCT_PROGRAM ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
 		$program = sanitize_title( wp_unslash( $_POST[ SNF_META_PRODUCT_PROGRAM ] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
 		update_post_meta( $product_id, SNF_META_PRODUCT_PROGRAM, $program );

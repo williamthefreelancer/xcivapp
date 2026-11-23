@@ -39,7 +39,7 @@
   const dropdownItems = Array.from(
     nav.querySelectorAll(".snf-primary-nav__item--dropdown")
   );
-  const desktopQuery = window.matchMedia("(min-width: 80.0625rem)");
+  const desktopQuery = window.matchMedia("(min-width: 56.3125rem)");
 
   const setNavOpen = (open) => {
     if (!menuToggle || !panel) return;

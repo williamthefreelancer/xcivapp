@@ -121,10 +121,6 @@ function snf_get_site_pages() {
 			'title'    => 'Home',
 			'template' => 'home-page',
 		),
-		'about' => array(
-			'title'    => 'About',
-			'template' => 'about',
-		),
 		'inquiries' => array(
 			'title'    => 'Service Inquiries',
 			'template' => 'public-content',
@@ -132,10 +128,6 @@ function snf_get_site_pages() {
 		'videos-audio' => array(
 			'title'    => 'Videos & Audio',
 			'template' => 'videos-audio',
-		),
-		'contact' => array(
-			'title'    => 'Contact',
-			'template' => 'contact',
 		),
 		'newsletter' => array(
 			'title'    => 'Newsletter',
@@ -172,10 +164,6 @@ function snf_get_site_pages() {
 		'select-events-by-non-members' => array(
 			'title'    => 'Select Events (Non-Members)',
 			'template' => 'select-events',
-		),
-		'expo' => array(
-			'title'    => 'Expo',
-			'template' => 'expo-marketplace',
 		),
 		'community' => array(
 			'title'    => 'Community',
@@ -217,6 +205,10 @@ function snf_get_obsolete_page_slugs() {
 		'commercial-janitor-cleaning',
 		'event-by-admission',
 		'account-settings-for-profile',
+		// Dropped from one-pager marketing surface (events / reciprocal / inquiries kept).
+		'about',
+		'contact',
+		'expo',
 		// Legacy page copies of Woo products (products themselves are kept).
 		'the-township-adventures-event',
 		'the-badlands-bra-private-gathering',
@@ -752,6 +744,27 @@ function snf_get_workshop_product_slug() {
 }
 
 /**
+ * City Club Private Party product slug (Apply landing).
+ *
+ * @return string
+ */
+function snf_get_city_club_private_party_slug() {
+	return 'the-city-club-private-party';
+}
+
+/**
+ * Product slugs that use stepped checkout landings (contact → ticket).
+ *
+ * @return array<int, string>
+ */
+function snf_get_workshop_landing_slugs() {
+	return array(
+		snf_get_workshop_product_slug(),
+		snf_get_city_club_private_party_slug(),
+	);
+}
+
+/**
  * Lifestyle Concierge workshop landing URL (Woo product page only).
  *
  * @return string
@@ -763,6 +776,29 @@ function snf_get_workshop_landing_url() {
 	}
 
 	return home_url( '/product/' . snf_get_workshop_product_slug() . '/' );
+}
+
+/**
+ * City Club Private Party product URL.
+ *
+ * @return string
+ */
+function snf_get_city_club_private_party_url() {
+	$product = get_page_by_path( snf_get_city_club_private_party_slug(), OBJECT, 'product' );
+	if ( $product instanceof WP_Post && 'publish' === $product->post_status ) {
+		return get_permalink( $product );
+	}
+
+	return home_url( '/product/' . snf_get_city_club_private_party_slug() . '/' );
+}
+
+/**
+ * Public Apply CTA URL — City Club Private Party workshop landing.
+ *
+ * @return string
+ */
+function snf_get_apply_landing_url() {
+	return snf_get_city_club_private_party_url();
 }
 
 /**
@@ -932,140 +968,41 @@ function snf_get_service_inquiry( $slug = '' ) {
  * @return array<int, array<string, mixed>>
  */
 function snf_primary_menu_items() {
-	$is_member = function_exists( 'snf_user_can_access_member_areas' ) && snf_user_can_access_member_areas();
+	$home = trailingslashit( home_url( '/' ) );
+	$is_front = is_front_page();
 
-	$inquiry_children = array(
-		array(
-			'type'    => 'heading',
-			'label'   => __( 'Service inquiries', 'super-ninety-four' ),
-			'url'     => snf_get_page_url( 'inquiries' ),
-			'current' => is_page( 'inquiries' ),
-		),
-	);
-
-	if ( function_exists( 'snf_get_dashboard_service_inquiry_cards' ) ) {
-		foreach ( snf_get_dashboard_service_inquiry_cards() as $card ) {
-			$card_url = isset( $card['url'] ) ? (string) $card['url'] : '';
-			$inquiry_children[] = array(
-				'type'    => 'link',
-				'label'   => $card['title'],
-				'url'     => $card_url,
-				'current' => $card_url && function_exists( 'snf_url_matches_request' )
-					? snf_url_matches_request( $card_url )
-					: false,
-			);
-		}
-	}
-
-	$public_events_url = snf_get_page_url( 'select-events-by-non-members' );
-	$events_url        = $is_member
-		? snf_get_page_url( 'select-events-by-members' )
-		: $public_events_url;
-	$expo_url          = snf_get_page_url( 'expo' );
-
-	$event_children = array(
-		array(
-			'type'    => 'heading',
-			'label'   => __( 'Public events', 'super-ninety-four' ),
-			'url'     => $public_events_url,
-			'current' => is_page( 'select-events-by-non-members' ),
-		),
-	);
-
-	if ( function_exists( 'snf_get_dashboard_non_member_event_cards' ) ) {
-		foreach ( snf_get_dashboard_non_member_event_cards() as $card ) {
-			$card_url = isset( $card['url'] ) ? (string) $card['url'] : '';
-			$event_children[] = array(
-				'type'    => 'link',
-				'label'   => $card['title'],
-				'url'     => $card_url,
-				'current' => $card_url && function_exists( 'snf_url_matches_request' )
-					? snf_url_matches_request( $card_url )
-					: false,
-			);
-		}
-	}
-
-	$events_current = is_page( 'select-events-by-members' )
-		|| is_page( 'select-events-by-non-members' )
-		|| ( function_exists( 'snf_url_matches_request' ) && snf_url_matches_request( $events_url ) )
-		|| snf_primary_menu_has_current_child( $event_children );
-
-	$events_item = $is_member
-		? array(
-			'type'    => 'link',
-			'label'   => __( 'Events', 'super-ninety-four' ),
-			'url'     => $events_url,
-			'current' => $events_current,
-		)
-		: array(
-			'type'     => 'dropdown',
-			'label'    => __( 'Events', 'super-ninety-four' ),
-			'url'      => $public_events_url,
-			'current'  => $events_current,
-			'children' => $event_children,
-		);
+	$apply_url = function_exists( 'snf_get_apply_landing_url' )
+		? snf_get_apply_landing_url()
+		: snf_get_page_url( 'apply' );
+	$on_apply  = is_page( 'apply' )
+		|| ( function_exists( 'is_product' ) && is_product() && function_exists( 'snf_get_city_club_private_party_slug' ) && is_singular( 'product' ) && snf_get_city_club_private_party_slug() === get_post_field( 'post_name' ) );
 
 	$items = array(
 		array(
 			'type'    => 'link',
-			'label'   => __( 'Expo', 'super-ninety-four' ),
-			'url'     => $expo_url,
-			'current' => is_page( 'expo' )
-				|| ( function_exists( 'snf_is_expo_marketplace_page' ) && snf_is_expo_marketplace_page() ),
-		),
-		$events_item,
-		array(
-			'type'     => 'dropdown',
-			'label'    => __( 'Inquiries', 'super-ninety-four' ),
-			'url'      => snf_get_page_url( 'inquiries' ),
-			'current'  => is_page( 'inquiries' ) || snf_primary_menu_has_current_child( $inquiry_children ),
-			'children' => $inquiry_children,
+			'label'   => __( 'Help', 'super-ninety-four' ),
+			'url'     => $home . '#help',
+			'current' => $is_front,
 		),
 		array(
 			'type'    => 'link',
-			'label'   => __( 'About', 'super-ninety-four' ),
-			'url'     => snf_get_page_url( 'about' ),
-			'current' => is_page( 'about' ),
+			'label'   => __( 'Fit', 'super-ninety-four' ),
+			'url'     => $home . '#fit',
+			'current' => false,
 		),
 		array(
 			'type'    => 'link',
-			'label'   => __( 'Videos & Audio', 'super-ninety-four' ),
-			'url'     => snf_get_page_url( 'videos-audio' ),
-			'current' => is_page( 'videos-audio' )
-				|| is_singular( array( 'snf_video', 'snf_audio' ) )
-				|| is_post_type_archive( array( 'snf_video', 'snf_audio' ) )
-				|| is_tax( array( 'snf_media_topic', 'snf_media_series', 'snf_audio_channel', 'snf_broadcast_format' ) ),
+			'label'   => __( 'Membership', 'super-ninety-four' ),
+			'url'     => $home . '#pricing',
+			'current' => false,
 		),
 		array(
 			'type'    => 'link',
-			'label'   => __( 'Contact', 'super-ninety-four' ),
-			'url'     => snf_get_page_url( 'contact' ),
-			'current' => is_page( 'contact' ),
-		),
-		array(
-			'type'    => 'link',
-			'label'   => __( 'Newsletter', 'super-ninety-four' ),
-			'url'     => snf_get_page_url( 'newsletter' ),
-			'current' => is_page( 'newsletter' ),
+			'label'   => __( 'Apply', 'super-ninety-four' ),
+			'url'     => $apply_url,
+			'current' => $on_apply,
 		),
 	);
-
-	if ( $is_member ) {
-		array_splice(
-			$items,
-			2,
-			0,
-			array(
-				array(
-					'type'    => 'link',
-					'label'   => __( 'Community', 'super-ninety-four' ),
-					'url'     => snf_get_page_url( 'community' ),
-					'current' => is_page( 'community' ),
-				),
-			)
-		);
-	}
 
 	/**
 	 * Filter primary header menu items.
@@ -1306,6 +1243,78 @@ function snf_account_menu_items_members_area() {
 }
 
 /**
+ * Whether a product uses a stepped checkout landing (contact steps + custom template).
+ *
+ * @param int|null $post_id Product / event post ID.
+ * @return bool
+ */
+function snf_is_gathering_landing_product( $post_id = null ) {
+	$post = get_post( $post_id ? $post_id : get_the_ID() );
+	if ( ! $post ) {
+		return false;
+	}
+
+	$post_id  = (int) $post->ID;
+	$template = (string) get_post_meta( $post_id, 'snf_event_template', true );
+	if ( in_array(
+		$template,
+		array(
+			'lifestyle-concierge-workshop',
+			'city-club-private-party-gathering',
+			'city-club-private-party-workshop', // legacy meta key
+		),
+		true
+	) ) {
+		return true;
+	}
+
+	return in_array( $post->post_name, snf_get_workshop_landing_slugs(), true );
+}
+
+/**
+ * Stepped-checkout landing template map for a product.
+ *
+ * @param int|null $post_id Product ID.
+ * @return array{dir:string,part:string}
+ */
+function snf_get_stepped_checkout_landing( $post_id = null ) {
+	$post = get_post( $post_id ? $post_id : get_the_ID() );
+	if ( ! $post ) {
+		return array(
+			'dir'  => 'workshop',
+			'part' => 'lifestyle-concierge',
+		);
+	}
+
+	$template = (string) get_post_meta( (int) $post->ID, 'snf_event_template', true );
+	$is_city  = in_array( $template, array( 'city-club-private-party-gathering', 'city-club-private-party-workshop' ), true )
+		|| snf_get_city_club_private_party_slug() === $post->post_name;
+
+	if ( $is_city ) {
+		return array(
+			'dir'  => 'gathering',
+			'part' => 'city-club-private-party',
+		);
+	}
+
+	return array(
+		'dir'  => 'workshop',
+		'part' => 'lifestyle-concierge',
+	);
+}
+
+/**
+ * @deprecated 2.36.0 Use snf_get_stepped_checkout_landing().
+ *
+ * @param int|null $post_id Product ID.
+ * @return string
+ */
+function snf_get_workshop_template_part( $post_id = null ) {
+	$landing = snf_get_stepped_checkout_landing( $post_id );
+	return $landing['part'];
+}
+
+/**
  * Whether an event uses the Lifestyle Concierge Club Workshop landing.
  *
  * @param int|null $post_id Event post ID.
@@ -1318,13 +1327,81 @@ function snf_is_lifestyle_concierge_workshop( $post_id = null ) {
 	}
 
 	$post_id = (int) $post->ID;
-
 	if ( 'lifestyle-concierge-workshop' === get_post_meta( $post_id, 'snf_event_template', true ) ) {
 		return true;
 	}
 
-	return 'the-lifestyle-concierge-club-workshop' === $post->post_name;
+	return snf_get_workshop_product_slug() === $post->post_name;
 }
+
+/**
+ * Redirect /apply/ to the City Club Private Party product landing.
+ */
+function snf_redirect_apply_to_city_club_party() {
+	if ( is_admin() || wp_doing_ajax() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
+		return;
+	}
+	if ( ! is_page( 'apply' ) ) {
+		return;
+	}
+
+	$target = snf_get_apply_landing_url();
+	if ( ! $target ) {
+		return;
+	}
+
+	wp_safe_redirect( $target, 302 );
+	exit;
+}
+add_action( 'template_redirect', 'snf_redirect_apply_to_city_club_party', 5 );
+
+/**
+ * Ensure City Club Private Party product meta + $497 price.
+ */
+function snf_ensure_city_club_private_party_product() {
+	if ( wp_installing() || ! class_exists( 'WooCommerce' ) ) {
+		return;
+	}
+
+	$version = '1.1.0-city-club-gathering-497';
+	if ( get_option( 'snf_city_club_private_party_version' ) === $version ) {
+		return;
+	}
+
+	$post = get_page_by_path( snf_get_city_club_private_party_slug(), OBJECT, 'product' );
+	if ( ! $post instanceof WP_Post ) {
+		$product_id = wp_insert_post(
+			array(
+				'post_title'   => __( 'The City Club Private Party', 'super-ninety-four' ),
+				'post_name'    => snf_get_city_club_private_party_slug(),
+				'post_status'  => 'publish',
+				'post_type'    => 'product',
+				'post_content' => __( 'Private City Clubs social gathering — coach, credentials, and a closed room.', 'super-ninety-four' ),
+			),
+			true
+		);
+		if ( is_wp_error( $product_id ) || ! $product_id ) {
+			return;
+		}
+	} else {
+		$product_id = (int) $post->ID;
+	}
+
+	update_post_meta( $product_id, 'snf_event_template', 'city-club-private-party-gathering' );
+	update_post_meta( $product_id, 'snf_event_price', '$497.00' );
+	update_post_meta( $product_id, '_regular_price', '497' );
+	update_post_meta( $product_id, '_price', '497' );
+	update_post_meta( $product_id, '_virtual', 'yes' );
+	update_post_meta( $product_id, '_sold_individually', 'no' );
+	wp_set_object_terms( $product_id, 'simple', 'product_type' );
+
+	if ( function_exists( 'wc_delete_product_transients' ) ) {
+		wc_delete_product_transients( $product_id );
+	}
+
+	update_option( 'snf_city_club_private_party_version', $version, false );
+}
+add_action( 'init', 'snf_ensure_city_club_private_party_product', 35 );
 
 /**
  * Read workshop contact fields from the add-to-cart request.
@@ -1362,13 +1439,13 @@ function snf_workshop_request_contact_fields() {
  * @return bool
  */
 function snf_workshop_validate_add_to_cart( $passed, $product_id ) {
-	if ( ! $passed || ! snf_is_lifestyle_concierge_workshop( $product_id ) ) {
+	if ( ! $passed || ! snf_is_gathering_landing_product( $product_id ) ) {
 		return $passed;
 	}
 
 	$contact = snf_workshop_request_contact_fields();
 	if ( '' === $contact['name'] || ! is_email( $contact['email'] ) || '' === $contact['phone'] ) {
-		wc_add_notice( __( 'Please enter your full name, email, and phone before adding the workshop to your cart.', 'super-ninety-four' ), 'error' );
+		wc_add_notice( __( 'Please enter your full name, email, and phone before adding this ticket to your cart.', 'super-ninety-four' ), 'error' );
 		return false;
 	}
 
@@ -1384,7 +1461,7 @@ add_filter( 'woocommerce_add_to_cart_validation', 'snf_workshop_validate_add_to_
  * @return array
  */
 function snf_workshop_add_cart_item_data( $cart_item_data, $product_id ) {
-	if ( ! snf_is_lifestyle_concierge_workshop( $product_id ) ) {
+	if ( ! snf_is_gathering_landing_product( $product_id ) ) {
 		return $cart_item_data;
 	}
 
@@ -1414,7 +1491,7 @@ add_filter( 'woocommerce_add_cart_item_data', 'snf_workshop_add_cart_item_data',
  * @param array  $cart_item_data Cart item data.
  */
 function snf_workshop_prefill_customer_from_cart( $cart_item_key, $product_id, $quantity, $variation_id, $variation, $cart_item_data ) {
-	if ( ! snf_is_lifestyle_concierge_workshop( $product_id ) || ! function_exists( 'WC' ) || ! WC()->customer ) {
+	if ( ! snf_is_gathering_landing_product( $product_id ) || ! function_exists( 'WC' ) || ! WC()->customer ) {
 		return;
 	}
 
@@ -1450,7 +1527,7 @@ function snf_workshop_add_to_cart_redirect( $url ) {
 		$product_id = absint( $_REQUEST['product_id'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 	}
 
-	if ( $product_id && snf_is_lifestyle_concierge_workshop( $product_id ) && function_exists( 'wc_get_cart_url' ) ) {
+	if ( $product_id && snf_is_gathering_landing_product( $product_id ) && function_exists( 'wc_get_cart_url' ) ) {
 		return wc_get_cart_url();
 	}
 

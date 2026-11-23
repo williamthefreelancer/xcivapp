@@ -9,8 +9,8 @@
 
 defined( 'ABSPATH' ) || exit;
 
-$shop_url = apply_filters( 'woocommerce_return_to_shop_redirect', wc_get_page_permalink( 'shop' ) );
-$expo_url = function_exists( 'snf_get_page_url' ) ? snf_get_page_url( 'expo' ) : home_url( '/expo/' );
+$shop_url   = apply_filters( 'woocommerce_return_to_shop_redirect', wc_get_page_permalink( 'shop' ) );
+$events_url = function_exists( 'snf_get_page_url' ) ? snf_get_page_url( 'select-events-by-non-members' ) : home_url( '/select-events-by-non-members/' );
 ?>
 
 <div class="snf-cart-empty" data-figma-slot="cart-empty">
@@ -34,9 +34,9 @@ $expo_url = function_exists( 'snf_get_page_url' ) ? snf_get_page_url( 'expo' ) :
 				<?php echo esc_html( apply_filters( 'woocommerce_return_to_shop_text', __( 'Browse listings', 'super-ninety-four' ) ) ); ?>
 			</a>
 		<?php endif; ?>
-		<?php if ( $expo_url ) : ?>
-			<a class="button snf-cart-empty__btn<?php echo esc_attr( wc_wp_theme_get_element_class_name( 'button' ) ? ' ' . wc_wp_theme_get_element_class_name( 'button' ) : '' ); ?>" href="<?php echo esc_url( $expo_url ); ?>">
-				<?php esc_html_e( 'Visit Expo', 'super-ninety-four' ); ?>
+		<?php if ( $events_url ) : ?>
+			<a class="button snf-cart-empty__btn<?php echo esc_attr( wc_wp_theme_get_element_class_name( 'button' ) ? ' ' . wc_wp_theme_get_element_class_name( 'button' ) : '' ); ?>" href="<?php echo esc_url( $events_url ); ?>">
+				<?php esc_html_e( 'Browse events', 'super-ninety-four' ); ?>
 			</a>
 		<?php endif; ?>
 	</div>

@@ -80,7 +80,7 @@
   --snf-admin-cream: #f3ebe8;
   --snf-admin-on-dark: #ffffff;
   --snf-admin-ink: #1b1313;
-  --snf-bp-nav: 64rem;
+  --snf-bp-nav: 56.25rem;
   --snf-bp-wide: 68.75rem;
   --snf-bp-tablet: 56.25rem;
   --snf-bp-narrow: 45rem;
@@ -358,7 +358,8 @@
     }
   }
 
-  @media (min-width: 64rem) {
+  /* Tablet+ — same horizontal main menus as desktop */
+  @media (min-width: 56.25rem) {
     .snf-site-header__nav {
       display: flex;
     }

@@ -18,34 +18,26 @@ define( 'SNF_THEME_MENUS_LOADED', true );
  * @return array<string, array<int, array{title:string,url:string,children?:array}>>
  */
 function snf_get_theme_menu_blueprints() {
-	$primary = array(
+	$home = trailingslashit( home_url( '/' ) );
+	$apply_url = function_exists( 'snf_get_apply_landing_url' )
+		? snf_get_apply_landing_url()
+		: snf_get_page_url( 'apply' );
+	$primary   = array(
 		array(
-			'title' => __( 'Expo', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'expo' ),
+			'title' => __( 'Help', 'super-ninety-four' ),
+			'url'   => $home . '#help',
 		),
 		array(
-			'title' => __( 'Events', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'select-events-by-non-members' ),
+			'title' => __( 'Fit', 'super-ninety-four' ),
+			'url'   => $home . '#fit',
 		),
 		array(
-			'title' => __( 'Inquiries', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'inquiries' ),
+			'title' => __( 'Membership', 'super-ninety-four' ),
+			'url'   => $home . '#pricing',
 		),
 		array(
-			'title' => __( 'About', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'about' ),
-		),
-		array(
-			'title' => __( 'Videos & Audio', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'videos-audio' ),
-		),
-		array(
-			'title' => __( 'Contact', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'contact' ),
-		),
-		array(
-			'title' => __( 'Newsletter', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'newsletter' ),
+			'title' => __( 'Apply', 'super-ninety-four' ),
+			'url'   => $apply_url,
 		),
 	);
 
@@ -53,10 +45,6 @@ function snf_get_theme_menu_blueprints() {
 		array(
 			'title' => __( 'Dashboard', 'super-ninety-four' ),
 			'url'   => function_exists( 'snf_get_dashboard_url' ) ? snf_get_dashboard_url() : home_url( '/my-account/' ),
-		),
-		array(
-			'title' => __( 'Expo', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'expo' ),
 		),
 		array(
 			'title' => __( 'Select Events', 'super-ninety-four' ),
@@ -162,7 +150,7 @@ function snf_ensure_theme_menus() {
 	}
 
 	$force   = (bool) get_option( 'snf_theme_menus_force_resync' );
-	$version = '2.33.0';
+	$version = '2.36.0-apply-city-club-drop-gatherings';
 	if ( ! $force && get_option( 'snf_theme_menus_version' ) === $version ) {
 		return;
 	}

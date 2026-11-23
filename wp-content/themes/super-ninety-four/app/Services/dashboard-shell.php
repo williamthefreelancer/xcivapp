@@ -76,15 +76,21 @@ function snf_get_account_hub_nav() {
 			'group' => 'home',
 		),
 		array(
-			'slug'  => 'expo',
-			'label' => __( 'Expo', 'super-ninety-four' ),
-			'url'   => snf_get_page_url( 'expo' ),
-			'group' => 'catalog',
-		),
-		array(
 			'slug'  => 'events',
 			'label' => __( 'Select Events', 'super-ninety-four' ),
 			'url'   => snf_get_page_url( 'select-events-by-members' ),
+			'group' => 'catalog',
+		),
+		array(
+			'slug'  => 'inquiries',
+			'label' => __( 'Inquiries', 'super-ninety-four' ),
+			'url'   => snf_get_page_url( 'inquiries' ),
+			'group' => 'catalog',
+		),
+		array(
+			'slug'  => 'reciprocal',
+			'label' => __( 'Reciprocal', 'super-ninety-four' ),
+			'url'   => snf_get_page_url( 'find-other-reciprocal-programs' ),
 			'group' => 'catalog',
 		),
 		array(
@@ -161,12 +167,16 @@ function snf_get_account_nav_current_slug() {
 		return 'listings';
 	}
 
-	if ( is_page( 'expo' ) || ( function_exists( 'snf_is_expo_marketplace_page' ) && snf_is_expo_marketplace_page() ) ) {
-		return 'expo';
-	}
-
 	if ( is_page( 'select-events-by-members' ) || is_page( 'select-events-by-non-members' ) ) {
 		return 'events';
+	}
+
+	if ( is_page( 'inquiries' ) ) {
+		return 'inquiries';
+	}
+
+	if ( is_page( 'find-other-reciprocal-programs' ) ) {
+		return 'reciprocal';
 	}
 
 	if ( is_page( 'community' ) || ( function_exists( 'snf_is_community_page' ) && snf_is_community_page() ) ) {

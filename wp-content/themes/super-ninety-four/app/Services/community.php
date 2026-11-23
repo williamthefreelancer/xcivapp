@@ -422,7 +422,7 @@ function snf_community_get_bootstrap() {
 		'nonce'       => wp_create_nonce( 'wp_rest' ),
 		'loggedIn'    => (bool) $user_id,
 		'messagesUrl' => function_exists( 'snf_get_page_url' ) ? snf_get_page_url( 'messages' ) : home_url( '/messages/' ),
-		'expoUrl'     => function_exists( 'snf_get_page_url' ) ? snf_get_page_url( 'expo' ) : home_url( '/expo/' ),
+		'expoUrl'     => function_exists( 'snf_get_page_url' ) ? snf_get_page_url( 'select-events-by-members' ) : home_url( '/select-events-by-members/' ),
 		'eventsUrl'   => function_exists( 'snf_get_page_url' ) ? snf_get_page_url( 'select-events-by-members' ) : home_url( '/select-events-by-members/' ),
 		'circles'     => $user_id && function_exists( 'snf_user_can_access_member_areas' ) && snf_user_can_access_member_areas()
 			? snf_community_list_circles( $user_id )

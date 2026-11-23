@@ -137,7 +137,7 @@ function snf_get_connect_content() {
  * Handle Let's Connect form POST.
  */
 function snf_handle_connect_request() {
-	$redirect = function_exists( 'snf_get_page_url' ) ? snf_get_page_url( 'contact' ) : home_url( '/contact/' );
+	$redirect = home_url( '/' );
 
 	if ( ! isset( $_POST['snf_connect_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['snf_connect_nonce'] ) ), 'snf_connect_request' ) ) {
 		wp_safe_redirect( add_query_arg( 'snf_connect', 'error', $redirect ) );

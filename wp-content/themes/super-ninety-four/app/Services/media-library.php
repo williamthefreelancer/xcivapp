@@ -797,6 +797,10 @@ add_action( 'woocommerce_product_options_general_product_data', 'snf_woocommerce
  * @param int $product_id Product ID.
  */
 function snf_woocommerce_save_product_broadcast_fields( $product_id ) {
+	if ( ! current_user_can( 'edit_post', $product_id ) ) {
+		return;
+	}
+
 	snf_save_meta_fields_from_post( (int) $product_id, snf_event_broadcast_meta_fields() );
 }
 add_action( 'woocommerce_process_product_meta', 'snf_woocommerce_save_product_broadcast_fields', 25 );

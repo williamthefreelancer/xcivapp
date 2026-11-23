@@ -16,8 +16,8 @@ const fallbackMenus: SiteMenus = {
     { title: 'Help', path: '/#help' },
     { title: 'Gatherings', path: '/#gatherings' },
     { title: 'Fit', path: '/#fit' },
-    { title: 'Pricing', path: '/#pricing' },
-    { title: 'Shop', path: '/shop' },
+    { title: 'Membership', path: '/#pricing' },
+    { title: 'Apply', path: '/apply' },
   ],
   footer: [
     { title: 'Privacy Policy', path: '/legal/privacy-policy' },

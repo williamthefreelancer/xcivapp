@@ -3320,6 +3320,9 @@ function snf_admin_handle_ops_ensure_membership_products() {
 		delete_option( 'snf_membership_products_seeded_v2' );
 		snf_ensure_application_product();
 	}
+	if ( function_exists( 'snf_dedupe_membership_products' ) ) {
+		snf_dedupe_membership_products( true );
+	}
 
 	$page = snf_admin_ops_redirect_page( 'snf-club-settings' );
 	wp_safe_redirect( admin_url( 'admin.php?page=' . $page . '&products_ok=membership' ) );

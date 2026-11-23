@@ -14,7 +14,9 @@ $is_service    = false;
 if ( have_posts() ) {
 	the_post();
 	$product_id    = get_the_ID();
-	$is_workshop   = function_exists( 'snf_is_lifestyle_concierge_workshop' ) && snf_is_lifestyle_concierge_workshop( $product_id );
+	$is_workshop   = function_exists( 'snf_is_gathering_landing_product' )
+		? snf_is_gathering_landing_product( $product_id )
+		: ( function_exists( 'snf_is_lifestyle_concierge_workshop' ) && snf_is_lifestyle_concierge_workshop( $product_id ) );
 	$is_reciprocal = ! $is_workshop && function_exists( 'snf_is_reciprocal_club_landing' ) && snf_is_reciprocal_club_landing( $product_id );
 	$is_service    = ! $is_workshop && ! $is_reciprocal && function_exists( 'snf_is_service_quote_product' ) && snf_is_service_quote_product( $product_id );
 	$is_event      = ! $is_workshop && ! $is_reciprocal && ! $is_service && function_exists( 'snf_is_figma_event_landing' ) && snf_is_figma_event_landing( $product_id );
@@ -28,9 +30,15 @@ while ( have_posts() ) :
 	the_post();
 
 	if ( $is_workshop ) {
+		$landing = function_exists( 'snf_get_stepped_checkout_landing' )
+			? snf_get_stepped_checkout_landing( get_the_ID() )
+			: array(
+				'dir'  => 'workshop',
+				'part' => 'lifestyle-concierge',
+			);
 		get_template_part(
-			'template-parts/workshop',
-			'lifestyle-concierge',
+			'template-parts/' . $landing['dir'],
+			$landing['part'],
 			array(
 				'event' => get_post(),
 			)

@@ -8,6 +8,64 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
+ * Resolve a one-pager href (path, hash, or absolute URL).
+ *
+ * @param string $url Raw URL or path.
+ * @return string
+ */
+function snf_home_resolve_href( $url ) {
+	$url = trim( (string) $url );
+	if ( '' === $url ) {
+		return '#';
+	}
+	if ( '#' === $url[0] ) {
+		return $url;
+	}
+	if ( preg_match( '#^https?://#i', $url ) ) {
+		return $url;
+	}
+	if ( 0 === strpos( $url, '/' ) ) {
+		$path = $url;
+		$hash = '';
+		if ( false !== strpos( $path, '#' ) ) {
+			list( $path, $hash ) = explode( '#', $path, 2 );
+			$hash = '#' . $hash;
+		}
+		return home_url( $path ) . $hash;
+	}
+	return $url;
+}
+
+/**
+ * Hero copy for the marketing one-pager.
+ *
+ * @return array<string, mixed>
+ */
+function snf_get_home_hero() {
+	$brand = __( 'SUPER NINETY FOUR', 'super-ninety-four' );
+	$hero  = array(
+		'brand'     => $brand,
+		'title'     => $brand,
+		'lede'      => __( 'Not a marketplace. A private hospitality circuit — if you already clear the bar.', 'super-ninety-four' ),
+		'cta'       => array(
+			'label' => __( 'Apply', 'super-ninety-four' ),
+			'url'   => '/apply',
+		),
+		'secondary' => array(
+			'label' => __( 'See how we help', 'super-ninety-four' ),
+			'url'   => '#help',
+		),
+	);
+
+	/**
+	 * Filter one-pager hero payload.
+	 *
+	 * @param array<string, mixed> $hero Hero content.
+	 */
+	return apply_filters( 'snf_home_hero', $hero );
+}
+
+/**
  * Home page SVG icon (reuses reciprocal icon paths).
  *
  * @param string $name Icon key.

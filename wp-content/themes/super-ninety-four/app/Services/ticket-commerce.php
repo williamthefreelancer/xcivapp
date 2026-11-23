@@ -943,6 +943,10 @@ add_filter( 'woocommerce_product_data_tabs', 'snf_ticket_commerce_product_data_t
  * @param int $product_id Product ID.
  */
 function snf_ticket_commerce_save_product_fields( $product_id ) {
+	if ( ! current_user_can( 'edit_post', $product_id ) ) {
+		return;
+	}
+
 	if ( ! isset( $_POST['snf_ticket_commerce_json'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
 		return;
 	}

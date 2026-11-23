@@ -102,7 +102,7 @@ function snf_block_resolve_cta_url( array $attrs ) {
 				? snf_get_service_quote_product_url( $target )
 				: home_url( '/' );
 		case 'expo':
-			return function_exists( 'snf_get_page_url' ) ? snf_get_page_url( 'expo' ) : home_url( '/expo/' );
+			return function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'shop' ) : home_url( '/shop/' );
 		case 'apply':
 		default:
 			return function_exists( 'snf_get_page_url' ) ? snf_get_page_url( 'apply' ) : home_url( '/apply/' );

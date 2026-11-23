@@ -615,6 +615,7 @@ function snf_funnel_product_panel() {
 	$config = snf_get_funnel_config( (int) $post->ID );
 	echo '<div id="snf_funnel_data" class="panel woocommerce_options_panel hidden">';
 	echo '<div class="options_group">';
+	echo '<input type="hidden" name="snf_funnel_fields" value="1" />';
 
 	woocommerce_wp_checkbox(
 		array(
@@ -696,6 +697,15 @@ add_filter( 'woocommerce_product_data_tabs', 'snf_funnel_product_data_tab' );
  * @param int $product_id Product ID.
  */
 function snf_funnel_save_product_fields( $product_id ) {
+	if ( ! current_user_can( 'edit_post', $product_id ) ) {
+		return;
+	}
+
+	// Avoid wiping funnel config when the panel was not part of the request.
+	if ( ! isset( $_POST['snf_funnel_fields'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		return;
+	}
+
 	// phpcs:ignore WordPress.Security.NonceVerification.Missing -- WooCommerce product save nonce.
 	$config = array(
 		'enabled'             => ! empty( $_POST['snf_funnel_enabled'] ),

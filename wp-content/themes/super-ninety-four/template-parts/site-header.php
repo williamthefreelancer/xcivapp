@@ -116,7 +116,7 @@ $snf_is_member     = function_exists( 'snf_user_can_access_member_areas' ) && sn
 				<?php endif; ?>
 			</div>
 			<?php if ( ! $snf_logged_in ) : ?>
-				<a class="snf-header__apply" href="<?php echo esc_url( snf_get_page_url( 'apply' ) ); ?>">
+				<a class="snf-header__apply" href="<?php echo esc_url( function_exists( 'snf_get_apply_landing_url' ) ? snf_get_apply_landing_url() : snf_get_page_url( 'apply' ) ); ?>">
 					<?php esc_html_e( 'Apply', 'super-ninety-four' ); ?>
 				</a>
 			<?php endif; ?>

@@ -1094,6 +1094,194 @@ add_action( 'admin_post_nopriv_snf_apply_membership', 'snf_handle_apply_membersh
 add_action( 'admin_post_snf_apply_membership', 'snf_handle_apply_membership_checkout' );
 
 /**
+ * Find a product ID by slug across every non-trash status.
+ *
+ * get_page_by_path() can miss drafts, pending, and private products, which
+ * lets the seeders create a second product for an existing slug. Querying the
+ * posts table directly and returning the oldest ID keeps lookups stable.
+ *
+ * @param string $slug Product slug.
+ * @return int Product ID, or 0 when none exists.
+ */
+function snf_find_product_id_by_slug( $slug ) {
+	global $wpdb;
+
+	$slug = sanitize_title( (string) $slug );
+	if ( '' === $slug ) {
+		return 0;
+	}
+
+	return (int) $wpdb->get_var(
+		$wpdb->prepare(
+			"SELECT ID FROM {$wpdb->posts} WHERE post_type = 'product' AND post_name = %s AND post_status NOT IN ( 'trash', 'auto-draft' ) ORDER BY ID ASC LIMIT 1",
+			$slug
+		)
+	);
+}
+
+/**
+ * Acquire the atomic membership seed lock.
+ *
+ * add_option() fails when the option already exists, so concurrent requests
+ * cannot both run the seed path and insert duplicate products. Stale locks
+ * older than five minutes are reclaimed.
+ *
+ * @return bool True when this request owns the lock.
+ */
+function snf_membership_seed_lock_acquire() {
+	if ( add_option( 'snf_membership_seed_lock', time(), '', false ) ) {
+		return true;
+	}
+
+	$locked_at = (int) get_option( 'snf_membership_seed_lock' );
+	if ( $locked_at <= 0 || ( time() - $locked_at ) > 300 ) {
+		delete_option( 'snf_membership_seed_lock' );
+		return (bool) add_option( 'snf_membership_seed_lock', time(), '', false );
+	}
+
+	return false;
+}
+
+/**
+ * Release the membership seed lock.
+ */
+function snf_membership_seed_lock_release() {
+	delete_option( 'snf_membership_seed_lock' );
+}
+
+/**
+ * Whether a product is referenced by any order item.
+ *
+ * Checks the legacy order-item meta table and the HPOS product lookup table
+ * when it exists.
+ *
+ * @param int $product_id Product ID.
+ * @return bool
+ */
+function snf_product_has_orders( $product_id ) {
+	global $wpdb;
+
+	$product_id = (int) $product_id;
+	if ( $product_id <= 0 ) {
+		return false;
+	}
+
+	$legacy = (int) $wpdb->get_var(
+		$wpdb->prepare(
+			"SELECT COUNT(*) FROM {$wpdb->prefix}woocommerce_order_itemmeta WHERE meta_key = '_product_id' AND meta_value = %d",
+			$product_id
+		)
+	);
+	if ( $legacy > 0 ) {
+		return true;
+	}
+
+	$lookup_table = $wpdb->prefix . 'wc_order_product_lookup';
+	if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $lookup_table ) ) === $lookup_table ) {
+		$hpos = (int) $wpdb->get_var(
+			$wpdb->prepare( "SELECT COUNT(*) FROM {$lookup_table} WHERE product_id = %d", $product_id )
+		);
+		if ( $hpos > 0 ) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+/**
+ * Choose which duplicate membership product to keep.
+ *
+ * Prefers a product carrying Stripe IDs, then one with orders, then the
+ * oldest product.
+ *
+ * @param int[] $ids Product IDs.
+ * @return int
+ */
+function snf_pick_canonical_membership_product( array $ids ) {
+	$ids = array_values( array_map( 'intval', $ids ) );
+
+	$stripe_keys = array(
+		SNF_PRODUCT_STRIPE_PRODUCT_LIVE,
+		SNF_PRODUCT_STRIPE_PRICE_LIVE,
+		SNF_PRODUCT_STRIPE_PRODUCT_TEST,
+		SNF_PRODUCT_STRIPE_PRICE_TEST,
+	);
+	foreach ( $ids as $id ) {
+		foreach ( $stripe_keys as $key ) {
+			if ( '' !== (string) get_post_meta( $id, $key, true ) ) {
+				return $id;
+			}
+		}
+	}
+
+	foreach ( $ids as $id ) {
+		if ( snf_product_has_orders( $id ) ) {
+			return $id;
+		}
+	}
+
+	return isset( $ids[0] ) ? (int) $ids[0] : 0;
+}
+
+/**
+ * Collapse duplicate membership products created by earlier seed races.
+ *
+ * Keeps the canonical product (Stripe IDs, then orders, then oldest) and
+ * trashes the extras. Never trashes a product that has orders. Runs once per
+ * version unless forced.
+ *
+ * @param bool $force Run even when the dedupe version option is already set.
+ * @return int[] Product IDs that were trashed.
+ */
+function snf_dedupe_membership_products( $force = false ) {
+	global $wpdb;
+
+	if ( ! class_exists( 'WooCommerce' ) || ! taxonomy_exists( 'product_cat' ) ) {
+		return array();
+	}
+
+	$version = '1.0.0-membership-dedupe';
+	if ( ! $force && get_option( 'snf_membership_products_dedupe' ) === $version ) {
+		return array();
+	}
+
+	$defs  = snf_get_membership_plan_definitions();
+	$slugs = array( 'membership-application' );
+	if ( ! empty( $defs['application_fee']['product_slug'] ) ) {
+		$slugs[] = (string) $defs['application_fee']['product_slug'];
+	}
+
+	$trashed = array();
+	foreach ( array_unique( array_filter( $slugs ) ) as $slug ) {
+		$ids = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT ID FROM {$wpdb->posts} WHERE post_type = 'product' AND post_name = %s AND post_status NOT IN ( 'trash', 'auto-draft' ) ORDER BY ID ASC",
+				sanitize_title( $slug )
+			)
+		);
+		$ids = array_map( 'intval', (array) $ids );
+		if ( count( $ids ) < 2 ) {
+			continue;
+		}
+
+		$canonical = snf_pick_canonical_membership_product( $ids );
+		foreach ( $ids as $id ) {
+			if ( $id === $canonical || snf_product_has_orders( $id ) ) {
+				continue;
+			}
+			wp_trash_post( $id );
+			$trashed[] = $id;
+		}
+	}
+
+	update_option( 'snf_membership_products_dedupe', $version, false );
+
+	return $trashed;
+}
+add_action( 'init', 'snf_dedupe_membership_products', 52 );
+
+/**
  * Ensure membership product category + catalog products exist (draft-friendly publish).
  *
  * @param bool $force Re-run even when the one-shot seed option is set (creates missing only).
@@ -1105,6 +1293,10 @@ function snf_ensure_membership_products( $force = false ) {
 	}
 
 	if ( ! $force && get_option( 'snf_membership_products_seeded_v1' ) ) {
+		return false;
+	}
+
+	if ( ! snf_membership_seed_lock_acquire() ) {
 		return false;
 	}
 
@@ -1149,9 +1341,9 @@ function snf_ensure_membership_products( $force = false ) {
 	}
 
 	foreach ( $to_create as $row ) {
-		$existing = get_page_by_path( $row['slug'], OBJECT, 'product' );
-		if ( $existing ) {
-			$product_id = (int) $existing->ID;
+		$existing_id = snf_find_product_id_by_slug( $row['slug'] );
+		if ( $existing_id ) {
+			$product_id = $existing_id;
 		} else {
 			$product_id = wp_insert_post(
 				array(
@@ -1190,6 +1382,8 @@ function snf_ensure_membership_products( $force = false ) {
 	update_option( 'snf_membership_products_seeded_v1', 1, false );
 	update_option( 'snf_membership_products_seeded_v2', 1, false );
 
+	snf_membership_seed_lock_release();
+
 	return true;
 }
 add_action( 'init', 'snf_ensure_membership_products', 50 );
@@ -1205,13 +1399,17 @@ function snf_ensure_application_product() {
 		return;
 	}
 
+	if ( ! snf_membership_seed_lock_acquire() ) {
+		return;
+	}
+
 	$defs = snf_get_membership_plan_definitions();
 	$slug = isset( $defs['application_fee']['product_slug'] ) ? $defs['application_fee']['product_slug'] : 'membership-application';
 	$price = isset( $defs['application_fee']['amount_raw'] ) ? $defs['application_fee']['amount_raw'] : 97.0;
 
-	$existing = get_page_by_path( $slug, OBJECT, 'product' );
-	if ( $existing ) {
-		$product_id = (int) $existing->ID;
+	$existing_id = snf_find_product_id_by_slug( $slug );
+	if ( $existing_id ) {
+		$product_id = $existing_id;
 	} else {
 		$product_id = wp_insert_post(
 			array(
@@ -1224,6 +1422,7 @@ function snf_ensure_application_product() {
 			true
 		);
 		if ( is_wp_error( $product_id ) || ! $product_id ) {
+			snf_membership_seed_lock_release();
 			return;
 		}
 	}
@@ -1246,6 +1445,8 @@ function snf_ensure_application_product() {
 	wp_set_object_terms( $product_id, 'simple', 'product_type', false );
 
 	update_option( 'snf_membership_products_seeded_v2', 1, false );
+
+	snf_membership_seed_lock_release();
 }
 add_action( 'init', 'snf_ensure_application_product', 51 );
 
@@ -1259,6 +1460,7 @@ function snf_woocommerce_membership_product_fields() {
 	}
 
 	echo '<div class="options_group">';
+	echo '<input type="hidden" name="snf_membership_fields" value="1" />';
 
 	woocommerce_wp_select(
 		array(
@@ -1334,6 +1536,15 @@ add_action( 'woocommerce_product_options_general_product_data', 'snf_woocommerce
  * @param int $product_id Product ID.
  */
 function snf_woocommerce_save_membership_product_fields( $product_id ) {
+	if ( ! current_user_can( 'edit_post', $product_id ) ) {
+		return;
+	}
+
+	// Only trust checkbox state when our panel was actually submitted.
+	if ( ! isset( $_POST['snf_membership_fields'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		return;
+	}
+
 	if ( isset( $_POST[ SNF_PRODUCT_PLAN_META ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
 		$plan = sanitize_title( wp_unslash( $_POST[ SNF_PRODUCT_PLAN_META ] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
 		update_post_meta( $product_id, SNF_PRODUCT_PLAN_META, $plan );

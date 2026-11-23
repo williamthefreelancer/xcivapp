@@ -344,19 +344,21 @@ add_action( 'rest_api_init', 'snf_rest_content_register_routes' );
  */
 function snf_rest_content_home() {
 	$home = function_exists( 'snf_get_home_content' ) ? snf_get_home_content() : array();
+	$hero = function_exists( 'snf_get_home_hero' ) ? snf_get_home_hero() : array();
+
 	$brand = array(
-		'name'     => get_bloginfo( 'name' ),
-		'tagline'  => get_bloginfo( 'description' ),
-		'hero'     => array(
-			'title' => __( 'SUPER NINETY FOUR', 'super-ninety-four' ),
-			'lede'  => __( 'Not a marketplace. A private hospitality circuit — if you already clear the bar.', 'super-ninety-four' ),
-			'cta'   => array(
-				'label' => __( 'Apply', 'super-ninety-four' ),
-				'path'  => '/apply',
+		'name'    => isset( $hero['brand'] ) ? $hero['brand'] : get_bloginfo( 'name' ),
+		'tagline' => get_bloginfo( 'description' ),
+		'hero'    => array(
+			'title'     => isset( $hero['title'] ) ? $hero['title'] : __( 'SUPER NINETY FOUR', 'super-ninety-four' ),
+			'lede'      => isset( $hero['lede'] ) ? $hero['lede'] : '',
+			'cta'       => array(
+				'label' => isset( $hero['cta']['label'] ) ? $hero['cta']['label'] : __( 'Apply', 'super-ninety-four' ),
+				'path'  => isset( $hero['cta']['url'] ) ? $hero['cta']['url'] : '/apply',
 			),
 			'secondary' => array(
-				'label' => __( 'See how we help', 'super-ninety-four' ),
-				'path'  => '/#help',
+				'label' => isset( $hero['secondary']['label'] ) ? $hero['secondary']['label'] : __( 'See how we help', 'super-ninety-four' ),
+				'path'  => isset( $hero['secondary']['url'] ) ? $hero['secondary']['url'] : '/#help',
 			),
 		),
 	);
@@ -506,8 +508,8 @@ function snf_rest_content_menus() {
 		snf_rest_menu_item( __( 'Help', 'super-ninety-four' ), '/#help' ),
 		snf_rest_menu_item( __( 'Gatherings', 'super-ninety-four' ), '/#gatherings' ),
 		snf_rest_menu_item( __( 'Fit', 'super-ninety-four' ), '/#fit' ),
-		snf_rest_menu_item( __( 'Pricing', 'super-ninety-four' ), '/#pricing' ),
-		snf_rest_menu_item( __( 'Shop', 'super-ninety-four' ), '/shop' ),
+		snf_rest_menu_item( __( 'Membership', 'super-ninety-four' ), '/#pricing' ),
+		snf_rest_menu_item( __( 'Apply', 'super-ninety-four' ), '/apply' ),
 	);
 
 	$footer = array(
