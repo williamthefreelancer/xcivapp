@@ -68,9 +68,13 @@ jobs:
         env:
           NUXT_PUBLIC_WP_URL: https://superninetyfour.com
           NUXT_WP_URL: https://superninetyfour.com
+          GQL_HOST: https://superninetyfour.com/graphql
+          NUXT_IMAGE_DOMAINS: superninetyfour.com
+          APP_HOST: https://superninetyfour.com
         run: |
           set -euo pipefail
           npm ci
+          npm run graphql:codegen || echo "::warning::graphql:codegen skipped (endpoint unreachable or schema unavailable)"
           npm run build
           test -f .output/server/index.mjs
 
@@ -198,6 +202,7 @@ jobs:
             "set +e; cd '${remote_nuxt}' || exit 0; \
              export HOST=127.0.0.1 PORT=3000 NITRO_HOST=127.0.0.1 NITRO_PORT=3000; \
              export NUXT_PUBLIC_WP_URL=https://superninetyfour.com NUXT_WP_URL=https://superninetyfour.com; \
+             export GQL_HOST=https://superninetyfour.com/graphql NUXT_IMAGE_DOMAINS=superninetyfour.com APP_HOST=https://superninetyfour.com; \
              if command -v pm2 >/dev/null 2>&1; then \
                pm2 describe snf-nuxt >/dev/null 2>&1 \
                  && pm2 restart snf-nuxt --update-env \
