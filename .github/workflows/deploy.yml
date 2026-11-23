@@ -1,0 +1,260 @@
+# Deploy Super Ninety Four theme + payments plugin + Nuxt front to DreamHost
+# (superninetyfour.com).
+# Theme source:  wp-content/themes/super-ninety-four/
+# Plugin source: wp-content/plugins/snf-payments/
+# Nuxt source:   frontend/ → Nitro .output/
+# Theme dest:    secrets.DREAMHOST_THEME_PATH
+# Plugin dest:   derived as .../wp-content/plugins/snf-payments
+# Nuxt dest:     secrets.DREAMHOST_NUXT_PATH (optional) or
+#                /home/superxcivapp/nuxt-superninetyfour
+#
+# Trailing slash on local paths syncs *contents* into remote folders
+# (avoids nested directory duplication).
+#
+# Repo secrets (Settings → Secrets and variables → Actions):
+#   DREAMHOST_HOST        vps72256.dreamhostps.com
+#   DREAMHOST_USERNAME    superxcivapp
+#   DREAMHOST_SSH_KEY     Private key (public key in ~/.ssh/authorized_keys)
+#   DREAMHOST_THEME_PATH  /home/superxcivapp/superninetyfour.com/wp-content/themes/super-ninety-four
+#   DREAMHOST_NUXT_PATH   optional Nuxt app dir on the VPS
+
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "wp-content/themes/super-ninety-four/**"
+      - "wp-content/plugins/snf-payments/**"
+      - "frontend/**"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: |
+            wp-content/themes/super-ninety-four/package-lock.json
+            frontend/package-lock.json
+
+      - name: Setup PHP / Composer
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          tools: composer
+
+      - name: Build theme assets
+        working-directory: wp-content/themes/super-ninety-four
+        run: |
+          set -euo pipefail
+          composer install --no-dev --optimize-autoloader --no-interaction
+          npm ci
+          npm run build
+          test -f dist/main.css
+          test -f dist/main.js
+          test -f vendor/autoload.php
+
+      - name: Build Nuxt headless front
+        working-directory: frontend
+        env:
+          NUXT_PUBLIC_WP_URL: https://superninetyfour.com
+          NUXT_WP_URL: https://superninetyfour.com
+        run: |
+          set -euo pipefail
+          npm ci
+          npm run build
+          test -f .output/server/index.mjs
+
+      - name: Validate secrets
+        env:
+          DREAMHOST_HOST: ${{ secrets.DREAMHOST_HOST }}
+          DREAMHOST_USERNAME: ${{ secrets.DREAMHOST_USERNAME }}
+          DREAMHOST_SSH_KEY: ${{ secrets.DREAMHOST_SSH_KEY }}
+          DREAMHOST_THEME_PATH: ${{ secrets.DREAMHOST_THEME_PATH }}
+        run: |
+          set -euo pipefail
+          for name in DREAMHOST_HOST DREAMHOST_USERNAME DREAMHOST_SSH_KEY DREAMHOST_THEME_PATH; do
+            if [ -z "${!name}" ]; then
+              echo "Missing secret: ${name}"
+              exit 1
+            fi
+          done
+          if [[ "${DREAMHOST_USERNAME}" != "superxcivapp" ]]; then
+            echo "DREAMHOST_USERNAME should be superxcivapp (got: ${DREAMHOST_USERNAME})"
+            exit 1
+          fi
+          if [[ "${DREAMHOST_THEME_PATH}" != /* ]]; then
+            echo "DREAMHOST_THEME_PATH must be absolute (e.g. /home/superxcivapp/superninetyfour.com/wp-content/themes/super-ninety-four)"
+            exit 1
+          fi
+          if [[ "${DREAMHOST_THEME_PATH}" == */super-ninety-four/super-ninety-four ]]; then
+            echo "DREAMHOST_THEME_PATH looks nested. Use .../themes/super-ninety-four once."
+            exit 1
+          fi
+
+      - name: Configure SSH
+        env:
+          DREAMHOST_HOST: ${{ secrets.DREAMHOST_HOST }}
+          DREAMHOST_SSH_KEY: ${{ secrets.DREAMHOST_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          printf '%s\n' "${DREAMHOST_SSH_KEY}" > ~/.ssh/dreamhost_deploy
+          chmod 600 ~/.ssh/dreamhost_deploy
+          ssh-keyscan -H "${DREAMHOST_HOST}" >> ~/.ssh/known_hosts
+
+      - name: Sync theme to DreamHost
+        env:
+          DREAMHOST_HOST: ${{ secrets.DREAMHOST_HOST }}
+          DREAMHOST_USERNAME: ${{ secrets.DREAMHOST_USERNAME }}
+          DREAMHOST_THEME_PATH: ${{ secrets.DREAMHOST_THEME_PATH }}
+        run: |
+          set -euo pipefail
+          remote_theme="${DREAMHOST_THEME_PATH%/}"
+          echo "User:   superxcivapp"
+          echo "Local:  wp-content/themes/super-ninety-four/"
+          echo "Remote: ${DREAMHOST_USERNAME}@${DREAMHOST_HOST}:${remote_theme}/"
+
+          # Trailing slash on source = contents only (prevents duplicate folder nesting).
+          rsync -avz --delete \
+            -e "ssh -i ${HOME}/.ssh/dreamhost_deploy -o IdentitiesOnly=yes -o BatchMode=yes" \
+            --exclude '.git/' \
+            --exclude 'node_modules/' \
+            --exclude 'resources/' \
+            --exclude 'bin/build-islands.mjs' \
+            "./wp-content/themes/super-ninety-four/" \
+            "${DREAMHOST_USERNAME}@${DREAMHOST_HOST}:${remote_theme}/"
+
+      - name: Sync snf-payments plugin to DreamHost
+        env:
+          DREAMHOST_HOST: ${{ secrets.DREAMHOST_HOST }}
+          DREAMHOST_USERNAME: ${{ secrets.DREAMHOST_USERNAME }}
+          DREAMHOST_THEME_PATH: ${{ secrets.DREAMHOST_THEME_PATH }}
+        run: |
+          set -euo pipefail
+          remote_theme="${DREAMHOST_THEME_PATH%/}"
+          remote_plugin="${remote_theme%/themes/super-ninety-four}/plugins/snf-payments"
+          echo "Local:  wp-content/plugins/snf-payments/"
+          echo "Remote: ${DREAMHOST_USERNAME}@${DREAMHOST_HOST}:${remote_plugin}/"
+
+          ssh -i "${HOME}/.ssh/dreamhost_deploy" -o IdentitiesOnly=yes -o BatchMode=yes \
+            "${DREAMHOST_USERNAME}@${DREAMHOST_HOST}" \
+            "mkdir -p '${remote_plugin}'"
+
+          rsync -avz --delete \
+            -e "ssh -i ${HOME}/.ssh/dreamhost_deploy -o IdentitiesOnly=yes -o BatchMode=yes" \
+            --exclude '.git/' \
+            "./wp-content/plugins/snf-payments/" \
+            "${DREAMHOST_USERNAME}@${DREAMHOST_HOST}:${remote_plugin}/"
+
+      - name: Sync Nuxt front to DreamHost
+        env:
+          DREAMHOST_HOST: ${{ secrets.DREAMHOST_HOST }}
+          DREAMHOST_USERNAME: ${{ secrets.DREAMHOST_USERNAME }}
+          DREAMHOST_NUXT_PATH: ${{ secrets.DREAMHOST_NUXT_PATH }}
+        run: |
+          set -euo pipefail
+          remote_nuxt="${DREAMHOST_NUXT_PATH:-/home/superxcivapp/nuxt-superninetyfour}"
+          remote_nuxt="${remote_nuxt%/}"
+          echo "Local:  frontend/.output/"
+          echo "Remote: ${DREAMHOST_USERNAME}@${DREAMHOST_HOST}:${remote_nuxt}/"
+
+          ssh -i "${HOME}/.ssh/dreamhost_deploy" -o IdentitiesOnly=yes -o BatchMode=yes \
+            "${DREAMHOST_USERNAME}@${DREAMHOST_HOST}" \
+            "mkdir -p '${remote_nuxt}'"
+
+          rsync -avz --delete \
+            -e "ssh -i ${HOME}/.ssh/dreamhost_deploy -o IdentitiesOnly=yes -o BatchMode=yes" \
+            "./frontend/.output/" \
+            "${DREAMHOST_USERNAME}@${DREAMHOST_HOST}:${remote_nuxt}/"
+
+      - name: Restart Nuxt on DreamHost (best-effort)
+        timeout-minutes: 2
+        continue-on-error: true
+        env:
+          DREAMHOST_HOST: ${{ secrets.DREAMHOST_HOST }}
+          DREAMHOST_USERNAME: ${{ secrets.DREAMHOST_USERNAME }}
+          DREAMHOST_NUXT_PATH: ${{ secrets.DREAMHOST_NUXT_PATH }}
+        run: |
+          remote_nuxt="${DREAMHOST_NUXT_PATH:-/home/superxcivapp/nuxt-superninetyfour}"
+          remote_nuxt="${remote_nuxt%/}"
+          set +e
+          timeout --foreground -k 10 60 ssh \
+            -i "${HOME}/.ssh/dreamhost_deploy" \
+            -o IdentitiesOnly=yes \
+            -o BatchMode=yes \
+            -o ConnectTimeout=15 \
+            -o ConnectionAttempts=1 \
+            "${DREAMHOST_USERNAME}@${DREAMHOST_HOST}" \
+            "set +e; cd '${remote_nuxt}' || exit 0; \
+             export HOST=127.0.0.1 PORT=3000 NITRO_HOST=127.0.0.1 NITRO_PORT=3000; \
+             export NUXT_PUBLIC_WP_URL=https://superninetyfour.com NUXT_WP_URL=https://superninetyfour.com; \
+             if command -v pm2 >/dev/null 2>&1; then \
+               pm2 describe snf-nuxt >/dev/null 2>&1 \
+                 && pm2 restart snf-nuxt --update-env \
+                 || pm2 start server/index.mjs --name snf-nuxt --cwd '${remote_nuxt}'; \
+               pm2 save; \
+               echo 'pm2: snf-nuxt restarted'; \
+             else \
+               echo 'pm2 not found — Nuxt .output synced; start Node manually or install pm2'; \
+             fi; \
+             exit 0"
+          echo "Nuxt restart step finished (rc=$?)."
+          exit 0
+
+      - name: Activate snf-payments on DreamHost
+        # Hard ceiling: plain `timeout ssh` can still hang if SSH ignores SIGTERM.
+        timeout-minutes: 2
+        continue-on-error: true
+        env:
+          DREAMHOST_HOST: ${{ secrets.DREAMHOST_HOST }}
+          DREAMHOST_USERNAME: ${{ secrets.DREAMHOST_USERNAME }}
+          DREAMHOST_THEME_PATH: ${{ secrets.DREAMHOST_THEME_PATH }}
+        run: |
+          remote_theme="${DREAMHOST_THEME_PATH%/}"
+          remote_wp="${remote_theme%/wp-content/themes/super-ninety-four}"
+
+          # Rsync already shipped theme + plugin. This step is best-effort only.
+          # -k 10 = SIGKILL if SIGTERM does not stop SSH within 10s.
+          set +e
+          timeout --foreground -k 10 60 ssh \
+            -i "${HOME}/.ssh/dreamhost_deploy" \
+            -o IdentitiesOnly=yes \
+            -o BatchMode=yes \
+            -o ConnectTimeout=15 \
+            -o ConnectionAttempts=1 \
+            -o ServerAliveInterval=5 \
+            -o ServerAliveCountMax=2 \
+            "${DREAMHOST_USERNAME}@${DREAMHOST_HOST}" \
+            "set +e; cd '${remote_wp}' || exit 0; \
+             command -v wp >/dev/null 2>&1 || { echo 'wp-cli not found'; exit 0; }; \
+             wp plugin activate snf-payments --quiet; \
+             wp theme activate super-ninety-four --quiet; \
+             wp rewrite flush --quiet; \
+             wp eval-file wp-content/themes/super-ninety-four/bin/snf-production-bootstrap.php; \
+             echo 'wp-cli: activate/bootstrap finished'; \
+             exit 0"
+          ssh_rc=$?
+          set -e
+
+          case "${ssh_rc}" in
+            0)
+              echo "WP-CLI activate completed."
+              ;;
+            124|137)
+              echo "::warning::WP-CLI activate timed out (rc=${ssh_rc}); theme/plugin rsync already completed."
+              ;;
+            *)
+              echo "::warning::WP-CLI activate exited ${ssh_rc}; theme/plugin rsync already completed."
+              ;;
+          esac
+          exit 0

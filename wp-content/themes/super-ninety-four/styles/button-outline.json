@@ -1,0 +1,19 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/theme.json",
+  "version": 3,
+  "title": "Outline",
+  "slug": "outline",
+  "blockTypes": ["core/button"],
+  "styles": {
+    "color": {
+      "background": "transparent",
+      "text": "var(--wp--preset--color--ink)"
+    },
+    "border": {
+      "color": "var(--wp--preset--color--surface-border)",
+      "width": "1px",
+      "style": "solid",
+      "radius": "2px"
+    }
+  }
+}

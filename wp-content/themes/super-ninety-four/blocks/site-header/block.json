@@ -1,0 +1,14 @@
+{
+  "apiVersion": 3,
+  "name": "snf/site-header",
+  "title": "SNF Site Header",
+  "category": "snf",
+  "icon": "menu",
+  "description": "Primary navigation and account chrome for Super Ninety Four.",
+  "textdomain": "super-ninety-four",
+  "supports": {
+    "html": false,
+    "multiple": false,
+    "reusable": false
+  }
+}

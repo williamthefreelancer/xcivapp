@@ -1,0 +1,1 @@
+function n(){const t=document.querySelector(".snf-quote");if(!t)return;t.querySelectorAll(".snf-quote__hero, .snf-quote__section, .snf-quote__pricing").forEach((e,o)=>{e.classList.add("snf-quote__motion"),e.style.setProperty("--snf-delay",`${Math.min(o*80,240)}ms`)}),requestAnimationFrame(()=>{t.classList.add("is-ready")})}export{n as initServiceQuote};

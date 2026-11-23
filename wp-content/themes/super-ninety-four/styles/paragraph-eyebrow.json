@@ -1,0 +1,19 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/theme.json",
+  "version": 3,
+  "title": "Eyebrow",
+  "slug": "eyebrow",
+  "blockTypes": ["core/paragraph"],
+  "styles": {
+    "color": {
+      "text": "var(--wp--preset--color--ink-muted)"
+    },
+    "typography": {
+      "fontFamily": "var(--wp--preset--font-family--body)",
+      "fontSize": "var(--wp--preset--font-size--small)",
+      "fontWeight": "600",
+      "letterSpacing": "0.12em",
+      "textTransform": "uppercase"
+    }
+  }
+}

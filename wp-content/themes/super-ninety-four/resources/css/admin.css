@@ -1,0 +1,115 @@
+@import "tailwindcss";
+
+/*
+ * SNF Club wp-admin dashboards — same palette as the front end:
+ * linear #815b5a → #1b1313, white text, translucent dark surfaces.
+ */
+@theme {
+  --color-snf-grad-top: #815b5a;
+  --color-snf-grad-bottom: #1b1313;
+  --color-snf-ink: #ffffff;
+  --color-snf-ink-muted: rgb(255 255 255 / 0.72);
+  --color-snf-ink-soft: rgb(255 255 255 / 0.42);
+  --color-snf-surface: rgb(27 19 19 / 0.42);
+  --color-snf-surface-strong: rgb(27 19 19 / 0.72);
+  --color-snf-border: rgb(255 255 255 / 0.18);
+
+  --color-background: #1b1313;
+  --color-foreground: #ffffff;
+  --color-card: rgb(27 19 19 / 0.72);
+  --color-card-foreground: #ffffff;
+  --color-popover: #1b1313;
+  --color-popover-foreground: #ffffff;
+  --color-primary: #815b5a;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: rgb(255 255 255 / 0.12);
+  --color-secondary-foreground: #ffffff;
+  --color-muted: rgb(255 255 255 / 0.08);
+  --color-muted-foreground: rgb(255 255 255 / 0.72);
+  --color-accent: #815b5a;
+  --color-accent-foreground: #ffffff;
+  --color-destructive: #b54a4a;
+  --color-destructive-foreground: #ffffff;
+  --color-border: rgb(255 255 255 / 0.18);
+  --color-input: rgb(255 255 255 / 0.18);
+  --color-ring: #815b5a;
+
+  /* Solid dark fill for active / hover chips (not page text) */
+  --color-snf-admin-cream: #f3ebe8;
+  --color-snf-admin-on-dark: #ffffff;
+  --color-snf-admin-ink: #1b1313;
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+}
+
+@layer base {
+  .snf-admin--vue,
+  #snf-admin-overview,
+  #snf-admin-chrome,
+  #snf-admin-settings-pulse {
+    --snf-admin-cream: #f3ebe8;
+    --snf-admin-on-dark: #ffffff;
+    /* Legacy text colour used by assets/css/admin-dashboard.css element rules.
+       Keep it white so headings/paragraphs stay legible on the dark gradient. */
+    --snf-admin-ink: #ffffff;
+    --snf-admin-gap: clamp(1rem, 2vw, 1.35rem);
+    --snf-grad-top: #815b5a;
+    --snf-grad-bottom: #1b1313;
+    --background: 15 20% 9%;
+    --foreground: 0 0% 100%;
+    --card: 15 20% 9%;
+    --card-foreground: 0 0% 100%;
+    --primary: 2 18% 43%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 20 20% 18%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 15 15% 14%;
+    --muted-foreground: 0 0% 72%;
+    --accent: 2 18% 43%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 45% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 20 20% 28%;
+    --input: 20 20% 28%;
+    --ring: 2 18% 43%;
+    --radius: 0.5rem;
+    color: var(--color-foreground);
+    font-family: "Open Sans", "Avenir Next", "Segoe UI", sans-serif;
+  }
+
+  .snf-admin--vue *,
+  #snf-admin-overview *,
+  #snf-admin-chrome *,
+  #snf-admin-settings-pulse * {
+    border-color: var(--color-border);
+  }
+}
+
+#snf-admin-overview,
+#snf-admin-chrome,
+#snf-admin-settings-pulse {
+  max-width: 73.75rem;
+  width: 100%;
+}
+
+.snf-admin-vue,
+.snf-admin-chrome {
+  display: flex;
+  flex-direction: column;
+  gap: var(--snf-admin-gap, 1.25rem);
+}
+
+.snf-admin-settings-pulse {
+  margin-bottom: var(--snf-admin-gap, 1.25rem);
+}
+
+@media (max-width: 40rem) {
+  .snf-admin--vue,
+  #snf-admin-overview,
+  #snf-admin-chrome,
+  #snf-admin-settings-pulse {
+    --snf-admin-gap: 1rem;
+  }
+}

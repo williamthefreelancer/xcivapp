@@ -1,0 +1,724 @@
+/**
+ * SNF Club + SNF Stripe admin dashboards — match front-end brand surfaces.
+ *
+ * Page: linear #815b5a → #1b1313. Text: white. Panels: translucent dark glass.
+ */
+
+/* Core Dashboard (index.php): hide stock WP wrap/chrome; leave .wrap.snf-admin alone. */
+body.snf-admin-home #wpbody-content > .wrap:not(.snf-admin),
+body.snf-admin-home #screen-meta-links,
+body.snf-admin-home #screen-meta {
+	display: none !important;
+}
+
+/* Front-end linear gradient behind all SNF admin desks */
+body.wp-admin:has(.snf-admin) #wpcontent,
+body.snf-admin-home #wpcontent {
+	background-color: #815b5a;
+	background-image: linear-gradient(180deg, #815b5a 0%, #1b1313 100%);
+	background-attachment: fixed;
+	color: #ffffff;
+}
+
+body.wp-admin:has(.snf-admin) #wpbody-content,
+body.snf-admin-home #wpbody-content {
+	margin-bottom: 2rem;
+}
+
+.snf-admin {
+	--snf-admin-ink: #ffffff;
+	--snf-admin-cream: #f3ebe8;
+	--snf-admin-on-dark: #ffffff;
+	--snf-admin-fill: #1b1313;
+	--snf-admin-accent: #815b5a;
+	--snf-admin-accent-soft: rgba(129, 91, 90, 0.35);
+	--snf-admin-line: rgba(255, 255, 255, 0.18);
+	--snf-admin-muted: rgba(255, 255, 255, 0.72);
+	--snf-admin-surface: rgba(27, 19, 19, 0.42);
+	--snf-admin-panel: rgba(27, 19, 19, 0.55);
+	--snf-admin-ok: #8fd4a0;
+	--snf-admin-warn: #f0c674;
+	--snf-admin-bad: #f08a8a;
+	--snf-admin-gap: clamp(1rem, 2vw, 1.35rem);
+	--snf-admin-space: clamp(1rem, 2.2vw, 1.35rem);
+	--snf-admin-title: clamp(1.45rem, 2.2vw, 1.95rem);
+	--snf-admin-section-title: 1.08rem;
+	--snf-admin-touch: 2.75rem;
+	max-width: 73.75rem;
+	margin: 1.25rem 1.25rem 2.5rem 0;
+	color: var(--snf-admin-ink);
+	font-size: 0.875rem;
+	line-height: 1.45;
+}
+
+/* Vue shell owns hero/nav; keep wrap spacing + align PHP panels to cards. */
+.snf-admin.snf-admin--vue {
+	background: transparent;
+}
+
+.snf-admin.snf-admin--vue .snf-admin__stat,
+.snf-admin.snf-admin--vue .snf-admin__panel {
+	border-radius: 0.5rem;
+	box-shadow: 0 0.625rem 1.75rem rgba(0, 0, 0, 0.18);
+}
+
+.snf-admin.snf-admin--vue .snf-admin__btn {
+	border-radius: 0.375rem;
+}
+
+.snf-admin.snf-admin--vue .snf-admin__pill {
+	border-radius: 0.25rem;
+}
+
+.snf-admin.snf-admin--vue #snf-admin-settings-pulse {
+	margin-bottom: var(--snf-admin-gap);
+}
+
+.snf-admin *,
+.snf-admin *::before,
+.snf-admin *::after {
+	box-sizing: border-box;
+}
+
+/* Surfaces + controls — white text on dark glass */
+.snf-admin__nav,
+.snf-admin__stat,
+.snf-admin__panel,
+.snf-admin__notice,
+.snf-admin__pill,
+.snf-admin .notice,
+.snf-admin .form-table,
+.snf-admin .form-table th,
+.snf-admin .form-table td,
+.snf-admin label,
+.snf-admin h1,
+.snf-admin h2,
+.snf-admin h3,
+.snf-admin h4,
+.snf-admin p,
+.snf-admin li {
+	color: var(--snf-admin-ink);
+}
+
+.snf-admin input[type="text"],
+.snf-admin input[type="email"],
+.snf-admin input[type="url"],
+.snf-admin input[type="number"],
+.snf-admin input[type="password"],
+.snf-admin input[type="search"],
+.snf-admin select,
+.snf-admin textarea {
+	color: var(--snf-admin-ink);
+	background: rgba(0, 0, 0, 0.35);
+	border-color: rgba(255, 255, 255, 0.22);
+}
+
+.snf-admin input::placeholder,
+.snf-admin textarea::placeholder {
+	color: rgba(255, 255, 255, 0.42);
+}
+
+.snf-admin__hero {
+	position: relative;
+	overflow: hidden;
+	padding: 1.85rem var(--snf-admin-space) 1.6rem;
+	border-radius: 0.125rem;
+	border: 0.0625rem solid var(--snf-admin-line);
+	background:
+		radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--snf-admin-cream) 14%, transparent), transparent 55%),
+		linear-gradient(135deg, var(--snf-admin-accent) 0%, var(--snf-admin-fill) 78%);
+	color: var(--snf-admin-on-dark);
+	margin-bottom: var(--snf-admin-gap);
+	animation: snf-admin-fade-up 0.45s ease both;
+}
+
+.snf-admin__hero::after {
+	content: "";
+	position: absolute;
+	inset: auto -10% -40% 45%;
+	height: 160%;
+	background: radial-gradient(circle at center, color-mix(in srgb, var(--snf-admin-cream) 12%, transparent), transparent 60%);
+	pointer-events: none;
+}
+
+.snf-admin__eyebrow {
+	display: inline-block;
+	margin: 0 0 0.55rem;
+	font-size: 0.6875rem;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	opacity: 0.78;
+	color: var(--snf-admin-on-dark);
+}
+
+.snf-admin__hero h1 {
+	margin: 0 0 0.4rem;
+	padding: 0;
+	color: var(--snf-admin-on-dark);
+	font-size: var(--snf-admin-title);
+	font-weight: 650;
+	letter-spacing: -0.02em;
+	line-height: 1.15;
+}
+
+.snf-admin__lede {
+	margin: 0;
+	max-width: 46rem;
+	opacity: 0.82;
+	font-size: 0.98rem;
+	color: var(--snf-admin-on-dark);
+}
+
+.snf-admin__nav {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35rem;
+	margin: 0 0 var(--snf-admin-gap);
+	padding: 0.4rem;
+	background: var(--snf-admin-surface);
+	border: 0.0625rem solid var(--snf-admin-line);
+	animation: snf-admin-fade-up 0.5s ease 0.05s both;
+}
+
+.snf-admin__nav a {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	padding: 0.55rem 0.9rem;
+	min-height: 2.25rem;
+	border-radius: 0.0625rem;
+	color: var(--snf-admin-muted);
+	text-decoration: none;
+	font-weight: 600;
+	font-size: 0.8125rem;
+	transition: background 0.18s ease, color 0.18s ease;
+}
+
+.snf-admin__nav a:hover {
+	background: rgba(243, 235, 232, 0.1);
+	color: var(--snf-admin-on-dark);
+}
+
+.snf-admin__nav a.is-active {
+	background: rgba(243, 235, 232, 0.14);
+	color: var(--snf-admin-on-dark);
+}
+
+.snf-admin__grid {
+	display: grid;
+	gap: var(--snf-admin-gap);
+}
+
+.snf-admin__grid--stats {
+	grid-template-columns: repeat(auto-fit, minmax(8.75rem, 1fr));
+	margin-bottom: var(--snf-admin-gap);
+	animation: snf-admin-fade-up 0.55s ease 0.08s both;
+}
+
+.snf-admin__grid--panels {
+	grid-template-columns: repeat(12, minmax(0, 1fr));
+	align-items: start;
+	animation: snf-admin-fade-up 0.6s ease 0.12s both;
+}
+
+.snf-admin__stat {
+	padding: 1.05rem 1.1rem;
+	background: var(--snf-admin-panel);
+	border: 0.0625rem solid var(--snf-admin-line);
+	border-top: 0.1875rem solid var(--snf-admin-accent);
+	min-width: 0;
+}
+
+.snf-admin__stat-value {
+	display: block;
+	font-size: clamp(1.25rem, 2vw, 1.75rem);
+	font-weight: 700;
+	letter-spacing: -0.03em;
+	line-height: 1.1;
+	word-break: break-word;
+	color: var(--snf-admin-ink);
+}
+
+.snf-admin__stat-label {
+	display: block;
+	margin-top: 0.3rem;
+	color: var(--snf-admin-muted);
+	font-size: 0.6875rem;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+.snf-admin__panel {
+	grid-column: span 6;
+	background: var(--snf-admin-panel);
+	border: 0.0625rem solid var(--snf-admin-line);
+	padding: var(--snf-admin-space) calc(var(--snf-admin-space) + 0.1rem) calc(var(--snf-admin-space) + 0.15rem);
+	min-width: 0;
+}
+
+.snf-admin__panel--wide {
+	grid-column: span 12;
+}
+
+.snf-admin__panel--narrow {
+	grid-column: span 4;
+}
+
+.snf-admin__panel h2,
+.snf-admin__form h2 {
+	margin: 0 0 0.4rem;
+	padding: 0;
+	font-size: var(--snf-admin-section-title);
+	font-weight: 700;
+	letter-spacing: -0.01em;
+	color: var(--snf-admin-ink);
+}
+
+/* Stronger glass panels on the gradient page */
+.snf-admin__panel--dark,
+.snf-admin__stat--dark {
+	background: rgba(27, 19, 19, 0.78);
+	border-color: var(--snf-admin-line);
+	color: var(--snf-admin-on-dark);
+}
+
+.snf-admin__panel--dark h1,
+.snf-admin__panel--dark h2,
+.snf-admin__panel--dark h3,
+.snf-admin__panel--dark h4,
+.snf-admin__panel--dark th,
+.snf-admin__panel--dark td,
+.snf-admin__panel--dark label,
+.snf-admin__panel--dark p,
+.snf-admin__panel--dark li,
+.snf-admin__panel--dark .snf-admin__subhead,
+.snf-admin__panel--dark .snf-admin__stat-value,
+.snf-admin__panel--dark .form-table th,
+.snf-admin__panel--dark .form-table td,
+.snf-admin__panel--dark .notice,
+.snf-admin__panel--dark .notice p,
+.snf-admin__stat--dark .snf-admin__stat-value {
+	color: var(--snf-admin-on-dark);
+}
+
+.snf-admin__panel--dark .snf-admin__panel-desc,
+.snf-admin__panel--dark .snf-admin__muted,
+.snf-admin__panel--dark .description,
+.snf-admin__stat--dark .snf-admin__stat-label {
+	color: rgba(255, 255, 255, 0.72);
+}
+
+.snf-admin__panel--dark a:not(.snf-admin__btn):not(.button) {
+	color: var(--snf-admin-on-dark);
+	text-decoration: underline;
+	text-underline-offset: 0.14em;
+}
+
+.snf-admin__form h2 + .snf-admin__panel-desc,
+.snf-admin__form .snf-admin__panel-desc + .form-table,
+.snf-admin__form h2 + .form-table {
+	margin-top: 0;
+}
+
+.snf-admin__form h2:not(:first-child) {
+	margin-top: 1.75rem;
+	padding-top: var(--snf-admin-gap);
+	border-top: 0.0625rem solid var(--snf-admin-line);
+}
+
+.snf-admin__subhead {
+	margin: 1.25rem 0 0.65rem;
+	padding: 0;
+	font-size: 0.95rem;
+	font-weight: 700;
+	color: var(--snf-admin-ink);
+}
+
+.snf-admin__panel-desc {
+	margin: 0 0 1.05rem;
+	color: var(--snf-admin-muted);
+}
+
+.snf-admin__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	margin: 0.9rem 0 0;
+}
+
+.snf-admin__btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.35rem;
+	padding: 0.55rem 0.95rem;
+	min-height: 2.25rem;
+	border: 0.0625rem solid var(--snf-admin-accent);
+	background: var(--snf-admin-accent);
+	color: var(--snf-admin-on-dark) !important;
+	text-decoration: none !important;
+	font-weight: 600;
+	font-size: 0.8125rem;
+	line-height: 1.2;
+	cursor: pointer;
+	border-radius: 0.0625rem;
+	transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.snf-admin__btn:hover {
+	background: var(--snf-admin-fill);
+	border-color: var(--snf-admin-cream);
+	color: var(--snf-admin-on-dark) !important;
+}
+
+.snf-admin__btn--ghost {
+	background: transparent;
+	border-color: rgba(255, 255, 255, 0.35);
+	color: var(--snf-admin-ink) !important;
+}
+
+.snf-admin__btn--ghost:hover {
+	background: rgba(243, 235, 232, 0.1);
+	border-color: var(--snf-admin-cream);
+	color: var(--snf-admin-on-dark) !important;
+}
+
+.snf-admin__table {
+	width: 100%;
+	border-collapse: collapse;
+	margin: 0 0 0.5rem;
+}
+
+.snf-admin__table th,
+.snf-admin__table td {
+	padding: 0.7rem 0.45rem;
+	border-bottom: 0.0625rem solid var(--snf-admin-line);
+	text-align: left;
+	vertical-align: top;
+	color: var(--snf-admin-ink);
+}
+
+.snf-admin__table th {
+	font-size: 0.6875rem;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--snf-admin-muted);
+	font-weight: 700;
+}
+
+.snf-admin__table a {
+	color: var(--snf-admin-cream);
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.snf-admin__table a:hover {
+	text-decoration: underline;
+	color: var(--snf-admin-on-dark);
+}
+
+.snf-admin__table code,
+.snf-admin__code {
+	font-size: 0.75rem;
+	word-break: break-all;
+}
+
+.snf-admin__pill {
+	display: inline-block;
+	padding: 0.18rem 0.5rem;
+	border: 0.0625rem solid var(--snf-admin-line);
+	background: var(--snf-admin-surface);
+	color: var(--snf-admin-ink);
+	font-size: 0.6875rem;
+	font-weight: 650;
+	letter-spacing: 0.03em;
+	text-transform: uppercase;
+	white-space: nowrap;
+	transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.snf-admin__pill:hover,
+.snf-admin__pill:focus-visible {
+	background: rgba(243, 235, 232, 0.14);
+	border-color: var(--snf-admin-cream);
+	color: var(--snf-admin-on-dark);
+}
+
+.snf-admin__pill--ok {
+	border-color: rgba(143, 212, 160, 0.45);
+	background: rgba(46, 125, 50, 0.22);
+	color: var(--snf-admin-ok);
+}
+
+.snf-admin__pill--ok:hover,
+.snf-admin__pill--ok:focus-visible {
+	background: rgba(46, 125, 50, 0.55);
+	border-color: var(--snf-admin-ok);
+	color: var(--snf-admin-on-dark);
+}
+
+.snf-admin__pill--warn {
+	border-color: rgba(240, 198, 116, 0.5);
+	background: rgba(183, 110, 0, 0.22);
+	color: var(--snf-admin-warn);
+}
+
+.snf-admin__pill--warn:hover,
+.snf-admin__pill--warn:focus-visible {
+	background: rgba(183, 110, 0, 0.55);
+	border-color: var(--snf-admin-warn);
+	color: var(--snf-admin-on-dark);
+}
+
+.snf-admin__pill--bad {
+	border-color: rgba(240, 138, 138, 0.45);
+	background: rgba(160, 40, 40, 0.28);
+	color: var(--snf-admin-bad);
+}
+
+.snf-admin__pill--bad:hover,
+.snf-admin__pill--bad:focus-visible {
+	background: rgba(160, 40, 40, 0.6);
+	border-color: var(--snf-admin-bad);
+	color: var(--snf-admin-on-dark);
+}
+
+.snf-admin__form .form-table {
+	margin-top: 0.25rem;
+}
+
+.snf-admin__form .form-table th {
+	width: 13.75rem;
+	padding-left: 0;
+	vertical-align: top;
+	color: var(--snf-admin-ink);
+}
+
+.snf-admin__form .form-table td {
+	padding-right: 0;
+	color: var(--snf-admin-ink);
+}
+.snf-admin__form .form-table .description {
+	color: var(--snf-admin-muted);
+}
+
+.snf-admin__form .form-table input.regular-text,
+.snf-admin__form .form-table input.large-text,
+.snf-admin__form .form-table textarea.large-text {
+	max-width: 100%;
+}
+
+.snf-admin__notice {
+	margin: 0 0 var(--snf-admin-gap);
+	padding: 0.8rem 0.95rem;
+	border-left: 0.1875rem solid var(--snf-admin-accent);
+	background: var(--snf-admin-surface);
+	color: var(--snf-admin-ink);
+}
+
+.snf-admin__notice p {
+	margin: 0;
+	color: inherit;
+}
+
+.snf-admin__notice--success {
+	border-left-color: #8fd4a0;
+	background: rgba(46, 125, 50, 0.22);
+}
+
+.snf-admin__notice--warn {
+	border-left-color: #f0c674;
+	background: rgba(183, 110, 0, 0.22);
+}
+
+.snf-admin__notice--error {
+	border-left-color: #f08a8a;
+	background: rgba(160, 40, 40, 0.28);
+}
+
+.snf-admin .notice {
+	background: var(--snf-admin-panel);
+	color: var(--snf-admin-ink);
+	border-color: var(--snf-admin-line);
+}
+
+.snf-admin .notice a {
+	color: var(--snf-admin-cream);
+}
+
+.snf-admin a:not(.snf-admin__btn):not(.button):not(.snf-admin__nav a) {
+	color: var(--snf-admin-cream);
+}
+
+.snf-admin a:not(.snf-admin__btn):not(.button):not(.snf-admin__nav a):hover {
+	color: var(--snf-admin-on-dark);
+}
+
+.snf-admin .button,
+.snf-admin .button-primary,
+.snf-admin .button-secondary {
+	background: var(--snf-admin-accent);
+	border-color: var(--snf-admin-accent);
+	color: var(--snf-admin-on-dark);
+	text-shadow: none;
+	box-shadow: none;
+}
+
+.snf-admin .button:hover,
+.snf-admin .button-primary:hover,
+.snf-admin .button-secondary:hover {
+	background: var(--snf-admin-fill);
+	border-color: var(--snf-admin-cream);
+	color: var(--snf-admin-on-dark);
+}
+
+.snf-admin .button-secondary {
+	background: transparent;
+	border-color: rgba(255, 255, 255, 0.35);
+}
+
+.snf-admin__list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.snf-admin__list li {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: 1rem;
+	padding: 0.6rem 0;
+	border-bottom: 0.0625rem solid var(--snf-admin-line);
+	color: var(--snf-admin-ink);
+}
+
+.snf-admin__list li:last-child {
+	border-bottom: 0;
+}
+
+.snf-admin__list li > span:last-child {
+	text-align: right;
+	max-width: 65%;
+}
+
+.snf-admin__muted {
+	color: var(--snf-admin-muted);
+	margin: 0.75rem 0 0;
+}
+
+@keyframes snf-admin-fade-up {
+	from {
+		opacity: 0;
+		transform: translateY(0.5rem);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.snf-admin__hero,
+	.snf-admin__nav,
+	.snf-admin__grid--stats,
+	.snf-admin__grid--panels {
+		animation: none;
+	}
+
+	.snf-admin__nav a,
+	.snf-admin__btn {
+		transition: none;
+	}
+}
+
+@media (max-width: 68.75rem) {
+	.snf-admin__panel--narrow {
+		grid-column: span 6;
+	}
+}
+
+@media (max-width: 60rem) {
+	.snf-admin {
+		max-width: 100%;
+		margin: 1rem 0 2rem;
+		--snf-admin-gap: 1.1rem;
+		--snf-admin-space: 1.15rem;
+	}
+
+	.snf-admin__hero {
+		padding: 1.35rem 1.25rem 1.2rem;
+	}
+
+	.snf-admin__panel,
+	.snf-admin__panel--narrow {
+		grid-column: span 12;
+	}
+
+	.snf-admin__form .form-table th {
+		width: auto;
+		display: block;
+		padding-bottom: 0.25rem;
+	}
+
+	.snf-admin__form .form-table td {
+		display: block;
+		padding-left: 0;
+	}
+
+	.snf-admin__list li {
+		flex-direction: column;
+		gap: 0.35rem;
+	}
+
+	.snf-admin__list li > span:last-child {
+		max-width: 100%;
+		text-align: left;
+	}
+
+	.snf-admin__grid--stats {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 40rem) {
+	.snf-admin {
+		margin: 0.75rem 0 1.5rem;
+		font-size: 0.8125rem;
+		--snf-admin-gap: 1rem;
+		--snf-admin-space: 1rem;
+		--snf-admin-title: clamp(1.35rem, 6vw, 1.65rem);
+	}
+
+	.snf-admin__hero {
+		padding: 1.15rem 1rem 1rem;
+		border-radius: 0.25rem;
+	}
+
+	.snf-admin__hero h1 {
+		font-size: var(--snf-admin-title);
+	}
+
+	.snf-admin__nav {
+		gap: 0.35rem;
+	}
+
+	.snf-admin__nav a,
+	.snf-admin__btn {
+		min-height: var(--snf-admin-touch);
+	}
+
+	.snf-admin__actions {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.snf-admin__grid--stats {
+		grid-template-columns: 1fr 1fr;
+		gap: 0.75rem;
+	}
+
+	.snf-admin__panel {
+		margin: 1rem;
+	}
+}

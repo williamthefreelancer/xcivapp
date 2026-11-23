@@ -1,0 +1,56 @@
+{
+  "apiVersion": 3,
+  "name": "snf/cta-button",
+  "title": "SNF CTA Button",
+  "category": "snf",
+  "icon": "button",
+  "description": "Branded call-to-action linking to Apply, workshop, Expo, or a service quote.",
+  "textdomain": "super-ninety-four",
+  "attributes": {
+    "label": {
+      "type": "string",
+      "default": "Continue"
+    },
+    "target": {
+      "type": "string",
+      "default": "apply"
+    },
+    "customUrl": {
+      "type": "string",
+      "default": ""
+    }
+  },
+  "supports": {
+    "html": false,
+    "anchor": true,
+    "align": ["left", "center", "right", "wide"],
+    "color": {
+      "text": true,
+      "background": true,
+      "gradients": false
+    },
+    "spacing": {
+      "margin": true,
+      "padding": true
+    },
+    "typography": {
+      "fontSize": true,
+      "fontFamily": true,
+      "fontWeight": true,
+      "letterSpacing": true,
+      "textTransform": true
+    },
+    "__experimentalBorder": {
+      "color": true,
+      "radius": true,
+      "style": true,
+      "width": true,
+      "__experimentalDefaultControls": {
+        "color": true,
+        "radius": true,
+        "style": true,
+        "width": true
+      }
+    }
+  }
+}

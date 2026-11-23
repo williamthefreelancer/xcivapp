@@ -1,0 +1,196 @@
+# Backup superninetyfour.com WordPress (DB + wp-content) from DreamHost.
+# Uses the same DREAMHOST_* secrets as deploy.yml.
+#
+# Manual: Actions → Backup DreamHost WordPress → Run workflow
+# CLI:    gh workflow run backup-dreamhost.yml
+#
+# Artifact retention: 14 days (download promptly for long-term storage).
+
+name: Backup DreamHost WordPress
+
+on:
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 45
+    steps:
+      - name: Validate secrets
+        env:
+          DREAMHOST_HOST: ${{ secrets.DREAMHOST_HOST }}
+          DREAMHOST_USERNAME: ${{ secrets.DREAMHOST_USERNAME }}
+          DREAMHOST_SSH_KEY: ${{ secrets.DREAMHOST_SSH_KEY }}
+          DREAMHOST_THEME_PATH: ${{ secrets.DREAMHOST_THEME_PATH }}
+        run: |
+          set -euo pipefail
+          for name in DREAMHOST_HOST DREAMHOST_USERNAME DREAMHOST_SSH_KEY DREAMHOST_THEME_PATH; do
+            if [[ -z "${!name}" ]]; then
+              echo "Missing secret: ${name}"
+              exit 1
+            fi
+          done
+
+      - name: Configure SSH
+        env:
+          DREAMHOST_HOST: ${{ secrets.DREAMHOST_HOST }}
+          DREAMHOST_SSH_KEY: ${{ secrets.DREAMHOST_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          printf '%s\n' "${DREAMHOST_SSH_KEY}" > ~/.ssh/dreamhost_deploy
+          chmod 600 ~/.ssh/dreamhost_deploy
+          ssh-keyscan -H "${DREAMHOST_HOST}" >> ~/.ssh/known_hosts
+
+      - name: Create remote backup archive
+        id: remote
+        env:
+          DREAMHOST_HOST: ${{ secrets.DREAMHOST_HOST }}
+          DREAMHOST_USERNAME: ${{ secrets.DREAMHOST_USERNAME }}
+          DREAMHOST_THEME_PATH: ${{ secrets.DREAMHOST_THEME_PATH }}
+        run: |
+          set -euo pipefail
+          stamp="$(date -u +%Y%m%d-%H%M%S)"
+          echo "stamp=${stamp}" >> "${GITHUB_OUTPUT}"
+
+          remote_theme="${DREAMHOST_THEME_PATH%/}"
+          # .../wp-content/themes/super-ninety-four → site root
+          site_root="$(dirname "$(dirname "$(dirname "${remote_theme}")")")"
+
+          echo "Site root: ${site_root}"
+          echo "Stamp:     ${stamp}"
+
+          ssh -i "${HOME}/.ssh/dreamhost_deploy" -o IdentitiesOnly=yes -o BatchMode=yes \
+            "${DREAMHOST_USERNAME}@${DREAMHOST_HOST}" \
+            "SITE_ROOT='${site_root}' STAMP='${stamp}' bash -s" <<'REMOTE'
+          set -euo pipefail
+
+          site_root="${SITE_ROOT}"
+          stamp="${STAMP}"
+          work="/tmp/snf-wp-backup-${stamp}"
+          archive="/tmp/snf-wordpress-${stamp}.tar.gz"
+
+          cleanup() {
+            rm -rf "${work}"
+          }
+          trap cleanup EXIT
+
+          if [[ ! -d "${site_root}" ]]; then
+            echo "Site root not found: ${site_root}"
+            exit 1
+          fi
+          if [[ ! -d "${site_root}/wp-content" ]]; then
+            echo "wp-content missing under ${site_root}"
+            exit 1
+          fi
+
+          mkdir -p "${work}"
+          cd "${site_root}"
+
+          echo "==> Exporting database"
+          if command -v wp >/dev/null 2>&1; then
+            wp db export "${work}/database.sql" --path="${site_root}" --add-drop-table
+          elif [[ -x "${HOME}/bin/wp" ]]; then
+            "${HOME}/bin/wp" db export "${work}/database.sql" --path="${site_root}" --add-drop-table
+          else
+            # Fallback: parse wp-config.php (no WP-CLI)
+            DB_NAME="$(php -r '
+              $c = file_get_contents($argv[1]);
+              if (!preg_match("/define\(\s*['\''\"]DB_NAME['\''\"]\s*,\s*['\''\"]([^'\''\"]+)/", $c, $m)) exit(1);
+              echo $m[1];
+            ' "${site_root}/wp-config.php")"
+            DB_USER="$(php -r '
+              $c = file_get_contents($argv[1]);
+              if (!preg_match("/define\(\s*['\''\"]DB_USER['\''\"]\s*,\s*['\''\"]([^'\''\"]+)/", $c, $m)) exit(1);
+              echo $m[1];
+            ' "${site_root}/wp-config.php")"
+            DB_PASSWORD="$(php -r '
+              $c = file_get_contents($argv[1]);
+              if (!preg_match("/define\(\s*['\''\"]DB_PASSWORD['\''\"]\s*,\s*['\''\"]([^'\''\"]+)/", $c, $m)) exit(1);
+              echo $m[1];
+            ' "${site_root}/wp-config.php")"
+            DB_HOST="$(php -r '
+              $c = file_get_contents($argv[1]);
+              if (!preg_match("/define\(\s*['\''\"]DB_HOST['\''\"]\s*,\s*['\''\"]([^'\''\"]+)/", $c, $m)) { echo "localhost"; exit(0); }
+              echo $m[1];
+            ' "${site_root}/wp-config.php")"
+            mysqldump -h "${DB_HOST}" -u "${DB_USER}" -p"${DB_PASSWORD}" \
+              --single-transaction --quick --routines --triggers \
+              "${DB_NAME}" > "${work}/database.sql"
+          fi
+
+          test -s "${work}/database.sql"
+          echo "DB dump bytes: $(wc -c < "${work}/database.sql")"
+
+          echo "==> Archiving wp-content (excluding caches)"
+          tar -C "${site_root}" -czf "${work}/wp-content.tar.gz" \
+            --exclude='wp-content/cache' \
+            --exclude='wp-content/upgrade' \
+            --exclude='wp-content/upgrade-temp-backup' \
+            --exclude='wp-content/uploads/wc-logs' \
+            --exclude='*/node_modules' \
+            --exclude='*/.git' \
+            wp-content
+
+          # Include wp-config.php for restore context (kept inside the private artifact only)
+          if [[ -f "${site_root}/wp-config.php" ]]; then
+            cp -a "${site_root}/wp-config.php" "${work}/wp-config.php"
+          fi
+
+          {
+            echo "site_root=${site_root}"
+            echo "stamp=${stamp}"
+            echo "hostname=$(hostname)"
+            echo "created_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            php -r 'echo "php=" . PHP_VERSION . "\n";' 2>/dev/null || true
+            if command -v wp >/dev/null 2>&1; then
+              wp core version --path="${site_root}" 2>/dev/null | sed 's/^/wp=/' || true
+            fi
+          } > "${work}/MANIFEST.txt"
+
+          tar -C "${work}" -czf "${archive}" .
+          ls -lh "${archive}"
+          echo "${archive}"
+          REMOTE
+
+          # Capture archive path from last line of remote output is fragile;
+          # use known path.
+          echo "remote_archive=/tmp/snf-wordpress-${stamp}.tar.gz" >> "${GITHUB_OUTPUT}"
+
+      - name: Download archive from DreamHost
+        env:
+          DREAMHOST_HOST: ${{ secrets.DREAMHOST_HOST }}
+          DREAMHOST_USERNAME: ${{ secrets.DREAMHOST_USERNAME }}
+          REMOTE_ARCHIVE: ${{ steps.remote.outputs.remote_archive }}
+          STAMP: ${{ steps.remote.outputs.stamp }}
+        run: |
+          set -euo pipefail
+          mkdir -p backup-out
+          scp -i "${HOME}/.ssh/dreamhost_deploy" -o IdentitiesOnly=yes -o BatchMode=yes \
+            "${DREAMHOST_USERNAME}@${DREAMHOST_HOST}:${REMOTE_ARCHIVE}" \
+            "backup-out/snf-wordpress-${STAMP}.tar.gz"
+          ls -lh backup-out/
+
+      - name: Remove remote temp archive
+        if: always()
+        env:
+          DREAMHOST_HOST: ${{ secrets.DREAMHOST_HOST }}
+          DREAMHOST_USERNAME: ${{ secrets.DREAMHOST_USERNAME }}
+          REMOTE_ARCHIVE: ${{ steps.remote.outputs.remote_archive }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${REMOTE_ARCHIVE:-}" ]]; then
+            echo "No remote archive path; skip cleanup"
+            exit 0
+          fi
+          ssh -i "${HOME}/.ssh/dreamhost_deploy" -o IdentitiesOnly=yes -o BatchMode=yes \
+            "${DREAMHOST_USERNAME}@${DREAMHOST_HOST}" \
+            "rm -f '${REMOTE_ARCHIVE}' /tmp/snf-wp-backup-* 2>/dev/null || true"
+
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: snf-wordpress-backup-${{ steps.remote.outputs.stamp }}
+          path: backup-out/snf-wordpress-*.tar.gz
+          if-no-files-found: error
+          retention-days: 14

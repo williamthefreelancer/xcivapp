@@ -1,0 +1,29 @@
+{
+  "apiVersion": 3,
+  "name": "snf/listing-grid",
+  "title": "SNF Listing Grid",
+  "category": "snf",
+  "icon": "grid-view",
+  "description": "Renders event, reciprocal, or service inquiry cards from theme helpers.",
+  "textdomain": "super-ninety-four",
+  "attributes": {
+    "source": {
+      "type": "string",
+      "default": "service-inquiries"
+    }
+  },
+  "supports": {
+    "html": false,
+    "align": ["wide", "full"],
+    "anchor": true,
+    "color": {
+      "text": true,
+      "background": true
+    },
+    "spacing": {
+      "margin": true,
+      "padding": true,
+      "blockGap": true
+    }
+  }
+}

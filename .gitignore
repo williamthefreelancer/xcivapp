@@ -1,0 +1,84 @@
+# WordPress core (install on host / XAMPP — not part of the app monorepo)
+/wp-admin/
+/wp-includes/
+/index.php
+/license.txt
+/readme.html
+/router.php
+/xmlrpc.php
+/wp-*.php
+!/wp-config-sample.php
+wp-config.php
+frontend/node_modules.bak*/
+.mysql-local.json
+mysql-setup.log
+mysql-*.txt
+wordpress.zip
+wp-cli.phar
+/deploy/
+
+# Local DreamHost / production backup archives (contain DB + wp-config secrets)
+/backups/
+
+# Uploads and caches
+wp-content/uploads/
+wp-content/cache/
+wp-content/upgrade/
+wp-content/backup-db/
+wp-content/advanced-cache.php
+wp-content/wp-cache-config.php
+wp-content/debug.log
+
+# Do not commit full plugin trees (installed on host / local only)
+wp-content/plugins/woocommerce/
+wp-content/plugins/sureforms/
+wp-content/plugins/surecontact/
+wp-content/plugins/suretriggers/
+wp-content/plugins/buddypress/
+wp-content/upgrade/
+wp-content/wpvivid_uploads/
+# WooNuxt WP plugins — install on host (Settings for WooNuxt / WPGraphQL)
+wp-content/plugins/wp-graphql/
+wp-content/plugins/wp-graphql-woocommerce/
+wp-content/plugins/wp-graphql-headless-login/
+wp-content/plugins/settings-for-woonuxt/
+# Removed from the stack — keep ignore so reinstalls stay out of git
+# sureforms + suretriggers (OttoKit) deleted on deploy
+
+# Dependencies / local tooling
+/vendor/
+/node_modules/
+**/node_modules/
+frontend/.nuxt/
+frontend/.output/
+frontend/.data/
+frontend/.cache/
+frontend/dist/
+# Regenerated from GQL_HOST — placeholders may be committed; live codegen overwrites locally
+# frontend/woonuxt_base/app/gql/default.ts
+# frontend/woonuxt_base/app/gql/schema.ts
+wp-content/themes/super-ninety-four/vendor/
+wp-content/themes/super-ninety-four/node_modules/
+.cursor/
+*.log
+.DS_Store
+Thumbs.db
+
+# Local SSH authorized keys (do not commit)
+.ssh/
+
+# Local debug / render dumps
+scripts/_err-*
+scripts/_out-*
+scripts/_home-fatal.php
+scripts/_siteurl.php
+scripts/_snf-*.php
+
+.projects/cache
+.projects/vault
+.projects/state.test.json
+.projects/state.local.test.json
+.env
+.env.*
+!.env.example
+!frontend/.env.example

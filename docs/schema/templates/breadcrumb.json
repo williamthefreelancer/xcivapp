@@ -1,0 +1,24 @@
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://www.example.com/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Select Events",
+      "item": "https://www.example.com/REPLACE-select-events-path/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "REPLACE: Event title",
+      "item": "https://www.example.com/event/REPLACE-EVENT-SLUG/"
+    }
+  ]
+}

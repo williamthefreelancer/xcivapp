@@ -1,0 +1,51 @@
+{
+  "name": "snf-frontend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev --port 3000",
+    "dev:host": "nuxt dev --host 0.0.0.0 --port 3000",
+    "build": "nuxt build",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "graphql:codegen": "graphql-codegen --config codegen.ts",
+    "typecheck": "nuxi typecheck"
+  },
+  "dependencies": {
+    "@stripe/stripe-js": "^10.3.0",
+    "@tailwindcss/vite": "^4.3.5",
+    "@vueuse/core": "^15.0.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "graphql": "^16.14.2",
+    "graphql-request": "^7.4.0",
+    "reka-ui": "^2.11.0",
+    "tailwind-merge": "^3.7.0",
+    "tailwindcss": "^4.3.5",
+    "undici": "^8.13.1"
+  },
+  "devDependencies": {
+    "@graphql-codegen/add": "^8.0.0",
+    "@graphql-codegen/cli": "^8.0.0",
+    "@graphql-codegen/typescript": "7.0.1",
+    "@graphql-codegen/typescript-graphql-request": "^8.0.2",
+    "@graphql-codegen/typescript-operations": "7.0.1",
+    "@iconify-json/ion": "^1.2.7",
+    "@nuxt/eslint": "^1.17.0",
+    "@nuxt/icon": "^2.6.2",
+    "@nuxt/image": "2.2.1",
+    "@nuxtjs/i18n": "^10.6.0",
+    "@tailwindcss/typography": "^0.5.20",
+    "@vite-pwa/nuxt": "^2.0.1",
+    "esbuild": "^0.28.2",
+    "eslint": "^10.15.0",
+    "nuxt": "^4.6.4",
+    "prettier": "^3.10.1",
+    "typescript": "6.0.3",
+    "vue": "^3.5.13",
+    "vue-i18n": "11.4.20",
+    "vue-router": "^4.5.0",
+    "vue-tsc": "^3.3.14"
+  }
+}
