@@ -24,6 +24,7 @@ function snf_nuxt_path_for_slug( $slug ) {
 		'about'                              => '/about',
 		'contact'                            => '/contact',
 		'newsletter'                         => '/newsletter',
+		'thank-you-newsletter'               => '/thank-you/newsletter',
 		'apply'                              => '/apply',
 		'under-consideration'                => '/under-consideration',
 		'inquiries'                          => '/inquiries',
@@ -350,13 +351,16 @@ function snf_rest_content_home() {
 		'name'    => isset( $hero['brand'] ) ? $hero['brand'] : get_bloginfo( 'name' ),
 		'tagline' => get_bloginfo( 'description' ),
 		'hero'    => array(
-			'title'     => isset( $hero['title'] ) ? $hero['title'] : __( 'SUPER NINETY FOUR', 'super-ninety-four' ),
-			'lede'      => isset( $hero['lede'] ) ? $hero['lede'] : '',
-			'cta'       => array(
+			'title'      => isset( $hero['title'] ) ? $hero['title'] : __( 'SUPER NINETY FOUR', 'super-ninety-four' ),
+			'titleLead'  => isset( $hero['titleLead'] ) ? $hero['titleLead'] : '',
+			'titleFocus' => isset( $hero['titleFocus'] ) ? $hero['titleFocus'] : '',
+			'lede'       => isset( $hero['lede'] ) ? $hero['lede'] : '',
+			'showBrand'  => ! empty( $hero['showBrand'] ),
+			'cta'        => array(
 				'label' => isset( $hero['cta']['label'] ) ? $hero['cta']['label'] : __( 'Apply', 'super-ninety-four' ),
 				'path'  => isset( $hero['cta']['url'] ) ? $hero['cta']['url'] : '/apply',
 			),
-			'secondary' => array(
+			'secondary'  => array(
 				'label' => isset( $hero['secondary']['label'] ) ? $hero['secondary']['label'] : __( 'See how we help', 'super-ninety-four' ),
 				'path'  => isset( $hero['secondary']['url'] ) ? $hero['secondary']['url'] : '/#help',
 			),
@@ -399,11 +403,23 @@ function snf_rest_content_contact() {
  * @return WP_REST_Response
  */
 function snf_rest_content_newsletter() {
+	$home       = function_exists( 'snf_get_home_content' ) ? snf_get_home_content() : array();
+	$newsletter = isset( $home['newsletter'] ) && is_array( $home['newsletter'] ) ? $home['newsletter'] : array();
+
 	return rest_ensure_response(
 		array(
-			'title'      => __( 'Video newsletter', 'super-ninety-four' ),
-			'lede'       => __( 'Get circuit updates, workshop invites, and select-event drops.', 'super-ninety-four' ),
-			'youtubeUrl' => function_exists( 'snf_newsletter_youtube_url' ) ? snf_newsletter_youtube_url() : '',
+			'title'      => isset( $newsletter['title'] ) ? $newsletter['title'] : __( 'The Zircoria Cryon Newsletter', 'super-ninety-four' ),
+			'lede'       => isset( $newsletter['lede'] ) ? $newsletter['lede'] : __( 'Films, live rooms, and circuit drops — subscribe and SureContact delivers the details.', 'super-ninety-four' ),
+			'youtubeUrl' => isset( $newsletter['youtubeUrl'] )
+				? $newsletter['youtubeUrl']
+				: ( function_exists( 'snf_newsletter_youtube_url' ) ? snf_newsletter_youtube_url() : '' ),
+			'benefits'   => isset( $newsletter['benefits'] ) && is_array( $newsletter['benefits'] )
+				? array_values( $newsletter['benefits'] )
+				: array(
+					__( 'Upcoming event updates and private invitations', 'super-ninety-four' ),
+					__( 'Every new YouTube video, as soon as it lands', 'super-ninety-four' ),
+					__( 'Live video and audio details delivered through SureContact', 'super-ninety-four' ),
+				),
 		)
 	);
 }
@@ -506,7 +522,6 @@ function snf_rest_menu_item( $title, $path ) {
 function snf_rest_content_menus() {
 	$primary = array(
 		snf_rest_menu_item( __( 'Help', 'super-ninety-four' ), '/#help' ),
-		snf_rest_menu_item( __( 'Gatherings', 'super-ninety-four' ), '/#gatherings' ),
 		snf_rest_menu_item( __( 'Fit', 'super-ninety-four' ), '/#fit' ),
 		snf_rest_menu_item( __( 'Membership', 'super-ninety-four' ), '/#pricing' ),
 		snf_rest_menu_item( __( 'Apply', 'super-ninety-four' ), '/apply' ),
@@ -629,14 +644,23 @@ function snf_rest_form_newsletter( WP_REST_Request $request ) {
 
 	// Honeypot.
 	if ( ! empty( $params['website'] ) ) {
-		return rest_ensure_response( array( 'ok' => true, 'status' => 'subscribed' ) );
+		return rest_ensure_response(
+			array(
+				'ok'     => true,
+				'status' => 'subscribed',
+				'next'   => '/thank-you/newsletter?status=subscribed',
+			)
+		);
 	}
 
 	$email = isset( $params['email'] ) ? sanitize_email( (string) $params['email'] ) : '';
-	$name  = isset( $params['name'] ) ? sanitize_text_field( (string) $params['name'] ) : '';
+	$phone = isset( $params['phone'] ) ? sanitize_text_field( (string) $params['phone'] ) : '';
 
 	if ( ! is_email( $email ) ) {
 		return new WP_Error( 'snf_invalid', __( 'Enter a valid email.', 'super-ninety-four' ), array( 'status' => 400 ) );
+	}
+	if ( '' === $phone ) {
+		return new WP_Error( 'snf_invalid', __( 'Enter a phone number.', 'super-ninety-four' ), array( 'status' => 400 ) );
 	}
 
 	$duplicate = get_posts(
@@ -650,14 +674,20 @@ function snf_rest_form_newsletter( WP_REST_Request $request ) {
 		)
 	);
 	if ( $duplicate ) {
-		return rest_ensure_response( array( 'ok' => true, 'status' => 'duplicate' ) );
+		return rest_ensure_response(
+			array(
+				'ok'     => true,
+				'status' => 'duplicate',
+				'next'   => '/thank-you/newsletter?status=duplicate',
+			)
+		);
 	}
 
 	$subscriber_id = wp_insert_post(
 		array(
 			'post_type'    => 'snf_subscriber',
 			'post_status'  => 'publish',
-			'post_title'   => $name ? $name : $email,
+			'post_title'   => $email,
 			'post_content' => '',
 		),
 		true
@@ -668,12 +698,27 @@ function snf_rest_form_newsletter( WP_REST_Request $request ) {
 	}
 
 	update_post_meta( $subscriber_id, '_snf_newsletter_email', $email );
-	update_post_meta( $subscriber_id, '_snf_newsletter_name', $name );
+	update_post_meta( $subscriber_id, '_snf_newsletter_phone', $phone );
 	update_post_meta( $subscriber_id, '_snf_newsletter_source', 'nuxt-newsletter' );
 	update_post_meta( $subscriber_id, '_snf_newsletter_user_id', get_current_user_id() );
 	update_post_meta( $subscriber_id, '_snf_newsletter_subscribed_at', current_time( 'mysql' ) );
 
-	return rest_ensure_response( array( 'ok' => true, 'status' => 'subscribed' ) );
+	/**
+	 * Hook for SureContact / CRM sync after a successful subscribe.
+	 *
+	 * @param int    $subscriber_id Subscriber post ID.
+	 * @param string $email         Email.
+	 * @param string $phone         Phone.
+	 */
+	do_action( 'snf_newsletter_subscribed', (int) $subscriber_id, $email, $phone );
+
+	return rest_ensure_response(
+		array(
+			'ok'     => true,
+			'status' => 'subscribed',
+			'next'   => '/thank-you/newsletter?status=subscribed',
+		)
+	);
 }
 
 /**

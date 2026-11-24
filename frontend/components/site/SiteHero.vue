@@ -1,21 +1,34 @@
 <script setup lang="ts">
-const props = defineProps<{
-  brand?: string
-  title: string
-  lede?: string
-  primaryLabel?: string
-  primaryTo?: string
-  secondaryLabel?: string
-  secondaryTo?: string
-  compact?: boolean
-}>()
+const props = withDefaults(
+  defineProps<{
+    brand?: string
+    showBrand?: boolean
+    title: string
+    titleLead?: string
+    titleFocus?: string
+    lede?: string
+    primaryLabel?: string
+    primaryTo?: string
+    secondaryLabel?: string
+    secondaryTo?: string
+    compact?: boolean
+  }>(),
+  {
+    showBrand: true,
+  },
+)
 
 const brandLabel = computed(() => (props.brand || '').trim())
 const titleText = computed(() => (props.title || '').trim())
+const titleLead = computed(() => (props.titleLead || '').trim())
+const titleFocus = computed(() => (props.titleFocus || '').trim())
 const titleIsBrand = computed(() => {
   if (!brandLabel.value || !titleText.value) return false
   return brandLabel.value.toLowerCase() === titleText.value.toLowerCase()
 })
+const showBrandLabel = computed(() => props.showBrand && !!brandLabel.value)
+const titleIsPrimary = computed(() => !showBrandLabel.value || !titleIsBrand.value)
+const hasStatementParts = computed(() => !!(titleLead.value && titleFocus.value))
 </script>
 
 <template>
@@ -26,12 +39,20 @@ const titleIsBrand = computed(() => {
     <div class="snf-hero__veil" aria-hidden="true" />
     <div class="snf-frame snf-hero__inner">
       <template v-if="!compact">
-        <p v-if="brandLabel" class="snf-hero__brand snf-display">
+        <p v-if="showBrandLabel" class="snf-hero__brand snf-display">
           {{ brandLabel }}
         </p>
         <h1
-          v-if="!titleIsBrand"
+          v-if="titleIsPrimary && hasStatementParts"
+          class="snf-hero__title snf-hero__title--statement"
+        >
+          <span class="snf-hero__title-lead">{{ titleLead }}</span>
+          <span class="snf-hero__title-focus">{{ titleFocus }}</span>
+        </h1>
+        <h1
+          v-else-if="titleIsPrimary"
           class="snf-hero__title"
+          :class="{ 'snf-hero__title--statement': !showBrandLabel }"
         >
           {{ titleText }}
         </h1>

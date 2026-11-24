@@ -38,6 +38,7 @@ final class Bootstrap {
 		'home.php',
 		'contact.php',
 		'events.php',
+		'gathering-thankyou.php',
 		'ticket-commerce.php',
 		'funnels.php',
 		'media-library.php',

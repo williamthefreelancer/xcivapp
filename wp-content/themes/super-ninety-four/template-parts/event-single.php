@@ -65,6 +65,16 @@ if ( $allow_ticket ) {
 	data-ticket-purchase="<?php echo $allow_ticket ? '1' : '0'; ?>"
 >
 	<section class="snf-event__shell snf-container" aria-label="<?php echo esc_attr( $event['title'] ); ?>">
+		<?php
+		get_template_part(
+			'template-parts/event',
+			'breadcrumbs',
+			array(
+				'post'  => ! empty( $event['id'] ) ? (int) $event['id'] : get_the_ID(),
+				'class' => 'snf-crumbs--event',
+			)
+		);
+		?>
 		<article class="snf-event__frame">
 			<header class="snf-event__topbar">
 				<a class="snf-event__brand snf-event__brand--<?php echo esc_attr( $logo_variant ); ?>" href="<?php echo esc_url( home_url( '/' ) ); ?>">
@@ -416,6 +426,18 @@ if ( $allow_ticket ) {
 												<?php checked( 0 === (int) $index ); ?>
 												required
 											>
+											<?php if ( ! empty( $plan['image'] ) ) : ?>
+												<span class="snf-event__plan-media" aria-hidden="true">
+													<img
+														src="<?php echo esc_url( (string) $plan['image'] ); ?>"
+														alt=""
+														width="96"
+														height="72"
+														loading="lazy"
+														decoding="async"
+													>
+												</span>
+											<?php endif; ?>
 											<span class="snf-event__plan-body">
 												<span class="snf-event__plan-name"><?php echo esc_html( $plan['name'] ); ?></span>
 												<span class="snf-event__plan-price">

@@ -131,9 +131,9 @@ function snf_get_expo_gathering_cards() {
 	$cards = array_values(
 		array_filter(
 			array(
-				snf_get_dashboard_event_card_by_slug( 'the-badlands-bra-private-gathering', 'badlands-bra-event.jpg' ),
-				snf_get_dashboard_event_card_by_slug( 'the-eight-hundred-plus-journeys-event', 'eight-hundred-journeys-event.jpg' ),
 				snf_get_dashboard_event_card_by_slug( 'the-township-adventures-event', 'township-adventures-event.jpg' ),
+				snf_get_dashboard_event_card_by_slug( 'the-eight-hundred-plus-journeys-event', 'eight-hundred-journeys-event.jpg' ),
+				snf_get_dashboard_event_card_by_slug( 'the-city-club-private-party', 'city-club-private-party.webp' ),
 			)
 		)
 	);
@@ -174,7 +174,7 @@ function snf_get_expo_non_member_teasers() {
 		array(
 			'title' => __( 'Private Gatherings', 'super-ninety-four' ),
 			'meta'  => __( 'Gatherings — not networking', 'super-ninety-four' ),
-			'image' => $img . 'badlands-bra-event.jpg',
+			'image' => get_template_directory_uri() . '/assets/images/reciprocal/the-city-clubs-at-super-ninety-four.jpg',
 			'url'   => add_query_arg( 'q', rawurlencode( 'Private Gatherings' ), $apply ),
 		),
 	);
@@ -555,7 +555,9 @@ function snf_get_expo_catalog_rails( $audience = 'members' ) {
 				'title'      => __( 'Open admission', 'super-ninety-four' ),
 				'bp'         => 'events',
 				'empty_text' => __( 'No open admission listings yet.', 'super-ninety-four' ),
-				'cards'      => snf_get_dashboard_non_member_event_cards(),
+				'cards'      => function_exists( 'snf_get_upcoming_gathering_cards' )
+					? snf_get_upcoming_gathering_cards()
+					: snf_get_dashboard_non_member_event_cards(),
 			),
 			array(
 				'id'         => 'drive-gathering-teasers',
@@ -851,11 +853,17 @@ function snf_query_marketplace_product_rows( $q = '', $cats = array(), $audience
 		$args['s'] = $q;
 	}
 
-	// Guests: only the Lifestyle Concierge workshop product from events.
-	if ( 'members' !== $audience && function_exists( 'snf_get_workshop_product_slug' ) ) {
-		$workshop = get_page_by_path( snf_get_workshop_product_slug(), OBJECT, 'product' );
-		if ( $workshop instanceof WP_Post ) {
-			$args['post__in'] = array( (int) $workshop->ID );
+	// Guests: open-admission gatherings only (City Club Private Party + Lifestyle Concierge workshop).
+	if ( 'members' !== $audience && function_exists( 'snf_get_open_admission_event_slugs' ) ) {
+		$ids = array();
+		foreach ( snf_get_open_admission_event_slugs() as $slug ) {
+			$post = get_page_by_path( $slug, OBJECT, 'product' );
+			if ( $post instanceof WP_Post ) {
+				$ids[] = (int) $post->ID;
+			}
+		}
+		if ( $ids ) {
+			$args['post__in'] = $ids;
 			$args['orderby']  = 'post__in';
 		} else {
 			return array();

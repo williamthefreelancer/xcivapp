@@ -1,12 +1,12 @@
 <script setup lang="ts">
 export type GatheringCard = {
+  slug?: string
   title: string
   body?: string
   price?: string
   url?: string
   image?: string
   cta?: string
-  slug?: string
 }
 
 defineProps<{
@@ -16,10 +16,11 @@ defineProps<{
 }>()
 
 function toPath(url?: string) {
-  if (!url) return '/apply'
+  if (!url) return '#'
   if (url.startsWith('/') || url.startsWith('#')) return url
   try {
-    return new URL(url).pathname || '/apply'
+    const path = new URL(url).pathname || '#'
+    return path.replace(/\/product\//, '/events/').replace(/\/$/, '') || path
   } catch {
     return url
   }
@@ -32,15 +33,10 @@ function toPath(url?: string) {
       <h2 class="snf-home-section__title">{{ title }}</h2>
       <p v-if="lede" class="snf-home-section__lede">{{ lede }}</p>
     </header>
-    <div class="snf-home-gatherings">
-      <article
-        v-for="(card, i) in cards"
-        :key="card.slug || i"
-        class="snf-home-gathering"
-      >
-        <div class="snf-home-gathering__media">
+    <div class="snf-home-gatherings snf-home-gatherings--two">
+      <article v-for="(card, i) in cards" :key="card.slug || i" class="snf-home-gathering">
+        <div v-if="card.image" class="snf-home-gathering__media">
           <img
-            v-if="card.image"
             :src="card.image"
             :alt="card.title"
             class="snf-home-gathering__img"
@@ -52,7 +48,7 @@ function toPath(url?: string) {
           <h3 class="snf-home-gathering__title">{{ card.title }}</h3>
           <p v-if="card.price" class="snf-home-gathering__price">{{ card.price }}</p>
           <p v-if="card.body" class="snf-home-gathering__body">{{ card.body }}</p>
-          <UiButton :to="toPath(card.url)" variant="outline" size="sm" style="margin-block-start: 0.85rem">
+          <UiButton class="snf-home-gathering__cta" :to="toPath(card.url)" size="sm">
             {{ card.cta || 'View event' }}
           </UiButton>
         </div>

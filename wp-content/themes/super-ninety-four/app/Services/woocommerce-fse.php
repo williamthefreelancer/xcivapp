@@ -210,7 +210,9 @@ function snf_wc_body_classes( $classes ) {
 		$classes[] = 'snf-is-product';
 		$product_id = (int) get_queried_object_id();
 		$blank      = (
-			( function_exists( 'snf_is_lifestyle_concierge_workshop' ) && snf_is_lifestyle_concierge_workshop( $product_id ) )
+			( function_exists( 'snf_is_gathering_landing_product' ) && snf_is_gathering_landing_product( $product_id ) )
+			|| ( function_exists( 'snf_is_lifestyle_concierge_workshop' ) && snf_is_lifestyle_concierge_workshop( $product_id ) )
+			|| ( function_exists( 'snf_is_event_product_landing' ) && snf_is_event_product_landing( $product_id ) )
 			|| ( function_exists( 'snf_is_reciprocal_club_landing' ) && snf_is_reciprocal_club_landing( $product_id ) )
 			|| ( function_exists( 'snf_is_service_quote_product' ) && snf_is_service_quote_product( $product_id ) )
 			|| ( function_exists( 'snf_is_figma_event_landing' ) && snf_is_figma_event_landing( $product_id ) )

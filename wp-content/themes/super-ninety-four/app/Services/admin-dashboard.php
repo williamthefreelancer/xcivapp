@@ -2134,12 +2134,12 @@ function snf_admin_render_subscribers() {
 
 		<section class="snf-admin__panel snf-admin__panel--wide">
 			<h2><?php esc_html_e( 'Recent subscribers', 'super-ninety-four' ); ?></h2>
-			<p class="snf-admin__panel-desc"><?php esc_html_e( 'Newest signups first. Names link to the subscriber record in WordPress.', 'super-ninety-four' ); ?></p>
+			<p class="snf-admin__panel-desc"><?php esc_html_e( 'Newest signups first. Emails link to the subscriber record in WordPress.', 'super-ninety-four' ); ?></p>
 			<table class="snf-admin__table">
 				<thead>
 					<tr>
-						<th><?php esc_html_e( 'Name', 'super-ninety-four' ); ?></th>
 						<th><?php esc_html_e( 'Email', 'super-ninety-four' ); ?></th>
+						<th><?php esc_html_e( 'Phone', 'super-ninety-four' ); ?></th>
 						<th><?php esc_html_e( 'Source', 'super-ninety-four' ); ?></th>
 						<th><?php esc_html_e( 'User', 'super-ninety-four' ); ?></th>
 						<th><?php esc_html_e( 'Subscribed', 'super-ninety-four' ); ?></th>
@@ -2152,6 +2152,7 @@ function snf_admin_render_subscribers() {
 					<?php foreach ( $recent as $subscriber ) : ?>
 						<?php
 						$email      = (string) get_post_meta( $subscriber->ID, '_snf_newsletter_email', true );
+						$phone      = (string) get_post_meta( $subscriber->ID, '_snf_newsletter_phone', true );
 						$source     = (string) get_post_meta( $subscriber->ID, '_snf_newsletter_source', true );
 						$user_id    = (int) get_post_meta( $subscriber->ID, '_snf_newsletter_user_id', true );
 						$subscribed = (string) get_post_meta( $subscriber->ID, '_snf_newsletter_subscribed_at', true );
@@ -2162,8 +2163,8 @@ function snf_admin_render_subscribers() {
 						}
 						?>
 						<tr>
-							<td><a href="<?php echo esc_url( get_edit_post_link( $subscriber->ID ) ); ?>"><?php echo esc_html( get_the_title( $subscriber ) ?: $email ); ?></a></td>
-							<td><?php echo $email ? esc_html( $email ) : '—'; ?></td>
+							<td><a href="<?php echo esc_url( get_edit_post_link( $subscriber->ID ) ); ?>"><?php echo esc_html( $email ?: get_the_title( $subscriber ) ); ?></a></td>
+							<td><?php echo $phone ? esc_html( $phone ) : '—'; ?></td>
 							<td><span class="snf-admin__pill"><?php echo esc_html( $source ?: '—' ); ?></span></td>
 							<td><?php echo esc_html( $user_label ); ?></td>
 							<td><?php echo esc_html( $subscribed ?: get_the_date( '', $subscriber ) ); ?></td>

@@ -76,6 +76,7 @@ const SNF_META_APPLICATION = 'snf_application_paid';
  */
 function snf_get_membership_plan_definitions() {
 	$renewal_note = __( 'You will get a reminder before renewal.', 'super-ninety-four' );
+	$club_img     = get_template_directory_uri() . '/assets/images/reciprocal/';
 
 	$plans = array(
 		array(
@@ -87,6 +88,8 @@ function snf_get_membership_plan_definitions() {
 			'term'         => __( 'for 12 months', 'super-ninety-four' ),
 			'note'         => $renewal_note,
 			'product_slug' => 'membership-back-creek',
+			'club_slug'    => 'the-clubs-at-back-creek',
+			'image'        => $club_img . 'the-clubs-at-back-creek.jpg',
 			'role'         => 'snf_member',
 		),
 		array(
@@ -98,6 +101,8 @@ function snf_get_membership_plan_definitions() {
 			'term'         => __( 'for 12 months', 'super-ninety-four' ),
 			'note'         => $renewal_note,
 			'product_slug' => 'membership-regions-ne',
+			'club_slug'    => 'the-clubs-at-wyoma-square',
+			'image'        => $club_img . 'the-clubs-at-wyoma-square.jpg',
 			'role'         => 'snf_member',
 		),
 		array(
@@ -109,6 +114,8 @@ function snf_get_membership_plan_definitions() {
 			'term'         => __( 'for 12 months', 'super-ninety-four' ),
 			'note'         => $renewal_note,
 			'product_slug' => 'membership-city-to-city',
+			'club_slug'    => 'the-city-clubs-at-super-ninety-four',
+			'image'        => $club_img . 'the-city-clubs-at-super-ninety-four.jpg',
 			'role'         => 'snf_member',
 		),
 	);
@@ -164,12 +171,14 @@ function snf_membership_plans_compat_shape() {
 		'plans'          => array_map(
 			static function ( $plan ) {
 				return array(
-					'slug'    => $plan['slug'],
-					'name'    => $plan['name'],
-					'price'   => $plan['price'],
-					'cadence' => $plan['cadence'],
-					'term'    => $plan['term'],
-					'note'    => $plan['note'],
+					'slug'      => $plan['slug'],
+					'name'      => $plan['name'],
+					'price'     => $plan['price'],
+					'cadence'   => $plan['cadence'],
+					'term'      => $plan['term'],
+					'note'      => $plan['note'],
+					'image'     => isset( $plan['image'] ) ? (string) $plan['image'] : '',
+					'club_slug' => isset( $plan['club_slug'] ) ? (string) $plan['club_slug'] : '',
 				);
 			},
 			$defs['plans']

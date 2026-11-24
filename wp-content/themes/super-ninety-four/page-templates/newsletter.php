@@ -87,12 +87,12 @@ get_header();
 				</p>
 
 				<label class="snf-newsletter__field">
-					<span><?php esc_html_e( 'First name (optional)', 'super-ninety-four' ); ?></span>
-					<input type="text" name="snf_newsletter_name" autocomplete="given-name">
-				</label>
-				<label class="snf-newsletter__field">
 					<span><?php esc_html_e( 'Email address', 'super-ninety-four' ); ?></span>
 					<input type="email" name="snf_newsletter_email" autocomplete="email" required>
+				</label>
+				<label class="snf-newsletter__field">
+					<span><?php esc_html_e( 'Phone number', 'super-ninety-four' ); ?></span>
+					<input type="tel" name="snf_newsletter_phone" autocomplete="tel" required>
 				</label>
 				<button class="snf-hub__action snf-hub__action--primary snf-newsletter__submit" type="submit">
 					<?php esc_html_e( 'Subscribe to the dispatch', 'super-ninety-four' ); ?>

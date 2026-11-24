@@ -6,7 +6,10 @@ type HomePayload = {
     name?: string
     hero?: {
       title?: string
+      titleLead?: string
+      titleFocus?: string
       lede?: string
+      showBrand?: boolean
       cta?: { label?: string; path?: string }
       secondary?: { label?: string; path?: string }
     }
@@ -24,19 +27,6 @@ type HomePayload = {
         cta?: string
       }>
     }
-    gatherings?: {
-      title: string
-      lede?: string
-      cards: Array<{
-        title: string
-        body?: string
-        price?: string
-        url?: string
-        image?: string
-        cta?: string
-        slug?: string
-      }>
-    }
     audience?: {
       for?: { title: string; cards: Array<{ title: string; body: string }> }
       not_for?: { title: string; cards: Array<{ title: string; body: string }> }
@@ -47,6 +37,25 @@ type HomePayload = {
       initiation?: { label: string; amount: string; meta?: string }
       plans?: Array<{ name: string; price: string; cadence?: string; term?: string; benefits?: string[] }>
       cta?: { label?: string; url?: string }
+    }
+    gatherings?: {
+      title: string
+      lede?: string
+      cards: Array<{
+        slug?: string
+        title: string
+        body?: string
+        price?: string
+        url?: string
+        image?: string
+        cta?: string
+      }>
+    }
+    newsletter?: {
+      title?: string
+      lede?: string
+      youtubeUrl?: string
+      benefits?: string[]
     }
   }
 }
@@ -62,12 +71,6 @@ const helpImages = {
   courier: '/images/services/lifestyle-service-image-1.webp',
   janitorial: '/images/services/commercial-janitor-cleaning.webp',
 } as const
-
-const gatheringImages: Record<string, string> = {
-  'the-eight-hundred-plus-journeys-event': '/images/events/eight-hundred-journeys-event.webp',
-  'the-township-adventures-event': '/images/events/township-adventures-event.webp',
-  'the-city-club-private-party': '/images/events/city-club-private-party.webp',
-}
 
 const fallbackHelp = {
   title: 'How can SUPER NINETY FOUR help you',
@@ -97,40 +100,6 @@ const fallbackHelp = {
   ],
 }
 
-const fallbackGatherings = {
-  title: 'Upcoming gatherings',
-  lede: 'Three seats on the circuit. Prices as posted.',
-  cards: [
-    {
-      title: 'The Eight Hundred Plus Interstate Event',
-      body: 'Scenic city-to-city immersion along the SUPER NINETY FOUR journeys circuit.',
-      price: '$497.00',
-      url: '/events/the-eight-hundred-plus-journeys-event',
-      slug: 'the-eight-hundred-plus-journeys-event',
-      image: gatheringImages['the-eight-hundred-plus-journeys-event'],
-      cta: 'View event',
-    },
-    {
-      title: 'The Township Adventures Event',
-      body: 'Cultural township immersion on the SUPER NINETY FOUR circuit.',
-      price: '$97.00',
-      url: '/events/the-township-adventures-event',
-      slug: 'the-township-adventures-event',
-      image: gatheringImages['the-township-adventures-event'],
-      cta: 'View event',
-    },
-    {
-      title: 'The City Club Private Party',
-      body: 'Private City Clubs gathering — coach, credentials, and a closed room.',
-      price: '$397.00',
-      url: '/events/the-city-club-private-party',
-      slug: 'the-city-club-private-party',
-      image: gatheringImages['the-city-club-private-party'],
-      cta: 'View event',
-    },
-  ],
-}
-
 function withHelpImages(
   cards: Array<{ title: string; meta?: string; body?: string; url?: string; image?: string; cta?: string }>,
 ) {
@@ -145,21 +114,6 @@ function withHelpImages(
           ? helpImages.janitorial
           : byOrder
     return { ...card, image: byTitle || card.image }
-  })
-}
-
-function withGatheringImages(
-  cards: Array<{ title: string; body?: string; price?: string; url?: string; image?: string; cta?: string; slug?: string }>,
-) {
-  return cards.map((card) => {
-    const slug = card.slug
-      || (card.url || '').split('/').filter(Boolean).pop()
-      || ''
-    return {
-      ...card,
-      slug,
-      image: gatheringImages[slug] || card.image,
-    }
   })
 }
 
@@ -218,6 +172,42 @@ const fallbackMembership = {
   cta: { label: 'Apply for consideration', url: '/apply' },
 }
 
+const fallbackGatherings = {
+  title: 'Upcoming gatherings',
+  lede: 'Open admission for logged-out guests and members — City Club Private Party and the Lifestyle Concierge Club Workshop.',
+  cards: [
+    {
+      slug: 'the-city-club-private-party',
+      title: 'The City Club Private Party',
+      body: 'Open admission City Clubs gathering — coach, credentials, and a closed room. For new guests and members.',
+      price: '$397.00 · Open admission',
+      image: '/images/events/city-club-private-party.webp',
+      url: '/events/the-city-club-private-party',
+      cta: 'Get e-ticket',
+    },
+    {
+      slug: 'the-lifestyle-concierge-club-workshop',
+      title: 'The Lifestyle Concierge Club Workshop',
+      body: 'Open admission workshop desk for circuit operators and advisors. For new guests and members.',
+      price: 'Open admission',
+      image: '/images/events/lcc-workshop.webp',
+      url: '/product/the-lifestyle-concierge-club-workshop',
+      cta: 'Reserve seat',
+    },
+  ],
+}
+
+const fallbackNewsletter = {
+  title: 'The Zircoria Cryon Newsletter',
+  lede: 'Films, live rooms, and circuit drops — subscribe and SureContact delivers the details.',
+  youtubeUrl: 'https://www.youtube.com/@williamslist',
+  benefits: [
+    'Upcoming event updates and private invitations',
+    'Every new YouTube video, as soon as it lands',
+    'Live video and audio details delivered through SureContact',
+  ],
+}
+
 const help = computed(() => {
   const source = content.value?.help || fallbackHelp
   return {
@@ -225,26 +215,25 @@ const help = computed(() => {
     cards: withHelpImages(source.cards?.length ? source.cards : fallbackHelp.cards),
   }
 })
-const gatherings = computed(() => {
-  const source = content.value?.gatherings || fallbackGatherings
-  return {
-    ...source,
-    cards: withGatheringImages(source.cards?.length ? source.cards : fallbackGatherings.cards),
-  }
-})
 const audienceFor = computed(() => content.value?.audience?.for || fallbackAudience.for)
 const audienceNotFor = computed(() => content.value?.audience?.not_for || fallbackAudience.not_for)
 const membership = computed(() => content.value?.membership || fallbackMembership)
+const gatherings = computed(() => {
+  const source = content.value?.gatherings
+  if (source?.cards?.length) return source
+  return fallbackGatherings
+})
+const newsletter = computed(() => content.value?.newsletter || fallbackNewsletter)
 
 useSeoMeta({
   title: 'SUPER NINETY FOUR',
   description:
     hero.value?.lede
-    || 'Not a marketplace. A private hospitality circuit — if you already clear the bar.',
+    || 'You’re already running the desk — apply for consideration, or see how we help your rooms, routes, and estates first.',
 })
 
 const route = useRoute()
-const sectionIds = ['help', 'gatherings', 'fit', 'pricing'] as const
+const sectionIds = ['help', 'gatherings', 'fit', 'pricing', 'newsletter'] as const
 
 function scrollToSection(id: string) {
   if (!import.meta.client) return
@@ -256,12 +245,15 @@ function scrollToSection(id: string) {
 
 onMounted(() => {
   const fromQuery = typeof route.query.s === 'string' ? route.query.s : ''
+  const fromError = route.query.snf_newsletter === 'error' ? 'newsletter' : ''
   const fromHash = route.hash?.replace(/^#/, '') || ''
   const target = sectionIds.includes(fromQuery as typeof sectionIds[number])
     ? fromQuery
-    : sectionIds.includes(fromHash as typeof sectionIds[number])
-      ? fromHash
-      : ''
+    : sectionIds.includes(fromError as typeof sectionIds[number])
+      ? fromError
+      : sectionIds.includes(fromHash as typeof sectionIds[number])
+        ? fromHash
+        : ''
   if (target) {
     nextTick(() => scrollToSection(target))
   }
@@ -273,8 +265,11 @@ onMounted(() => {
     <div id="top" class="snf-home-top-anchor" aria-hidden="true" />
     <SiteHero
       :brand="brandName"
-      :title="hero?.title || brandName"
-      :lede="hero?.lede || 'Not a marketplace. A private hospitality circuit — if you already clear the bar.'"
+      :show-brand="false"
+      :title="hero?.title || 'If you already run rooms, routes, or estates'"
+      :title-lead="hero?.titleLead || 'If you already run'"
+      :title-focus="hero?.titleFocus || 'rooms, routes, or estates'"
+      :lede="hero?.lede || 'You’re already running the desk — apply for consideration, or see how we help your rooms, routes, and estates first.'"
       :primary-label="hero?.cta?.label || 'Apply'"
       :primary-to="hero?.cta?.path || '/apply'"
       :secondary-label="hero?.secondary?.label || 'See how we help'"
@@ -307,6 +302,13 @@ onMounted(() => {
       :plans="membership.plans || []"
       :cta-label="membership.cta?.label || 'Apply for consideration'"
       :cta-to="membership.cta?.url || '/apply'"
+    />
+
+    <HomeNewsletter
+      :title="newsletter.title"
+      :lede="newsletter.lede"
+      :youtube-url="newsletter.youtubeUrl"
+      :benefits="newsletter.benefits"
     />
 
     <section id="apply-again" class="snf-section snf-frame snf-home-reveal">

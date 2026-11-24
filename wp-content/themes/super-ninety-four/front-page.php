@@ -7,17 +7,27 @@ get_header();
 $home       = function_exists( 'snf_get_home_content' ) ? snf_get_home_content() : array();
 $hero       = function_exists( 'snf_get_home_hero' ) ? snf_get_home_hero() : array();
 $help       = isset( $home['help'] ) ? $home['help'] : array();
-$gatherings = isset( $home['gatherings'] ) ? $home['gatherings'] : array();
 $audience   = isset( $home['audience'] ) ? $home['audience'] : array();
 $for        = isset( $audience['for'] ) ? $audience['for'] : array();
 $not_for    = isset( $audience['not_for'] ) ? $audience['not_for'] : array();
 $membership = isset( $home['membership'] ) ? $home['membership'] : array();
+$gatherings = isset( $home['gatherings'] ) ? $home['gatherings'] : array();
+$newsletter = isset( $home['newsletter'] ) ? $home['newsletter'] : array();
 
-$brand_name = isset( $hero['brand'] ) ? (string) $hero['brand'] : __( 'SUPER NINETY FOUR', 'super-ninety-four' );
-$hero_title = isset( $hero['title'] ) ? (string) $hero['title'] : $brand_name;
-$hero_lede  = isset( $hero['lede'] ) ? (string) $hero['lede'] : '';
+$newsletter_status = isset( $_GET['snf_newsletter'] ) ? sanitize_key( wp_unslash( $_GET['snf_newsletter'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+$newsletter_youtube = isset( $newsletter['youtubeUrl'] )
+	? (string) $newsletter['youtubeUrl']
+	: ( function_exists( 'snf_newsletter_youtube_url' ) ? snf_newsletter_youtube_url() : 'https://www.youtube.com/@williamslist' );
+
+$brand_name  = isset( $hero['brand'] ) ? (string) $hero['brand'] : __( 'SUPER NINETY FOUR', 'super-ninety-four' );
+$hero_title  = isset( $hero['title'] ) ? (string) $hero['title'] : $brand_name;
+$hero_lead   = isset( $hero['titleLead'] ) ? (string) $hero['titleLead'] : '';
+$hero_focus  = isset( $hero['titleFocus'] ) ? (string) $hero['titleFocus'] : '';
+$hero_lede   = isset( $hero['lede'] ) ? (string) $hero['lede'] : '';
+$show_brand  = ! empty( $hero['showBrand'] );
 /* Brand is the hero signal; hide a duplicate title when it matches the brand. */
 $title_is_brand = ( '' !== $brand_name && 0 === strcasecmp( trim( $brand_name ), trim( $hero_title ) ) );
+$title_is_primary = ( ! $title_is_brand || ! $show_brand );
 
 $apply_url = function_exists( 'snf_get_page_url' ) ? snf_get_page_url( 'apply' ) : home_url( '/apply/' );
 $cta_label = isset( $hero['cta']['label'] ) ? (string) $hero['cta']['label'] : __( 'Apply', 'super-ninety-four' );
@@ -34,12 +44,19 @@ $mem_cta_url   = isset( $membership['cta']['url'] ) ? snf_home_resolve_href( $me
 	<section class="snf-hero snf-hero--home" aria-label="<?php echo esc_attr( $brand_name ); ?>">
 		<div class="snf-hero__veil" aria-hidden="true"></div>
 		<div class="snf-frame snf-hero__inner">
-			<?php if ( $brand_name ) : ?>
+			<?php if ( $show_brand && $brand_name ) : ?>
 				<p class="snf-hero__brand snf-display"><?php echo esc_html( $brand_name ); ?></p>
 			<?php endif; ?>
 
-			<?php if ( ! $title_is_brand ) : ?>
-				<h1 class="snf-hero__title"><?php echo esc_html( $hero_title ); ?></h1>
+			<?php if ( $title_is_primary ) : ?>
+				<?php if ( $hero_lead && $hero_focus ) : ?>
+					<h1 class="snf-hero__title snf-hero__title--statement">
+						<span class="snf-hero__title-lead"><?php echo esc_html( $hero_lead ); ?></span>
+						<span class="snf-hero__title-focus"><?php echo esc_html( $hero_focus ); ?></span>
+					</h1>
+				<?php else : ?>
+					<h1 class="snf-hero__title snf-hero__title--statement"><?php echo esc_html( $hero_title ); ?></h1>
+				<?php endif; ?>
 			<?php else : ?>
 				<h1 class="screen-reader-text"><?php echo esc_html( $hero_title ); ?></h1>
 			<?php endif; ?>
@@ -105,11 +122,11 @@ $mem_cta_url   = isset( $membership['cta']['url'] ) ? snf_home_resolve_href( $me
 					<p class="snf-home-section__lede"><?php echo esc_html( $gatherings['lede'] ); ?></p>
 				<?php endif; ?>
 			</header>
-			<div class="snf-home-gatherings">
+			<div class="snf-home-gatherings snf-home-gatherings--two">
 				<?php foreach ( $gatherings['cards'] as $card ) : ?>
 					<article class="snf-home-gathering">
-						<div class="snf-home-gathering__media">
-							<?php if ( ! empty( $card['image'] ) ) : ?>
+						<?php if ( ! empty( $card['image'] ) ) : ?>
+							<div class="snf-home-gathering__media">
 								<img
 									class="snf-home-gathering__img"
 									src="<?php echo esc_url( $card['image'] ); ?>"
@@ -117,8 +134,8 @@ $mem_cta_url   = isset( $membership['cta']['url'] ) ? snf_home_resolve_href( $me
 									loading="lazy"
 									decoding="async"
 								>
-							<?php endif; ?>
-						</div>
+							</div>
+						<?php endif; ?>
 						<div class="snf-home-gathering__copy">
 							<h3 class="snf-home-gathering__title"><?php echo esc_html( $card['title'] ); ?></h3>
 							<?php if ( ! empty( $card['price'] ) ) : ?>
@@ -127,7 +144,7 @@ $mem_cta_url   = isset( $membership['cta']['url'] ) ? snf_home_resolve_href( $me
 							<?php if ( ! empty( $card['body'] ) ) : ?>
 								<p class="snf-home-gathering__body"><?php echo esc_html( $card['body'] ); ?></p>
 							<?php endif; ?>
-							<a class="snf-home-btn snf-home-btn--outline snf-home-btn--sm snf-home-gathering__cta" href="<?php echo esc_url( snf_home_resolve_href( isset( $card['url'] ) ? $card['url'] : $apply_url ) ); ?>">
+							<a class="snf-home-btn snf-home-btn--primary snf-home-gathering__cta" href="<?php echo esc_url( snf_home_resolve_href( isset( $card['url'] ) ? $card['url'] : '' ) ); ?>">
 								<?php echo esc_html( ! empty( $card['cta'] ) ? $card['cta'] : __( 'View event', 'super-ninety-four' ) ); ?>
 							</a>
 						</div>
@@ -217,6 +234,67 @@ $mem_cta_url   = isset( $membership['cta']['url'] ) ? snf_home_resolve_href( $me
 			</div>
 		</section>
 	<?php endif; ?>
+
+	<section id="newsletter" class="snf-section snf-frame snf-home-reveal" aria-labelledby="snf-home-newsletter-heading">
+		<div class="snf-home-newsletter">
+			<header class="snf-home-newsletter__header">
+				<h2 id="snf-home-newsletter-heading" class="snf-home-section__title">
+					<?php echo esc_html( isset( $newsletter['title'] ) ? $newsletter['title'] : __( 'The Zircoria Cryon Newsletter', 'super-ninety-four' ) ); ?>
+				</h2>
+				<?php if ( ! empty( $newsletter['lede'] ) ) : ?>
+					<p class="snf-home-section__lede"><?php echo esc_html( $newsletter['lede'] ); ?></p>
+				<?php endif; ?>
+			</header>
+
+			<?php if ( ! empty( $newsletter['benefits'] ) && is_array( $newsletter['benefits'] ) ) : ?>
+				<ul class="snf-home-newsletter__benefits">
+					<?php foreach ( $newsletter['benefits'] as $benefit ) : ?>
+						<li><?php echo esc_html( $benefit ); ?></li>
+					<?php endforeach; ?>
+				</ul>
+			<?php endif; ?>
+
+			<?php if ( 'error' === $newsletter_status ) : ?>
+				<p class="snf-home-newsletter__flash snf-home-newsletter__flash--err" role="alert">
+					<?php esc_html_e( 'Please check your email address and try again.', 'super-ninety-four' ); ?>
+				</p>
+			<?php endif; ?>
+
+			<form class="snf-home-newsletter__form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+				<input type="hidden" name="action" value="snf_newsletter_subscribe">
+				<?php wp_nonce_field( 'snf_newsletter_subscribe', 'snf_newsletter_nonce' ); ?>
+				<div class="snf-home-newsletter__honeypot" aria-hidden="true">
+					<label>
+						<span><?php esc_html_e( 'Website', 'super-ninety-four' ); ?></span>
+						<input type="text" name="snf_newsletter_website" tabindex="-1" autocomplete="off">
+					</label>
+				</div>
+				<div class="snf-home-newsletter__fields">
+					<label class="snf-home-newsletter__field">
+						<span><?php esc_html_e( 'Email', 'super-ninety-four' ); ?></span>
+						<input type="email" name="snf_newsletter_email" autocomplete="email" required placeholder="<?php esc_attr_e( 'you@example.com', 'super-ninety-four' ); ?>">
+					</label>
+					<label class="snf-home-newsletter__field">
+						<span><?php esc_html_e( 'Phone number', 'super-ninety-four' ); ?></span>
+						<input type="tel" name="snf_newsletter_phone" autocomplete="tel" required placeholder="<?php esc_attr_e( '(555) 000-0000', 'super-ninety-four' ); ?>">
+					</label>
+				</div>
+				<div class="snf-home-newsletter__actions">
+					<button class="snf-home-btn snf-home-btn--primary" type="submit">
+						<?php esc_html_e( 'Subscribe', 'super-ninety-four' ); ?>
+					</button>
+					<?php if ( $newsletter_youtube ) : ?>
+						<a class="snf-home-btn snf-home-btn--outline" href="<?php echo esc_url( $newsletter_youtube ); ?>" target="_blank" rel="noopener noreferrer">
+							<?php esc_html_e( 'Watch on YouTube', 'super-ninety-four' ); ?>
+						</a>
+					<?php endif; ?>
+				</div>
+				<p class="snf-home-newsletter__privacy">
+					<?php esc_html_e( 'Live video and audio links stay private — SureContact sends them after you join. Unsubscribe any time.', 'super-ninety-four' ); ?>
+				</p>
+			</form>
+		</div>
+	</section>
 
 	<section id="apply-again" class="snf-section snf-frame snf-home-reveal" aria-labelledby="snf-home-closing-heading">
 		<div class="snf-home-closing">

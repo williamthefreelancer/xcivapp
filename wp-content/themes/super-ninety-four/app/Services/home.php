@@ -45,8 +45,11 @@ function snf_get_home_hero() {
 	$brand = __( 'SUPER NINETY FOUR', 'super-ninety-four' );
 	$hero  = array(
 		'brand'     => $brand,
-		'title'     => $brand,
-		'lede'      => __( 'Not a marketplace. A private hospitality circuit — if you already clear the bar.', 'super-ninety-four' ),
+		'showBrand' => false,
+		'title'      => __( 'If you already run rooms, routes, or estates', 'super-ninety-four' ),
+		'titleLead'  => __( 'If you already run', 'super-ninety-four' ),
+		'titleFocus' => __( 'rooms, routes, or estates', 'super-ninety-four' ),
+		'lede'       => __( 'You’re already running the desk — apply for consideration, or see how we help your rooms, routes, and estates first.', 'super-ninety-four' ),
 		'cta'       => array(
 			'label' => __( 'Apply', 'super-ninety-four' ),
 			'url'   => '/apply',
@@ -156,50 +159,68 @@ function snf_get_home_program_cards() {
 }
 
 /**
- * Upcoming gathering event cards for the one-pager.
+ * Upcoming gathering event cards for the My Account dashboard.
  *
  * @return array<int, array<string, mixed>>
  */
-function snf_get_home_gathering_cards() {
-	$img_base = get_template_directory_uri() . '/assets/images/events/';
-	$city_img = get_template_directory_uri() . '/assets/images/reciprocal/the-city-clubs-at-super-ninety-four.jpg';
+function snf_get_upcoming_gathering_cards() {
+	$city_img     = function_exists( 'snf_get_event_default_image_url' )
+		? snf_get_event_default_image_url( 'the-city-club-private-party' )
+		: get_template_directory_uri() . '/assets/images/events/city-club-private-party.webp';
+	$workshop_img = function_exists( 'snf_get_event_default_image_url' )
+		? snf_get_event_default_image_url( 'the-lifestyle-concierge-club-workshop' )
+		: get_template_directory_uri() . '/assets/images/events/lcc-workshop.jpg';
+	$workshop_url = function_exists( 'snf_get_workshop_landing_url' )
+		? snf_get_workshop_landing_url()
+		: '/product/the-lifestyle-concierge-club-workshop';
+
+	$city_url = function_exists( 'snf_get_city_club_private_party_url' )
+		? snf_get_city_club_private_party_url()
+		: '/product/the-city-club-private-party';
 
 	$cards = array(
 		array(
-			'slug'  => 'the-eight-hundred-plus-journeys-event',
-			'title' => __( 'The Eight Hundred Plus Interstate Event', 'super-ninety-four' ),
-			'body'  => __( 'Scenic city-to-city immersion along the SUPER NINETY FOUR journeys circuit.', 'super-ninety-four' ),
-			'price' => '$497.00',
-			'image' => $img_base . 'eight-hundred-journeys-event.jpg',
-			'url'   => '/events/the-eight-hundred-plus-journeys-event',
-			'cta'   => __( 'View event', 'super-ninety-four' ),
-		),
-		array(
-			'slug'  => 'the-township-adventures-event',
-			'title' => __( 'The Township Adventures Event', 'super-ninety-four' ),
-			'body'  => __( 'Cultural township immersion on the SUPER NINETY FOUR circuit.', 'super-ninety-four' ),
-			'price' => '$97.00',
-			'image' => $img_base . 'township-adventures-event.jpg',
-			'url'   => '/events/the-township-adventures-event',
-			'cta'   => __( 'View event', 'super-ninety-four' ),
-		),
-		array(
 			'slug'  => 'the-city-club-private-party',
 			'title' => __( 'The City Club Private Party', 'super-ninety-four' ),
-			'body'  => __( 'Private City Clubs gathering — coach, credentials, and a closed room.', 'super-ninety-four' ),
-			'price' => '$397.00',
+			'body'  => __( 'Open admission City Clubs gathering — coach, credentials, and a closed room. For new guests and members.', 'super-ninety-four' ),
+			'price' => __( '$397.00 · Open admission', 'super-ninety-four' ),
 			'image' => $city_img,
-			'url'   => '/events/the-city-club-private-party',
-			'cta'   => __( 'View event', 'super-ninety-four' ),
+			'url'   => $city_url,
+			'cta'   => __( 'Get e-ticket', 'super-ninety-four' ),
+		),
+		array(
+			'slug'  => 'the-lifestyle-concierge-club-workshop',
+			'title' => __( 'The Lifestyle Concierge Club Workshop', 'super-ninety-four' ),
+			'body'  => __( 'Open admission workshop desk for circuit operators and advisors. For new guests and members.', 'super-ninety-four' ),
+			'price' => __( 'Open admission', 'super-ninety-four' ),
+			'image' => $workshop_img,
+			'url'   => $workshop_url,
+			'cta'   => __( 'Reserve seat', 'super-ninety-four' ),
 		),
 	);
 
 	/**
-	 * Filter one-pager upcoming gathering cards.
+	 * Filter upcoming gathering cards (My Account dashboard).
+	 *
+	 * @param array<int, array<string, mixed>> $cards Gathering cards.
+	 */
+	$cards = apply_filters( 'snf_upcoming_gathering_cards', $cards );
+
+	/**
+	 * Legacy filter alias (previously home one-pager).
 	 *
 	 * @param array<int, array<string, mixed>> $cards Gathering cards.
 	 */
 	return apply_filters( 'snf_home_gathering_cards', $cards );
+}
+
+/**
+ * @deprecated Use snf_get_upcoming_gathering_cards().
+ *
+ * @return array<int, array<string, mixed>>
+ */
+function snf_get_home_gathering_cards() {
+	return snf_get_upcoming_gathering_cards();
 }
 
 /**
@@ -210,19 +231,13 @@ function snf_get_home_gathering_cards() {
 function snf_get_home_content() {
 	$content = array(
 		/* One-pager: How can SUPER NINETY FOUR help you */
-		'help'       => array(
+		'help'     => array(
 			'title' => __( 'How can SUPER NINETY FOUR help you', 'super-ninety-four' ),
 			'lede'  => __( 'You don’t need membership to open the desk. You need the right stop.', 'super-ninety-four' ),
 			'cards' => snf_get_home_help_cards(),
 		),
-		/* One-pager: Upcoming gatherings (3 events) */
-		'gatherings' => array(
-			'title' => __( 'Upcoming gatherings', 'super-ninety-four' ),
-			'lede'  => __( 'Three seats on the circuit. Prices as posted.', 'super-ninety-four' ),
-			'cards' => snf_get_home_gathering_cards(),
-		),
 		/* Who is / is not for */
-		'audience'   => array(
+		'audience' => array(
 			'for'     => array(
 				'title' => __( 'Who this is for', 'super-ninety-four' ),
 				'cards' => array(
@@ -306,6 +321,23 @@ function snf_get_home_content() {
 			'cta'        => array(
 				'label' => __( 'Apply for consideration', 'super-ninety-four' ),
 				'url'   => '/apply',
+			),
+		),
+		/* Open-admission upcoming gatherings for guests + members */
+		'gatherings' => array(
+			'title' => __( 'Upcoming gatherings', 'super-ninety-four' ),
+			'lede'  => __( 'Open admission for logged-out guests and members — City Club Private Party and the Lifestyle Concierge Club Workshop.', 'super-ninety-four' ),
+			'cards' => snf_get_upcoming_gathering_cards(),
+		),
+		/* YouTube newsletter + live video / audio teaser */
+		'newsletter' => array(
+			'title'      => __( 'The Zircoria Cryon Newsletter', 'super-ninety-four' ),
+			'lede'       => __( 'Films, live rooms, and circuit drops — subscribe and SureContact delivers the details.', 'super-ninety-four' ),
+			'youtubeUrl' => function_exists( 'snf_newsletter_youtube_url' ) ? snf_newsletter_youtube_url() : 'https://www.youtube.com/@williamslist',
+			'benefits'   => array(
+				__( 'Upcoming event updates and private invitations', 'super-ninety-four' ),
+				__( 'Every new YouTube video, as soon as it lands', 'super-ninety-four' ),
+				__( 'Live video and audio details delivered through SureContact', 'super-ninety-four' ),
 			),
 		),
 	);

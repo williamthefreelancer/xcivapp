@@ -14,7 +14,6 @@ const fallbackMenus: SiteMenus = {
   brand: { name: 'SUPER NINETY FOUR', path: '/' },
   primary: [
     { title: 'Help', path: '/#help' },
-    { title: 'Gatherings', path: '/#gatherings' },
     { title: 'Fit', path: '/#fit' },
     { title: 'Membership', path: '/#pricing' },
     { title: 'Apply', path: '/apply' },

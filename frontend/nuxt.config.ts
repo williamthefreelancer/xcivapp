@@ -27,10 +27,11 @@ export default defineNuxtConfig({
     '/expo/**': { redirect: '/' },
     '/inquiries': { redirect: '/?s=help' },
     '/about': { redirect: '/?s=fit' },
-    '/media': { redirect: '/' },
-    '/media/**': { redirect: '/' },
+    '/media': { redirect: '/?s=newsletter' },
+    '/media/**': { redirect: '/?s=newsletter' },
     '/contact': { redirect: '/' },
-    '/newsletter': { redirect: '/' },
+    '/newsletter': { redirect: '/?s=newsletter' },
+    '/thank-you/newsletter': { prerender: false },
   },
 
   app: {

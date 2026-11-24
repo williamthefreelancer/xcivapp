@@ -89,21 +89,7 @@ define( 'WP_DEBUG', false );
 
 /* Add any custom values between this line and the "stop editing" line. */
 
-/**
- * Super Ninety Four — Stripe / Supabase / Mapbox (production + local).
- * Copy real values into gitignored wp-config.php; never commit secrets.
- */
-// define( 'SNF_STRIPE_MODE', 'live' );
-// define( 'SNF_STRIPE_PUBLISHABLE_KEY', 'pk_…' );
-// define( 'SNF_STRIPE_SECRET_KEY', 'sk_…' );
-// define( 'SNF_STRIPE_WEBHOOK_SECRET', 'whsec_…' );
-// define( 'SNF_STRIPE_TEST_PUBLISHABLE_KEY', 'pk_test_…' );
-// define( 'SNF_STRIPE_TEST_SECRET_KEY', 'sk_test_…' );
-// define( 'SNF_STRIPE_TEST_WEBHOOK_SECRET', 'whsec_…' );
-// define( 'SNF_SUPABASE_URL', 'https://….supabase.co' );
-// define( 'SNF_SUPABASE_ANON_KEY', '' );
-// define( 'SNF_SUPABASE_SERVICE_ROLE_KEY', '' );
-// define( 'SNF_MAPBOX_TOKEN', '' );
+
 
 /* That's all, stop editing! Happy publishing. */
 

@@ -154,6 +154,78 @@ function snf_get_account_endpoint_panels( $endpoint = 'dashboard' ) {
 }
 
 /**
+ * Upcoming gatherings panel for My Account / headless dashboard.
+ *
+ * @return array<string, mixed>
+ */
+function snf_get_dashboard_upcoming_gatherings_panel() {
+	$source = function_exists( 'snf_get_upcoming_gathering_cards' )
+		? snf_get_upcoming_gathering_cards()
+		: array();
+	$cards  = array();
+
+	foreach ( $source as $card ) {
+		$url = isset( $card['url'] ) ? (string) $card['url'] : '';
+		if ( $url && 0 === strpos( $url, '/' ) ) {
+			$url = home_url( $url );
+		}
+
+		$meta_bits = array_filter(
+			array(
+				isset( $card['price'] ) ? (string) $card['price'] : '',
+				isset( $card['body'] ) ? (string) $card['body'] : '',
+			)
+		);
+
+		$cards[] = array(
+			'eyebrow' => __( 'Gathering', 'super-ninety-four' ),
+			'title'   => isset( $card['title'] ) ? (string) $card['title'] : '',
+			'meta'    => implode( ' · ', $meta_bits ),
+			'status'  => __( 'Upcoming', 'super-ninety-four' ),
+			'tone'    => 'info',
+			'url'     => $url,
+			'action'  => isset( $card['cta'] ) && $card['cta']
+				? (string) $card['cta']
+				: __( 'View event', 'super-ninety-four' ),
+			'image'   => isset( $card['image'] ) ? (string) $card['image'] : '',
+		);
+	}
+
+	if ( ! $cards ) {
+		$cards[] = array(
+			'eyebrow' => __( 'Gathering', 'super-ninety-four' ),
+			'title'   => __( 'No gatherings posted', 'super-ninety-four' ),
+			'meta'    => __( 'Upcoming circuit seats will appear here when published.', 'super-ninety-four' ),
+			'status'  => __( 'Empty', 'super-ninety-four' ),
+			'tone'    => 'neutral',
+			'url'     => function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'shop' ) : home_url( '/shop/' ),
+			'action'  => __( 'Browse listings', 'super-ninety-four' ),
+		);
+	}
+
+	$view_all = function_exists( 'snf_get_page_url' ) ? snf_get_page_url( 'events' ) : home_url( '/events/' );
+	if ( ! $view_all ) {
+		$view_all = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'shop' ) : home_url( '/shop/' );
+	}
+
+	/**
+	 * Filter upcoming gatherings dashboard panel.
+	 *
+	 * @param array $panel Panel definition.
+	 */
+	return apply_filters(
+		'snf_dashboard_upcoming_gatherings_panel',
+		array(
+			'id'       => 'upcoming-gatherings',
+			'title'    => __( 'Upcoming gatherings', 'super-ninety-four' ),
+			'lede'     => __( 'Three seats on the circuit. Prices as posted.', 'super-ninety-four' ),
+			'view_all' => $view_all,
+			'cards'    => array_map( 'snf_normalize_panel_card', $cards ),
+		)
+	);
+}
+
+/**
  * Event schedule panel — upcoming dated listings.
  *
  * @return array<string, mixed>
@@ -342,6 +414,7 @@ function snf_get_dashboard_orders_panel() {
  */
 function snf_get_dashboard_design_panels() {
 	$panels = array(
+		snf_get_dashboard_upcoming_gatherings_panel(),
 		snf_get_dashboard_billing_panel(),
 		snf_get_dashboard_schedules_panel(),
 		snf_get_dashboard_orders_panel(),

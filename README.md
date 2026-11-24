@@ -105,10 +105,10 @@ Credentials are also stored in `.mysql-local.json` (gitignored).
 ## Admin login
 
 - URL: [https://localhost/super-ninety-four/wp-admin](https://localhost/super-ninety-four/wp-admin)
-- User: `admin`
+- User: `thesuperxcivapp`
 - Password: `admin123!`
 
-Change this password after first login.
+Change this password after first login. To reset locally: `php bin/reset-local-admin.php`.
 
 ## Theme integrations
 

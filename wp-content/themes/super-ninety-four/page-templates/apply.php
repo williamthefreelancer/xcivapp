@@ -27,7 +27,14 @@ $apply_name  = isset( $_GET['name'] ) ? sanitize_text_field( wp_unslash( $_GET['
 $apply_email = isset( $_GET['email'] ) ? sanitize_email( wp_unslash( $_GET['email'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 $apply_phone = isset( $_GET['phone'] ) ? sanitize_text_field( wp_unslash( $_GET['phone'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
-$plans      = snf_get_membership_plans();
+$plans = snf_get_membership_plans();
+if ( $event_id && function_exists( 'snf_filter_membership_plans_for_event' ) ) {
+	$event_post_for_plans = get_post( $event_id );
+	$event_slug_for_plans = $event_post_for_plans ? (string) $event_post_for_plans->post_name : '';
+	if ( $event_slug_for_plans ) {
+		$plans = snf_filter_membership_plans_for_event( $event_slug_for_plans, $plans );
+	}
+}
 $plan_list  = isset( $plans['plans'] ) && is_array( $plans['plans'] ) ? $plans['plans'] : array();
 $initiation = isset( $plans['initiation_fee'] ) && is_array( $plans['initiation_fee'] ) ? $plans['initiation_fee'] : array();
 
@@ -179,6 +186,18 @@ if ( function_exists( 'snf_supabase_get_stripe_catalog' ) ) {
 								<?php checked( 0 === (int) $index ); ?>
 								required
 							>
+							<?php if ( ! empty( $plan['image'] ) ) : ?>
+								<span class="snf-apply-steps__plan-media" aria-hidden="true">
+									<img
+										src="<?php echo esc_url( (string) $plan['image'] ); ?>"
+										alt=""
+										width="96"
+										height="72"
+										loading="lazy"
+										decoding="async"
+									>
+								</span>
+							<?php endif; ?>
 							<span>
 								<strong><?php echo esc_html( $plan['name'] ); ?></strong>
 								<em><?php echo esc_html( $plan['price'] . $plan['cadence'] . ' ' . $plan['term'] ); ?></em>

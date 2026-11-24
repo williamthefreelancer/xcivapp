@@ -93,3 +93,37 @@ function snf_fire_service_quote_added_to_cart( $cart_item_key, $product_id, $qua
 	do_action( 'snf_service_quote_added_to_cart', (int) $product_id, (string) $slug, (int) $quantity, get_current_user_id() );
 }
 add_action( 'woocommerce_add_to_cart', 'snf_fire_service_quote_added_to_cart', 30, 3 );
+
+/**
+ * Repair `wpgraphql_login_settings` after a WPGraphQL / Headless Login collision.
+ *
+ * Headless Login PluginSettings registers option `wpgraphql_login_settings` with a
+ * `default` on `init` priority 10. WPGraphQL SettingsRegistry then re-registers the
+ * same option name (settings section id) on `init` priority 11 without a `default`,
+ * overwriting the registration while leaving `filter_default_option` attached.
+ * PHP 8+ then warns on every `get_option( 'wpgraphql_login_settings' )`.
+ *
+ * Re-register PluginSettings afterward so the option keeps its intended default.
+ */
+function snf_fix_wpgraphql_login_settings_default() {
+	global $wp_registered_settings;
+
+	if ( ! is_array( $wp_registered_settings ) || empty( $wp_registered_settings['wpgraphql_login_settings'] ) ) {
+		return;
+	}
+
+	if ( array_key_exists( 'default', $wp_registered_settings['wpgraphql_login_settings'] ) ) {
+		return;
+	}
+
+	if ( class_exists( '\WPGraphQL\Login\Admin\SettingsRegistry' ) ) {
+		$instance = \WPGraphQL\Login\Admin\SettingsRegistry::get( 'wpgraphql_login_settings' );
+		if ( $instance ) {
+			$instance->register();
+			return;
+		}
+	}
+
+	$wp_registered_settings['wpgraphql_login_settings']['default'] = array();
+}
+add_action( 'init', 'snf_fix_wpgraphql_login_settings_default', 12 );

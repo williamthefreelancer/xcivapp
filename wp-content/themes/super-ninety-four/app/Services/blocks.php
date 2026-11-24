@@ -269,6 +269,9 @@ function snf_render_block_form_slot( $attrs, $content = '' ) {
  * @return string
  */
 function snf_render_block_site_header() {
+	if ( function_exists( 'snf_is_event_no_header_context' ) && snf_is_event_no_header_context() ) {
+		return '';
+	}
 	ob_start();
 	get_template_part( 'template-parts/site', 'header' );
 	return (string) ob_get_clean();

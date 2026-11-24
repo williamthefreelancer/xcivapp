@@ -411,57 +411,13 @@ function snf_ticket_commerce_default_for_slug( $slug ) {
 					'id'          => 'principal',
 					'label'       => __( 'Principal immersion seat', 'super-ninety-four' ),
 					'description' => __( 'Full Township Adventures route access.', 'super-ninety-four' ),
-					'price'       => 2500,
+					'price'       => 97,
 					'capacity'    => 40,
 				),
-				array(
-					'id'          => 'guest',
-					'label'       => __( 'Accompanied guest', 'super-ninety-four' ),
-					'description' => __( 'Guest seat tied to a principal.', 'super-ninety-four' ),
-					'price'       => 1200,
-					'capacity'    => 20,
-				),
 			),
-			'addons'          => array(
-				array(
-					'id'      => 'hospitality-desk',
-					'label'   => __( 'Private hospitality desk', 'super-ninety-four' ),
-					'price'   => 450,
-					'kind'    => 'hospitality',
-					'upsell'  => true,
-					'max_qty' => 1,
-				),
-				array(
-					'id'      => 'ground-transfer',
-					'label'   => __( 'Ground transfer window', 'super-ninety-four' ),
-					'price'   => 275,
-					'kind'    => 'transport',
-					'upsell'  => true,
-					'max_qty' => 4,
-				),
-			),
-			'upsells'         => array(
-				array(
-					'id'      => 'after-hours-salon',
-					'label'   => __( 'After-hours salon upsell', 'super-ninety-four' ),
-					'price'   => 350,
-					'kind'    => 'hospitality',
-					'upsell'  => true,
-					'max_qty' => 1,
-				),
-			),
-			'interactivities' => array(
-				array(
-					'id'            => 'live-audio-room',
-					'label'         => __( 'Live audio interactivity room', 'super-ninety-four' ),
-					'description'   => __( 'Ticket-gated WebRTC audio desk during the immerse window.', 'super-ninety-four' ),
-					'price'         => 95,
-					'kind'          => 'interactivity',
-					'provider'      => 'webrtc',
-					'requires_tier' => array( 'principal', 'guest' ),
-					'max_qty'       => 1,
-				),
-			),
+			'addons'          => array(),
+			'upsells'         => array(),
+			'interactivities' => array(),
 		),
 		'the-eight-hundred-plus-journeys-event' => array(
 			'enabled'         => true,
@@ -470,44 +426,13 @@ function snf_ticket_commerce_default_for_slug( $slug ) {
 					'id'          => 'journey',
 					'label'       => __( '800+ journey seat', 'super-ninety-four' ),
 					'description' => __( 'Multi-leg immerse journey admission.', 'super-ninety-four' ),
-					'price'       => 4800,
+					'price'       => 497,
 					'capacity'    => 24,
 				),
-				array(
-					'id'          => 'observer',
-					'label'       => __( 'Observer / soft RSVP', 'super-ninety-four' ),
-					'price'       => 900,
-					'capacity'    => 12,
-				),
 			),
-			'addons'          => array(
-				array(
-					'id'     => 'security-detail',
-					'label'  => __( 'Private security detail window', 'super-ninety-four' ),
-					'price'  => 1200,
-					'kind'   => 'hospitality',
-					'upsell' => true,
-				),
-			),
-			'upsells'         => array(
-				array(
-					'id'     => 'media-replay',
-					'label'  => __( 'Private media replay vault', 'super-ninety-four' ),
-					'price'  => 180,
-					'kind'   => 'media',
-					'upsell' => true,
-				),
-			),
-			'interactivities' => array(
-				array(
-					'id'          => 'hybrid-desk',
-					'label'       => __( 'Hybrid desk interactivity', 'super-ninety-four' ),
-					'description' => __( 'Live + venue hybrid check-ins during journey legs.', 'super-ninety-four' ),
-					'price'       => 150,
-					'kind'        => 'interactivity',
-					'provider'    => 'hybrid',
-				),
-			),
+			'addons'          => array(),
+			'upsells'         => array(),
+			'interactivities' => array(),
 		),
 		'the-city-club-private-party'           => array(
 			'enabled'         => true,
@@ -540,52 +465,6 @@ function snf_ticket_commerce_default_for_slug( $slug ) {
 				),
 			),
 			'interactivities' => array(),
-		),
-		'the-badlands-bra-private-gathering'    => array(
-			'enabled'         => true,
-			'tiers'           => array(
-				array(
-					'id'          => 'gathering',
-					'label'       => __( 'Private gathering seat', 'super-ninety-four' ),
-					'price'       => 1800,
-					'capacity'    => 60,
-				),
-				array(
-					'id'          => 'table-host',
-					'label'       => __( 'Table host', 'super-ninety-four' ),
-					'description' => __( 'Host / sponsor a table with party seats.', 'super-ninety-four' ),
-					'price'       => 4200,
-					'capacity'    => 8,
-				),
-			),
-			'addons'          => array(
-				array(
-					'id'      => 'guest-pass',
-					'label'   => __( 'Additional guest pass', 'super-ninety-four' ),
-					'price'   => 650,
-					'kind'    => 'guest',
-					'upsell'  => true,
-					'max_qty' => 3,
-				),
-			),
-			'upsells'         => array(
-				array(
-					'id'     => 'champagne-service',
-					'label'  => __( 'Champagne service upsell', 'super-ninety-four' ),
-					'price'  => 220,
-					'kind'   => 'hospitality',
-					'upsell' => true,
-				),
-			),
-			'interactivities' => array(
-				array(
-					'id'       => 'bus-relay',
-					'label'    => __( 'Party-bus live relay', 'super-ninety-four' ),
-					'price'    => 75,
-					'kind'     => 'interactivity',
-					'provider' => 'webrtc',
-				),
-			),
 		),
 		'the-lifestyle-concierge-club-workshop' => array(
 			'enabled'         => true,
@@ -690,8 +569,6 @@ function snf_ticket_commerce_experience_for_slug( $slug ) {
 		'the-eight-hundred-plus-journeys-event' => 'immerse',
 		'the-eight-hundred-plus-journeys'       => 'immerse',
 		'the-city-club-private-party'           => 'gathering',
-		'the-badlands-bra-private-gathering'    => 'gathering',
-		'the-badlands-bra-party-bus-gathering'  => 'gathering',
 		'the-lifestyle-concierge-club-workshop' => 'workshop',
 	);
 
@@ -818,7 +695,6 @@ function snf_ticket_commerce_seed_known_products() {
 		'the-township-adventures-event',
 		'the-eight-hundred-plus-journeys-event',
 		'the-city-club-private-party',
-		'the-badlands-bra-private-gathering',
 		'the-lifestyle-concierge-club-workshop',
 	);
 

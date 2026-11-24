@@ -161,18 +161,12 @@ add_action( 'woocommerce_product_query', 'snf_woocommerce_product_query' );
  */
 function snf_get_listing_favicon_relative_path( $slug ) {
 	$slug = sanitize_title( (string) $slug );
-	if ( 'the-eight-hundred-plus-journeys' === $slug ) {
-		$slug = 'the-eight-hundred-plus-journeys-event';
-	}
-	if ( 'the-badlands-bra-party-bus-gathering' === $slug ) {
-		$slug = 'the-badlands-bra-private-gathering';
-	}
 
 	$map = array(
 		/* Brand marks when they read at favicon size; Phosphor MIT otherwise. */
-		'the-badlands-bra-private-gathering'        => 'female-body-icon.svg',
-		'the-eight-hundred-plus-journeys-event'     => 'ui/car.svg',
 		'the-township-adventures-event'             => 'ui/buildings.svg',
+		'the-eight-hundred-plus-journeys-event'     => 'ui/car.svg',
+		'the-city-club-private-party'               => 'ui/buildings.svg',
 		'the-lifestyle-concierge-club-workshop'     => 'ui/chalkboard-teacher.svg',
 		'litter-pickup-service'                     => 'ui/broom.svg',
 		'professional-line-sitting-courier-service' => 'ui/person-simple-walk.svg',
@@ -345,20 +339,15 @@ add_action( 'woocommerce_process_product_meta', 'snf_woocommerce_save_product_se
  */
 function snf_get_default_event_product_serp_meta() {
 	return array(
-		'the-eight-hundred-plus-journeys-event' => array(
-			'location' => __( 'Charlotte, NC to Salem, MA', 'super-ninety-four' ),
-			'when'     => __( 'Scenic city-to-city immersion', 'super-ninety-four' ),
-			'action'   => __( 'View event', 'super-ninety-four' ),
-		),
-		'the-badlands-bra-private-gathering'    => array(
-			'location' => __( 'Private circuit gathering', 'super-ninety-four' ),
-			'when'     => __( 'Members select event', 'super-ninety-four' ),
-			'action'   => __( 'View gathering', 'super-ninety-four' ),
-		),
 		'the-township-adventures-event'         => array(
 			'location' => __( 'Township cultural circuit', 'super-ninety-four' ),
-			'when'     => __( 'Cultural township immersion', 'super-ninety-four' ),
-			'action'   => __( 'View event', 'super-ninety-four' ),
+			'when'     => __( 'Invite-only cultural immersion', 'super-ninety-four' ),
+			'action'   => __( 'View invite-only event', 'super-ninety-four' ),
+		),
+		'the-eight-hundred-plus-journeys-event' => array(
+			'location' => __( 'Charlotte, NC to Salem, MA', 'super-ninety-four' ),
+			'when'     => __( 'Invite-only city-to-city immersion', 'super-ninety-four' ),
+			'action'   => __( 'View invite-only event', 'super-ninety-four' ),
 		),
 		'the-city-club-private-party'           => array(
 			'location' => __( 'City Clubs private circuit', 'super-ninety-four' ),
@@ -370,6 +359,46 @@ function snf_get_default_event_product_serp_meta() {
 			'when'     => __( 'Guest workshop', 'super-ninety-four' ),
 			'action'   => __( 'Reserve seat', 'super-ninety-four' ),
 		),
+		'harris-houston-to-wyoma-square'        => array(
+			'location' => __( 'Harris Houston → Wyoma Square', 'super-ninety-four' ),
+			'when'     => __( 'Seasonal public immerse route', 'super-ninety-four' ),
+			'action'   => __( 'View event', 'super-ninety-four' ),
+		),
+		'wyoma-square-to-harris-houston'        => array(
+			'location' => __( 'Wyoma Square → Harris Houston', 'super-ninety-four' ),
+			'when'     => __( 'Seasonal public immerse route', 'super-ninety-four' ),
+			'action'   => __( 'View event', 'super-ninety-four' ),
+		),
+		'harrisburg-to-lynn'                    => array(
+			'location' => __( 'Harrisburg → Lynn', 'super-ninety-four' ),
+			'when'     => __( 'Seasonal public immerse route', 'super-ninety-four' ),
+			'action'   => __( 'View event', 'super-ninety-four' ),
+		),
+		'lynn-to-harrisburg'                    => array(
+			'location' => __( 'Lynn → Harrisburg', 'super-ninety-four' ),
+			'when'     => __( 'Seasonal public immerse route', 'super-ninety-four' ),
+			'action'   => __( 'View event', 'super-ninety-four' ),
+		),
+		'lynnfield-to-lynn'                     => array(
+			'location' => __( 'Lynnfield → Lynn', 'super-ninety-four' ),
+			'when'     => __( 'Seasonal public immerse route', 'super-ninety-four' ),
+			'action'   => __( 'View event', 'super-ninety-four' ),
+		),
+		'lynnfield-to-salem'                    => array(
+			'location' => __( 'Lynnfield → Salem', 'super-ninety-four' ),
+			'when'     => __( 'Seasonal public immerse route', 'super-ninety-four' ),
+			'action'   => __( 'View event', 'super-ninety-four' ),
+		),
+		'the-northshore-experience'             => array(
+			'location' => __( 'North Shore, MA', 'super-ninety-four' ),
+			'when'     => __( 'Public immerse experience', 'super-ninety-four' ),
+			'action'   => __( 'View event', 'super-ninety-four' ),
+		),
+		'the-dirty-pub-hour'                    => array(
+			'location' => __( 'North Shore pubs', 'super-ninety-four' ),
+			'when'     => __( 'Public evening experience', 'super-ninety-four' ),
+			'action'   => __( 'View event', 'super-ninety-four' ),
+		),
 	);
 }
 
@@ -380,9 +409,17 @@ function snf_get_default_event_product_serp_meta() {
  */
 function snf_get_default_product_brand_map() {
 	return array(
-		'the-eight-hundred-plus-journeys-event' => 'the-eight-hundred-plus-journeys',
-		'the-badlands-bra-private-gathering'    => 'the-badlands-bra-club',
-		'the-township-adventures-event'         => 'the-cultural-guides-of-township-adventures',
+		'the-township-adventures-event'         => array( 'the-clubs-at-back-creek', 'the-clubs-at-wyoma-square', 'the-city-clubs-at-super-ninety-four' ),
+		'the-eight-hundred-plus-journeys-event' => array( 'the-clubs-at-back-creek', 'the-clubs-at-wyoma-square', 'the-city-clubs-at-super-ninety-four' ),
+		'the-city-club-private-party'           => 'the-city-clubs-at-super-ninety-four',
+		'harris-houston-to-wyoma-square'        => array( 'the-clubs-at-back-creek', 'the-clubs-at-wyoma-square' ),
+		'wyoma-square-to-harris-houston'        => array( 'the-clubs-at-back-creek', 'the-clubs-at-wyoma-square' ),
+		'harrisburg-to-lynn'                    => array( 'the-clubs-at-back-creek', 'the-clubs-at-wyoma-square' ),
+		'lynn-to-harrisburg'                    => array( 'the-clubs-at-back-creek', 'the-clubs-at-wyoma-square' ),
+		'lynnfield-to-lynn'                     => 'the-clubs-at-wyoma-square',
+		'lynnfield-to-salem'                    => 'the-clubs-at-wyoma-square',
+		'the-northshore-experience'             => 'the-clubs-at-wyoma-square',
+		'the-dirty-pub-hour'                    => 'the-clubs-at-wyoma-square',
 	);
 }
 
@@ -397,10 +434,8 @@ function snf_get_product_brand_fallback_image( $slug ) {
 	$map  = array(
 		'the-clubs-at-wyoma-square'                   => 'reciprocal/the-clubs-at-wyoma-square.jpg',
 		'the-city-clubs-at-super-ninety-four'          => 'reciprocal/the-city-clubs-at-super-ninety-four.jpg',
-		'the-clubs-at-back-creek'                     => 'reciprocal/the-clubs-at-back-creek.jpg',
-		'the-badlands-bra-club'                       => 'reciprocal/the-badlands-bra-club.jpg',
-		'the-eight-hundred-plus-journeys'             => 'events/eight-hundred-journeys-event.jpg',
-		'the-cultural-guides-of-township-adventures'  => 'events/township-adventures-event.jpg',
+		'the-clubs-at-back-creek' => 'reciprocal/the-clubs-at-back-creek.jpg',
+		'the-badlands-bra-club'   => 'reciprocal/the-badlands-bra-club.jpg',
 	);
 
 	if ( empty( $map[ $slug ] ) ) {
@@ -522,7 +557,7 @@ function snf_ensure_event_product_brands() {
 		array(
 			'post_type'      => 'product',
 			'post_status'    => 'publish',
-			'posts_per_page' => 20,
+			'posts_per_page' => 50,
 			'post_name__in'  => array_keys( $map ),
 			'fields'         => 'ids',
 			'no_found_rows'  => true,
@@ -536,15 +571,21 @@ function snf_ensure_event_product_brands() {
 			continue;
 		}
 
-		$brand_slug = $map[ $post->post_name ];
-		if ( ! term_exists( $brand_slug, 'product_brand' ) ) {
-			continue;
-		}
-		if ( has_term( $brand_slug, 'product_brand', $product_id ) ) {
-			continue;
+		$brands = $map[ $post->post_name ];
+		if ( ! is_array( $brands ) ) {
+			$brands = array( $brands );
 		}
 
-		wp_set_object_terms( $product_id, $brand_slug, 'product_brand', true );
+		foreach ( $brands as $brand_slug ) {
+			$brand_slug = sanitize_title( (string) $brand_slug );
+			if ( ! $brand_slug || ! term_exists( $brand_slug, 'product_brand' ) ) {
+				continue;
+			}
+			if ( has_term( $brand_slug, 'product_brand', $product_id ) ) {
+				continue;
+			}
+			wp_set_object_terms( $product_id, $brand_slug, 'product_brand', true );
+		}
 	}
 }
 add_action( 'init', 'snf_ensure_event_product_brands', 45 );
@@ -613,20 +654,21 @@ function snf_get_default_service_product_images() {
 }
 
 /**
- * Attach a theme image file as a product featured image.
+ * Attach a theme image (under assets/images/) as a product featured image.
  *
- * @param int    $product_id Product ID.
- * @param string $filename   File under assets/images/services/.
+ * @param int    $product_id   Product ID.
+ * @param string $relative_path Path under assets/images/ (e.g. services/foo.jpg or events/bar.webp).
  * @return int Attachment ID or 0.
  */
-function snf_attach_theme_service_image( $product_id, $filename ) {
-	$product_id = (int) $product_id;
-	$filename   = basename( (string) $filename );
-	if ( $product_id <= 0 || '' === $filename ) {
+function snf_attach_theme_product_image( $product_id, $relative_path ) {
+	$product_id    = (int) $product_id;
+	$relative_path = ltrim( str_replace( '\\', '/', (string) $relative_path ), '/' );
+	if ( $product_id <= 0 || '' === $relative_path || false !== strpos( $relative_path, '..' ) ) {
 		return 0;
 	}
 
-	$source = get_template_directory() . '/assets/images/services/' . $filename;
+	$filename = basename( $relative_path );
+	$source   = get_template_directory() . '/assets/images/' . $relative_path;
 	if ( ! file_exists( $source ) || ! is_readable( $source ) ) {
 		return 0;
 	}
@@ -675,6 +717,21 @@ function snf_attach_theme_service_image( $product_id, $filename ) {
 }
 
 /**
+ * Attach a theme service image as a product featured image.
+ *
+ * @param int    $product_id Product ID.
+ * @param string $filename   File under assets/images/services/.
+ * @return int Attachment ID or 0.
+ */
+function snf_attach_theme_service_image( $product_id, $filename ) {
+	$filename = basename( (string) $filename );
+	if ( '' === $filename ) {
+		return 0;
+	}
+	return snf_attach_theme_product_image( $product_id, 'services/' . $filename );
+}
+
+/**
  * Ensure known service products have a featured image from theme assets.
  */
 function snf_ensure_service_product_images() {
@@ -713,3 +770,58 @@ function snf_ensure_service_product_images() {
 	}
 }
 add_action( 'init', 'snf_ensure_service_product_images', 46 );
+
+/**
+ * Ensure event / gathering products have a featured image from theme defaults.
+ */
+function snf_ensure_event_product_images() {
+	if ( ! class_exists( 'WooCommerce' ) || ! function_exists( 'snf_get_event_default_image_file' ) ) {
+		return;
+	}
+
+	$slugs = array();
+	if ( function_exists( 'snf_get_public_select_event_slugs' ) ) {
+		$slugs = array_merge( $slugs, snf_get_public_select_event_slugs() );
+	}
+	if ( function_exists( 'snf_get_invite_only_event_slugs' ) ) {
+		$slugs = array_merge( $slugs, snf_get_invite_only_event_slugs() );
+	}
+	if ( function_exists( 'snf_get_upcoming_gathering_event_catalog' ) ) {
+		$slugs = array_merge( $slugs, array_keys( snf_get_upcoming_gathering_event_catalog() ) );
+	}
+	$slugs = array_values( array_unique( array_filter( array_map( 'sanitize_title', $slugs ) ) ) );
+	if ( ! $slugs ) {
+		return;
+	}
+
+	$query = new WP_Query(
+		array(
+			'post_type'      => 'product',
+			'post_status'    => array( 'publish', 'private' ),
+			'posts_per_page' => 40,
+			'post_name__in'  => $slugs,
+			'fields'         => 'ids',
+			'no_found_rows'  => true,
+		)
+	);
+
+	foreach ( $query->posts as $product_id ) {
+		$product_id = (int) $product_id;
+		if ( has_post_thumbnail( $product_id ) ) {
+			continue;
+		}
+
+		$post = get_post( $product_id );
+		if ( ! $post ) {
+			continue;
+		}
+
+		$file = snf_get_event_default_image_file( $post->post_name );
+		if ( ! $file ) {
+			continue;
+		}
+
+		snf_attach_theme_product_image( $product_id, $file );
+	}
+}
+add_action( 'init', 'snf_ensure_event_product_images', 47 );

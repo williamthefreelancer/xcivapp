@@ -313,6 +313,46 @@ function snf_get_dashboard_services_listing_cards() {
 }
 
 /**
+ * Upcoming gathering cards for My Account listing sliders.
+ *
+ * @return array<int, array<string, string>>
+ */
+function snf_get_dashboard_upcoming_gathering_listing_cards() {
+	$source = function_exists( 'snf_get_upcoming_gathering_cards' )
+		? snf_get_upcoming_gathering_cards()
+		: array();
+	$cards  = array();
+
+	foreach ( $source as $card ) {
+		$url = isset( $card['url'] ) ? (string) $card['url'] : '';
+		if ( $url && 0 === strpos( $url, '/' ) ) {
+			$url = home_url( $url );
+		}
+
+		$meta_bits = array_filter(
+			array(
+				isset( $card['price'] ) ? (string) $card['price'] : '',
+				isset( $card['body'] ) ? (string) $card['body'] : '',
+			)
+		);
+
+		$cards[] = array(
+			'title' => isset( $card['title'] ) ? (string) $card['title'] : '',
+			'meta'  => implode( ' · ', $meta_bits ),
+			'url'   => $url,
+			'image' => isset( $card['image'] ) ? (string) $card['image'] : '',
+		);
+	}
+
+	/**
+	 * Filter upcoming gathering listing cards on My Account.
+	 *
+	 * @param array $cards Listing cards.
+	 */
+	return apply_filters( 'snf_dashboard_upcoming_gathering_listing_cards', $cards );
+}
+
+/**
  * Dashboard listing slider sections (Woo Events / Services).
  *
  * @return array<int, array<string, mixed>>
@@ -339,8 +379,21 @@ function snf_get_dashboard_event_listings() {
 	}
 
 	$reciprocal_url = snf_get_page_url( 'find-other-reciprocal-programs' );
+	$gatherings_url = function_exists( 'snf_get_page_url' )
+		? snf_get_page_url( 'events' )
+		: home_url( '/events/' );
+	if ( ! $gatherings_url ) {
+		$gatherings_url = $events_url;
+	}
 
 	$listings = array(
+		array(
+			'id'    => 'upcoming-gatherings',
+			'title' => __( 'Upcoming gatherings', 'super-ninety-four' ),
+			'url'   => $gatherings_url,
+			'bp'    => 'events',
+			'cards' => snf_get_dashboard_upcoming_gathering_listing_cards(),
+		),
 		array(
 			'id'    => 'events',
 			'title' => __( 'Events', 'super-ninety-four' ),

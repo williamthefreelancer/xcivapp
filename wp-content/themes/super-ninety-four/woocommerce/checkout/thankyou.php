@@ -45,6 +45,19 @@ $orders_url      = function_exists( 'snf_get_woo_account_url' ) ? snf_get_woo_ac
 
 		<?php else : ?>
 
+			<?php
+			$gathering_slug = function_exists( 'snf_order_open_admission_gathering_slug' )
+				? snf_order_open_admission_gathering_slug( $order )
+				: '';
+			$gathering_url  = ( $gathering_slug && function_exists( 'snf_get_gathering_thankyou_url' ) )
+				? snf_get_gathering_thankyou_url( $gathering_slug, $order )
+				: '';
+			if ( $gathering_url ) {
+				wp_safe_redirect( $gathering_url, 302 );
+				exit;
+			}
+			?>
+
 			<header class="snf-thankyou__intro">
 				<h1 class="snf-thankyou__title"><?php esc_html_e( 'You\'re confirmed', 'super-ninety-four' ); ?></h1>
 				<p class="snf-thankyou__lede">

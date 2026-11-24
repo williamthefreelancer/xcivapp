@@ -320,6 +320,26 @@ $who_for = array(
 								aria-label="<?php esc_attr_e( 'Product quantity', 'super-ninety-four' ); ?>"
 							>
 						</label>
+						<label class="snf-workshop__field">
+							<span><?php esc_html_e( 'Your loom video link', 'super-ninety-four' ); ?></span>
+							<input
+								type="url"
+								name="snf_workshop_loom"
+								id="snf-gathering-loom"
+								inputmode="url"
+								autocomplete="url"
+								placeholder="<?php esc_attr_e( 'https://www.loom.com/share/…', 'super-ninety-four' ); ?>"
+							>
+						</label>
+						<label class="snf-workshop__field">
+							<span><?php esc_html_e( 'Keep checkout details', 'super-ninety-four' ); ?></span>
+							<textarea
+								name="snf_workshop_checkout_details"
+								id="snf-gathering-checkout-details"
+								rows="3"
+								placeholder="<?php esc_attr_e( 'Anything we should keep on your checkout / ticket record…', 'super-ninety-four' ); ?>"
+							></textarea>
+						</label>
 					</div>
 					<?php if ( ! empty( $commerce['enabled'] ) ) : ?>
 						<?php

@@ -269,6 +269,12 @@ function snf_schema_is_event_context() {
 
 	if ( function_exists( 'is_product' ) && is_product() ) {
 		$post_id = get_the_ID();
+		if ( function_exists( 'snf_is_event_product_landing' ) && snf_is_event_product_landing( $post_id ) ) {
+			return true;
+		}
+		if ( function_exists( 'snf_is_gathering_landing_product' ) && snf_is_gathering_landing_product( $post_id ) ) {
+			return true;
+		}
 		if ( function_exists( 'snf_is_figma_event_landing' ) && snf_is_figma_event_landing( $post_id ) ) {
 			return true;
 		}
@@ -373,16 +379,19 @@ function snf_schema_event_breadcrumb_node( $post_id = null ) {
 		return null;
 	}
 
-	if ( function_exists( 'snf_is_member_select_event' ) && snf_is_member_select_event( $post ) ) {
-		$select_slug = 'select-events-by-members';
-	} elseif ( function_exists( 'snf_is_public_select_event' ) && snf_is_public_select_event( $post ) ) {
-		$select_slug = 'select-events-by-non-members';
+	if ( function_exists( 'snf_get_event_select_events_parent' ) ) {
+		$parent       = snf_get_event_select_events_parent( $post );
+		$select_url   = ! empty( $parent['url'] ) ? (string) $parent['url'] : $home;
+		$select_label = ! empty( $parent['label'] ) ? (string) $parent['label'] : __( 'Select Events', 'super-ninety-four' );
 	} else {
-		$select_slug = 'select-events-by-non-members';
+		$select_slug  = ( function_exists( 'snf_is_member_select_event' ) && snf_is_member_select_event( $post ) )
+			? 'select-events-by-members'
+			: 'select-events-by-non-members';
+		$select_url   = function_exists( 'snf_get_page_url' ) ? snf_get_page_url( $select_slug ) : $home;
+		$select_label = 'select-events-by-members' === $select_slug
+			? __( 'Select Events (Members)', 'super-ninety-four' )
+			: __( 'Select Events (Non-Members)', 'super-ninety-four' );
 	}
-
-	$select_url   = function_exists( 'snf_get_page_url' ) ? snf_get_page_url( $select_slug ) : $home;
-	$select_label = __( 'Select Events', 'super-ninety-four' );
 
 	$items = array(
 		array(

@@ -59,10 +59,19 @@ if ( $card_count >= 4 ) {
 	$row_class .= ' snf-dashboard__row--four';
 }
 
-get_header();
+get_header( 'empty' );
 ?>
 <main class="snf-page snf-dashboard snf-dashboard--select-events" data-figma-ready="true">
 	<section class="snf-dashboard__shell snf-container" aria-label="<?php echo esc_attr( $title ); ?>">
+		<?php
+		get_template_part(
+			'template-parts/event',
+			'breadcrumbs',
+			array(
+				'class' => 'snf-crumbs--listing',
+			)
+		);
+		?>
 		<section
 			class="<?php echo esc_attr( $row_class ); ?>"
 			data-listing="<?php echo esc_attr( $listing_id ); ?>"
@@ -94,4 +103,4 @@ get_header();
 	</section>
 </main>
 <?php
-get_footer();
+get_footer( 'empty' );

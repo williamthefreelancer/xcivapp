@@ -107,13 +107,13 @@ function snf_newsletter_export_subscribers() {
 	header( 'Expires: 0' );
 
 	$handle = fopen( 'php://output', 'w' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
-	fputcsv( $handle, array( 'Name', 'Email', 'Source', 'User ID', 'Subscribed', 'Post ID' ) );
+	fputcsv( $handle, array( 'Email', 'Phone', 'Source', 'User ID', 'Subscribed', 'Post ID' ) );
 	foreach ( $subscribers as $subscriber ) {
 		fputcsv(
 			$handle,
 			array(
-				get_the_title( $subscriber ),
 				(string) get_post_meta( $subscriber->ID, '_snf_newsletter_email', true ),
+				(string) get_post_meta( $subscriber->ID, '_snf_newsletter_phone', true ),
 				(string) get_post_meta( $subscriber->ID, '_snf_newsletter_source', true ),
 				(string) get_post_meta( $subscriber->ID, '_snf_newsletter_user_id', true ),
 				(string) get_post_meta( $subscriber->ID, '_snf_newsletter_subscribed_at', true ),
@@ -133,8 +133,9 @@ add_action( 'admin_post_snf_subscribers_export', 'snf_newsletter_export_subscrib
  * @return array<string,string>
  */
 function snf_newsletter_subscriber_columns( $columns ) {
-	$columns['title']       = __( 'Name / email', 'super-ninety-four' );
+	$columns['title']       = __( 'Email', 'super-ninety-four' );
 	$columns['email']       = __( 'Email', 'super-ninety-four' );
+	$columns['phone']       = __( 'Phone', 'super-ninety-four' );
 	$columns['subscribed']  = __( 'Subscribed', 'super-ninety-four' );
 	$columns['source']      = __( 'Source', 'super-ninety-four' );
 	unset( $columns['date'] );
@@ -153,6 +154,9 @@ function snf_newsletter_subscriber_column_content( $column, $post_id ) {
 		case 'email':
 			echo esc_html( (string) get_post_meta( $post_id, '_snf_newsletter_email', true ) );
 			break;
+		case 'phone':
+			echo esc_html( (string) get_post_meta( $post_id, '_snf_newsletter_phone', true ) );
+			break;
 		case 'subscribed':
 			echo esc_html( (string) get_post_meta( $post_id, '_snf_newsletter_subscribed_at', true ) );
 			break;
@@ -169,10 +173,29 @@ add_action( 'manage_snf_subscriber_posts_custom_column', 'snf_newsletter_subscri
  * @param string $status Status key.
  */
 function snf_newsletter_redirect( $status ) {
-	$url = function_exists( 'snf_get_page_url' )
-		? snf_get_page_url( 'newsletter' )
-		: home_url( '/newsletter/' );
-	wp_safe_redirect( add_query_arg( 'snf_newsletter', $status, $url ) );
+	$status = sanitize_key( (string) $status );
+
+	// Errors return to the home signup section; success lands on thank-you.
+	if ( 'error' === $status ) {
+		$url = add_query_arg( 'snf_newsletter', 'error', home_url( '/' ) ) . '#newsletter';
+		wp_safe_redirect( $url );
+		exit;
+	}
+
+	$query = array( 'status' => in_array( $status, array( 'duplicate', 'subscribed' ), true ) ? $status : 'subscribed' );
+
+	if ( function_exists( 'snf_nuxt_app_url' ) && function_exists( 'snf_nuxt_bridge_enabled' ) && snf_nuxt_bridge_enabled() ) {
+		$base = snf_nuxt_app_url();
+		if ( $base ) {
+			wp_safe_redirect( add_query_arg( $query, trailingslashit( $base ) . 'thank-you/newsletter' ) );
+			exit;
+		}
+	}
+
+	$wp_thanks = function_exists( 'snf_get_page_url' )
+		? snf_get_page_url( 'thank-you-newsletter' )
+		: home_url( '/thank-you-newsletter/' );
+	wp_safe_redirect( add_query_arg( $query, $wp_thanks ) );
 	exit;
 }
 
@@ -188,9 +211,9 @@ function snf_newsletter_handle_subscribe() {
 	}
 
 	$email = isset( $_POST['snf_newsletter_email'] ) ? sanitize_email( wp_unslash( $_POST['snf_newsletter_email'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing
-	$name  = isset( $_POST['snf_newsletter_name'] ) ? sanitize_text_field( wp_unslash( $_POST['snf_newsletter_name'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing
+	$phone = isset( $_POST['snf_newsletter_phone'] ) ? sanitize_text_field( wp_unslash( $_POST['snf_newsletter_phone'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing
 
-	if ( ! is_email( $email ) ) {
+	if ( ! is_email( $email ) || '' === $phone ) {
 		snf_newsletter_redirect( 'error' );
 	}
 
@@ -212,7 +235,7 @@ function snf_newsletter_handle_subscribe() {
 		array(
 			'post_type'    => 'snf_subscriber',
 			'post_status'  => 'publish',
-			'post_title'   => $name ? $name : $email,
+			'post_title'   => $email,
 			'post_content' => '',
 		),
 		true
@@ -223,18 +246,27 @@ function snf_newsletter_handle_subscribe() {
 	}
 
 	update_post_meta( $subscriber_id, '_snf_newsletter_email', $email );
-	update_post_meta( $subscriber_id, '_snf_newsletter_name', $name );
+	update_post_meta( $subscriber_id, '_snf_newsletter_phone', $phone );
 	update_post_meta( $subscriber_id, '_snf_newsletter_source', 'newsletter-page' );
 	update_post_meta( $subscriber_id, '_snf_newsletter_user_id', get_current_user_id() );
 	update_post_meta( $subscriber_id, '_snf_newsletter_subscribed_at', current_time( 'mysql' ) );
 
+	/**
+	 * Hook for SureContact / CRM sync after a successful subscribe.
+	 *
+	 * @param int    $subscriber_id Subscriber post ID.
+	 * @param string $email         Email.
+	 * @param string $phone         Phone.
+	 */
+	do_action( 'snf_newsletter_subscribed', (int) $subscriber_id, $email, $phone );
+
 	$to = apply_filters( 'snf_newsletter_notify_email', get_option( 'admin_email' ) );
 	if ( is_string( $to ) && is_email( $to ) ) {
 		$message = sprintf(
-			/* translators: 1: name, 2: email, 3: date */
-			__( "New SUPER NINETY FOUR video newsletter subscriber\n\nName: %1\$s\nEmail: %2\$s\nDate: %3\$s\n\nView subscribers: %4\$s", 'super-ninety-four' ),
-			$name ? $name : __( '(not provided)', 'super-ninety-four' ),
+			/* translators: 1: email, 2: phone, 3: date, 4: admin URL */
+			__( "New SUPER NINETY FOUR video newsletter subscriber\n\nEmail: %1\$s\nPhone: %2\$s\nDate: %3\$s\n\nView subscribers: %4\$s", 'super-ninety-four' ),
 			$email,
+			$phone,
 			current_time( 'mysql' ),
 			admin_url( 'edit.php?post_type=snf_subscriber' )
 		);

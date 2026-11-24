@@ -133,6 +133,10 @@ function snf_get_site_pages() {
 			'title'    => 'Newsletter',
 			'template' => 'newsletter',
 		),
+		'thank-you-newsletter' => array(
+			'title'    => 'Newsletter Thank You',
+			'template' => 'thank-you-newsletter',
+		),
 		'find-other-reciprocal-programs' => array(
 			'title'    => 'Find Other Reciprocal Programs',
 			'template' => 'reciprocal-hub',
@@ -474,11 +478,50 @@ add_action( 'init', 'snf_ensure_site_pages', 20 );
 function snf_resolve_listing_product_slug( $slug ) {
 	$slug    = sanitize_title( (string) $slug );
 	$aliases = array(
-		'the-badlands-bra-party-bus-gathering' => 'the-badlands-bra-private-gathering',
-		'the-eight-hundred-plus-journeys'      => 'the-eight-hundred-plus-journeys-event',
+		'the-eight-hundred-plus-journeys' => 'the-eight-hundred-plus-journeys-event',
 	);
 
 	return isset( $aliases[ $slug ] ) ? $aliases[ $slug ] : $slug;
+}
+
+/**
+ * Resolve a card/landing image for an event slug (explicit file, product thumb, or default).
+ *
+ * @param string           $slug       Product / event slug.
+ * @param string           $image_file Optional filename under assets/images/events/ or relative path under assets/images/.
+ * @param \WC_Product|null $product    Optional Woo product.
+ * @param int              $post_id    Optional post ID for thumbnail lookup.
+ * @return string
+ */
+function snf_resolve_event_card_image( $slug, $image_file = '', $product = null, $post_id = 0 ) {
+	$slug       = sanitize_title( (string) $slug );
+	$image_file = (string) $image_file;
+
+	if ( $image_file ) {
+		$rel = ltrim( $image_file, '/' );
+		if ( false === strpos( $rel, '/' ) ) {
+			$rel = 'events/' . $rel;
+		}
+		return get_template_directory_uri() . '/assets/images/' . $rel;
+	}
+
+	if ( $product && $product->get_image_id() ) {
+		$thumb = wp_get_attachment_image_url( $product->get_image_id(), 'medium_large' );
+		if ( $thumb ) {
+			return $thumb;
+		}
+	}
+
+	if ( $post_id ) {
+		$thumb = get_the_post_thumbnail_url( $post_id, 'medium_large' );
+		if ( $thumb ) {
+			return $thumb;
+		}
+	}
+
+	return function_exists( 'snf_get_event_default_image_url' )
+		? snf_get_event_default_image_url( $slug )
+		: '';
 }
 
 /**
@@ -498,22 +541,12 @@ function snf_get_dashboard_event_card_by_slug( $slug, $image_file = '', $fallbac
 		$product      = ( $product_post && class_exists( 'WooCommerce' ) ) ? wc_get_product( $product_post->ID ) : null;
 		$location     = $product_post ? (string) get_post_meta( $product_post->ID, '_snf_location', true ) : '';
 		$timing       = $product_post ? (string) get_post_meta( $product_post->ID, '_snf_when', true ) : '';
-		$image        = $image_file
-			? get_template_directory_uri() . '/assets/images/events/' . ltrim( $image_file, '/' )
-			: '';
-
-		if ( ! $image && $product && $product->get_image_id() ) {
-			$thumb = wp_get_attachment_image_url( $product->get_image_id(), 'medium_large' );
-			if ( $thumb ) {
-				$image = $thumb;
-			}
-		}
 
 		return array(
 			'title' => $product ? $product->get_name() : __( 'The Lifestyle Concierge Club Workshop', 'super-ninety-four' ),
 			'meta'  => trim( implode( ' · ', array_filter( array( $location, $timing ) ) ) ),
 			'url'   => snf_get_workshop_landing_url(),
-			'image' => $image,
+			'image' => snf_resolve_event_card_image( $slug, $image_file, $product, $product_post ? (int) $product_post->ID : 0 ),
 		);
 	}
 
@@ -523,25 +556,12 @@ function snf_get_dashboard_event_card_by_slug( $slug, $image_file = '', $fallbac
 		if ( $product ) {
 			$location = (string) get_post_meta( $product_post->ID, '_snf_location', true );
 			$timing   = (string) get_post_meta( $product_post->ID, '_snf_when', true );
-			$image    = '';
-
-			if ( $image_file ) {
-				$image = get_template_directory_uri() . '/assets/images/events/' . ltrim( $image_file, '/' );
-			} else {
-				$image_id = $product->get_image_id();
-				if ( $image_id ) {
-					$thumb = wp_get_attachment_image_url( $image_id, 'medium_large' );
-					if ( $thumb ) {
-						$image = $thumb;
-					}
-				}
-			}
 
 			return array(
 				'title' => $product->get_name(),
 				'meta'  => trim( implode( ' · ', array_filter( array( $location, $timing ) ) ) ),
 				'url'   => get_permalink( $product_post->ID ),
-				'image' => $image,
+				'image' => snf_resolve_event_card_image( $slug, $image_file, $product, (int) $product_post->ID ),
 			);
 		}
 	}
@@ -553,9 +573,7 @@ function snf_get_dashboard_event_card_by_slug( $slug, $image_file = '', $fallbac
 				'title' => $slug,
 				'meta'  => '',
 				'url'   => $fallback_url,
-				'image' => $image_file
-					? get_template_directory_uri() . '/assets/images/events/' . ltrim( $image_file, '/' )
-					: '',
+				'image' => snf_resolve_event_card_image( $slug, $image_file ),
 			);
 		}
 		return null;
@@ -563,22 +581,12 @@ function snf_get_dashboard_event_card_by_slug( $slug, $image_file = '', $fallbac
 
 	$location = get_post_meta( $event->ID, 'snf_event_location', true );
 	$timing   = get_post_meta( $event->ID, 'snf_event_when', true );
-	$image    = '';
-
-	if ( $image_file ) {
-		$image = get_template_directory_uri() . '/assets/images/events/' . ltrim( $image_file, '/' );
-	} else {
-		$thumb = get_the_post_thumbnail_url( $event->ID, 'medium_large' );
-		if ( $thumb ) {
-			$image = $thumb;
-		}
-	}
 
 	return array(
 		'title' => get_the_title( $event ),
 		'meta'  => trim( implode( ' · ', array_filter( array( $location, $timing ) ) ) ),
 		'url'   => snf_get_event_action_url( $event->ID ),
-		'image' => $image,
+		'image' => snf_resolve_event_card_image( $slug, $image_file, null, (int) $event->ID ),
 	);
 }
 
@@ -591,9 +599,9 @@ function snf_get_dashboard_member_event_cards() {
 	$cards = array_values(
 		array_filter(
 			array(
-				snf_get_dashboard_event_card_by_slug( 'the-badlands-bra-private-gathering', 'badlands-bra-event.jpg' ),
-				snf_get_dashboard_event_card_by_slug( 'the-eight-hundred-plus-journeys-event', 'eight-hundred-journeys-event.jpg' ),
 				snf_get_dashboard_event_card_by_slug( 'the-township-adventures-event', 'township-adventures-event.jpg' ),
+				snf_get_dashboard_event_card_by_slug( 'the-eight-hundred-plus-journeys-event', 'eight-hundred-journeys-event.jpg' ),
+				snf_get_dashboard_event_card_by_slug( 'the-city-club-private-party', 'city-club-private-party.webp' ),
 			)
 		)
 	);
@@ -1404,9 +1412,9 @@ function snf_ensure_city_club_private_party_product() {
 add_action( 'init', 'snf_ensure_city_club_private_party_product', 35 );
 
 /**
- * Read workshop contact fields from the add-to-cart request.
+ * Read workshop / gathering contact + step-2 custom fields from the add-to-cart request.
  *
- * @return array{name:string,email:string,phone:string}
+ * @return array{name:string,email:string,phone:string,loom:string,checkout_details:string}
  */
 function snf_workshop_request_contact_fields() {
 	$name  = isset( $_REQUEST['snf_cart_name'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['snf_cart_name'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
@@ -1424,10 +1432,15 @@ function snf_workshop_request_contact_fields() {
 		$phone = sanitize_text_field( wp_unslash( $_REQUEST['snf_workshop_phone'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 	}
 
+	$loom = isset( $_REQUEST['snf_workshop_loom'] ) ? esc_url_raw( wp_unslash( $_REQUEST['snf_workshop_loom'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	$details = isset( $_REQUEST['snf_workshop_checkout_details'] ) ? sanitize_textarea_field( wp_unslash( $_REQUEST['snf_workshop_checkout_details'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
 	return array(
-		'name'  => $name,
-		'email' => $email,
-		'phone' => $phone,
+		'name'             => $name,
+		'email'            => $email,
+		'phone'            => $phone,
+		'loom'             => $loom,
+		'checkout_details' => $details,
 	);
 }
 
@@ -1544,9 +1557,11 @@ add_filter( 'woocommerce_add_to_cart_redirect', 'snf_workshop_add_to_cart_redire
  */
 function snf_workshop_cart_item_data( $item_data, $cart_item ) {
 	$map = array(
-		'snf_workshop_name'  => __( 'Full name', 'super-ninety-four' ),
-		'snf_workshop_email' => __( 'Your email', 'super-ninety-four' ),
-		'snf_workshop_phone' => __( 'Your phone', 'super-ninety-four' ),
+		'snf_workshop_name'             => __( 'Full name', 'super-ninety-four' ),
+		'snf_workshop_email'            => __( 'Your email', 'super-ninety-four' ),
+		'snf_workshop_phone'            => __( 'Your phone', 'super-ninety-four' ),
+		'snf_workshop_loom'             => __( 'Your loom video link', 'super-ninety-four' ),
+		'snf_workshop_checkout_details' => __( 'Keep checkout details', 'super-ninety-four' ),
 	);
 
 	foreach ( $map as $key => $label ) {
@@ -1572,9 +1587,11 @@ add_filter( 'woocommerce_get_item_data', 'snf_workshop_cart_item_data', 10, 2 );
  */
 function snf_workshop_checkout_create_order_line_item( $item, $cart_item_key, $values ) {
 	$map = array(
-		'snf_workshop_name'  => __( 'Full name', 'super-ninety-four' ),
-		'snf_workshop_email' => __( 'Your email', 'super-ninety-four' ),
-		'snf_workshop_phone' => __( 'Your phone', 'super-ninety-four' ),
+		'snf_workshop_name'             => __( 'Full name', 'super-ninety-four' ),
+		'snf_workshop_email'            => __( 'Your email', 'super-ninety-four' ),
+		'snf_workshop_phone'            => __( 'Your phone', 'super-ninety-four' ),
+		'snf_workshop_loom'             => __( 'Your loom video link', 'super-ninety-four' ),
+		'snf_workshop_checkout_details' => __( 'Keep checkout details', 'super-ninety-four' ),
 	);
 
 	foreach ( $map as $key => $label ) {
@@ -1669,6 +1686,17 @@ function snf_get_service_inquiry_search_results( $query = '' ) {
 function snf_get_event_action_url( $post_id = null ) {
 	$post_id = $post_id ? (int) $post_id : get_the_ID();
 	$post    = get_post( $post_id );
+
+	// Open-admission gatherings always use their product landings (guest purchase).
+	if ( function_exists( 'snf_is_open_admission_event' ) && snf_is_open_admission_event( $post_id ) ) {
+		if ( snf_is_lifestyle_concierge_workshop( $post_id ) ) {
+			return snf_get_workshop_landing_url();
+		}
+		if ( function_exists( 'snf_get_city_club_private_party_url' ) && snf_get_city_club_private_party_slug() === get_post_field( 'post_name', $post_id ) ) {
+			return snf_get_city_club_private_party_url();
+		}
+		return get_permalink( $post_id );
+	}
 
 	// Workshop always uses the dedicated product landing.
 	if ( snf_is_lifestyle_concierge_workshop( $post_id ) ) {

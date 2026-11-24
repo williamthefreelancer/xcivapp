@@ -439,8 +439,47 @@
     text-transform: uppercase;
   }
 
+  /*
+   * Home hero statement: same type language as section titles, just larger.
+   * Even two-line stack — no brand .snf-display, no dual-size lead/focus.
+   */
+  .snf-hero__title--statement {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.08em;
+    width: min(100%, 42rem);
+    max-width: none;
+    font-size: var(--snf-title-hub);
+    letter-spacing: 0.015em;
+    line-height: 1.08;
+  }
+
+  .snf-hero__title-lead,
+  .snf-hero__title-focus,
+  .snf-hero__title-line {
+    display: block;
+    margin: 0;
+    font-size: 1em;
+    letter-spacing: inherit;
+    color: inherit;
+  }
+
+  @media (min-width: 40rem) {
+    .snf-hero__title--statement .snf-hero__title-lead,
+    .snf-hero__title--statement .snf-hero__title-focus,
+    .snf-hero__title--statement .snf-hero__title-line {
+      white-space: nowrap;
+    }
+  }
+
   .snf-hero__title--page {
     font-size: var(--snf-title-hub);
+  }
+
+  .snf-hero--home .snf-hero__lede {
+    margin-block-start: 0.35rem;
+    max-width: 36rem;
   }
 
   .snf-hero__lede {
@@ -457,7 +496,7 @@
     flex-wrap: wrap;
     justify-content: center;
     gap: 0.75rem;
-    margin-block-start: 0.65rem;
+    margin-block-start: 0.85rem;
   }
 
   .snf-hero__actions .border-border,
@@ -676,6 +715,7 @@
   #programs,
   #fit,
   #pricing,
+  #newsletter,
   #apply-again {
     scroll-margin-top: calc(var(--snf-header-offset, 5rem) + 0.75rem);
   }
@@ -942,6 +982,216 @@
     font-size: 0.92rem;
     line-height: 1.45;
     color: var(--snf-ink-muted);
+  }
+
+  /* Newsletter signup panel */
+  .snf-home-newsletter {
+    width: min(100%, 42rem);
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1.5rem;
+    border-radius: 1rem;
+    border: 0.0625rem solid rgba(255, 255, 255, 0.1);
+    background: linear-gradient(
+      160deg,
+      rgba(40, 36, 34, 0.92) 0%,
+      rgba(18, 18, 18, 0.88) 100%
+    );
+    box-sizing: border-box;
+  }
+
+  .snf-home-newsletter__header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: min(100%, 36rem);
+    margin: clamp(1.75rem, 4vw, 2.75rem) clamp(1.25rem, 3.5vw, 2.25rem) 0;
+  }
+
+  .snf-home-newsletter__header .snf-home-section__title {
+    max-width: none;
+  }
+
+  .snf-home-newsletter__header .snf-home-section__lede {
+    margin-block-start: 0.85rem;
+    margin-inline: auto;
+    max-width: 34rem;
+  }
+
+  .snf-home-newsletter__benefits {
+    margin: 0 clamp(1.25rem, 3.5vw, 2.25rem);
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.45rem;
+    width: min(calc(100% - 2 * clamp(1.25rem, 3.5vw, 2.25rem)), 32rem);
+    text-align: start;
+  }
+
+  .snf-home-newsletter__benefits li {
+    margin: 0;
+    font-size: 0.92rem;
+    line-height: 1.45;
+    color: var(--snf-ink-muted);
+  }
+
+  .snf-home-newsletter__benefits li::before {
+    content: "— ";
+    color: rgba(243, 235, 232, 0.4);
+  }
+
+  .snf-home-newsletter__form {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+    margin: 0 clamp(1.25rem, 3.5vw, 2.25rem) clamp(1.75rem, 4vw, 2.75rem);
+    width: min(calc(100% - 2 * clamp(1.25rem, 3.5vw, 2.25rem)), 32rem);
+  }
+
+  .snf-home-newsletter__fields {
+    display: grid;
+    gap: 0.85rem;
+    margin: 0;
+    width: 100%;
+  }
+
+  @media (min-width: 40rem) {
+    .snf-home-newsletter__fields {
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+      gap: 0.85rem;
+    }
+  }
+
+  .snf-home-newsletter__field {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.4rem;
+    margin: 0;
+    text-align: start;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(243, 235, 232, 0.7);
+  }
+
+  .snf-home-newsletter__field input {
+    width: 100%;
+    min-height: 2.75rem;
+    margin: 0;
+    border: 0.0625rem solid rgba(255, 255, 255, 0.18);
+    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+    font-size: 1rem;
+    letter-spacing: normal;
+    text-transform: none;
+    font-weight: 400;
+    box-sizing: border-box;
+    padding-inline: 0.85rem;
+  }
+
+  .snf-home-newsletter__field input::placeholder {
+    color: rgba(255, 255, 255, 0.35);
+  }
+
+  .snf-home-newsletter__field input:focus-visible {
+    outline: none;
+    border-color: rgba(243, 235, 232, 0.55);
+    background: rgba(255, 255, 255, 0.09);
+  }
+
+  .snf-home-newsletter__honeypot {
+    position: absolute;
+    width: 0.0625rem;
+    height: 0.0625rem;
+    margin: -0.0625rem;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+    padding: 0;
+    white-space: nowrap;
+  }
+
+  .snf-home-newsletter__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+    margin: 0;
+  }
+
+  .snf-home-newsletter__privacy {
+    margin: 0 auto;
+    font-size: 0.78rem;
+    line-height: 1.45;
+    color: rgba(255, 255, 255, 0.48);
+    max-width: 30rem;
+  }
+
+  .snf-home-newsletter__flash {
+    margin: 0 clamp(1.25rem, 3.5vw, 2.25rem);
+    font-size: 0.95rem;
+    line-height: 1.45;
+  }
+
+  .snf-home-newsletter__flash--ok {
+    color: var(--snf-cream, #f3ebe8);
+  }
+
+  .snf-home-newsletter__flash--err {
+    color: #f5a8a8;
+  }
+
+  /* Newsletter thank-you */
+  .snf-newsletter-thanks {
+    width: min(100%, 40rem);
+    margin-inline: auto;
+  }
+
+  .snf-newsletter-thanks__panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1.15rem;
+    margin: 0;
+  }
+
+  .snf-newsletter-thanks__lede {
+    margin-block-start: 0;
+    max-width: 36rem;
+  }
+
+  .snf-newsletter-thanks__list {
+    margin: 0.35rem 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.65rem;
+  }
+
+  .snf-newsletter-thanks__list li {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.45;
+    color: var(--snf-ink-muted);
+  }
+
+  .snf-newsletter-thanks__list li::before {
+    content: "— ";
+    color: rgba(243, 235, 232, 0.4);
+  }
+
+  .snf-newsletter-thanks__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-block-start: 0.85rem;
   }
 
   /* Audience: cards + accordion */

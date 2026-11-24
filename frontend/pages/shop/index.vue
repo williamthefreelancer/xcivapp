@@ -34,12 +34,13 @@ const reciprocalProducts = [
 const reciprocalSlugs = new Set(reciprocalProducts.map((p) => p.slug))
 
 const eventLandingSlugs = new Set([
-  'the-eight-hundred-plus-journeys-event',
   'the-township-adventures-event',
+  'the-eight-hundred-plus-journeys-event',
   'the-city-club-private-party',
-  'the-badlands-bra-private-gathering',
   'harris-houston-to-wyoma-square',
+  'wyoma-square-to-harris-houston',
   'harrisburg-to-lynn',
+  'lynn-to-harrisburg',
   'lynnfield-to-lynn',
   'lynnfield-to-salem',
   'the-northshore-experience',

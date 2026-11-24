@@ -134,6 +134,115 @@ $scope        = ! empty( $club['scope'] ) ? (string) $club['scope'] : '';
 		</div>
 	</section>
 
+	<?php
+	$invite_cards = function_exists( 'snf_get_invite_only_event_cards' )
+		? snf_get_invite_only_event_cards()
+		: array();
+	$club_events  = function_exists( 'snf_get_reciprocal_club_event_cards' )
+		? snf_get_reciprocal_club_event_cards( (string) $club['slug'] )
+		: array();
+	?>
+
+	<?php if ( $invite_cards ) : ?>
+		<section
+			class="snf-reciprocal__events snf-reciprocal__events--invite"
+			data-figma-slot="invite-only-events"
+			aria-labelledby="snf-reciprocal-invite-heading"
+		>
+			<div class="snf-reciprocal__events-inner">
+				<header class="snf-reciprocal__events-header">
+					<h2 id="snf-reciprocal-invite-heading" class="snf-reciprocal__events-title">
+						<?php esc_html_e( 'Invite-only events', 'super-ninety-four' ); ?>
+					</h2>
+					<p class="snf-reciprocal__events-lede">
+						<?php esc_html_e( 'Reciprocal circuit immersions — credentials required. Same WooCommerce event pages, invite-only desk.', 'super-ninety-four' ); ?>
+					</p>
+				</header>
+				<ul class="snf-reciprocal__events-list">
+					<?php foreach ( $invite_cards as $card ) : ?>
+						<li class="snf-reciprocal__events-item">
+							<a class="snf-reciprocal__events-link" href="<?php echo esc_url( (string) $card['url'] ); ?>">
+								<?php if ( ! empty( $card['image'] ) ) : ?>
+									<span class="snf-reciprocal__events-media" aria-hidden="true">
+										<?php
+										snf_the_optimized_image(
+											(string) $card['image'],
+											array(
+												'alt'     => '',
+												'width'   => 640,
+												'height'  => 400,
+												'loading' => 'lazy',
+											)
+										);
+										?>
+									</span>
+								<?php endif; ?>
+								<span class="snf-reciprocal__events-copy">
+									<span class="snf-reciprocal__events-item-title"><?php echo esc_html( (string) $card['title'] ); ?></span>
+									<?php if ( ! empty( $card['meta'] ) ) : ?>
+										<span class="snf-reciprocal__events-item-meta"><?php echo esc_html( (string) $card['meta'] ); ?></span>
+									<?php endif; ?>
+									<?php if ( ! empty( $card['cta'] ) ) : ?>
+										<span class="snf-reciprocal__events-item-cta"><?php echo esc_html( (string) $card['cta'] ); ?></span>
+									<?php endif; ?>
+								</span>
+							</a>
+						</li>
+					<?php endforeach; ?>
+				</ul>
+			</div>
+		</section>
+	<?php endif; ?>
+
+	<?php if ( $club_events ) : ?>
+		<section
+			class="snf-reciprocal__events snf-reciprocal__events--club"
+			data-figma-slot="club-events"
+			aria-labelledby="snf-reciprocal-club-events-heading"
+		>
+			<div class="snf-reciprocal__events-inner">
+				<header class="snf-reciprocal__events-header">
+					<h2 id="snf-reciprocal-club-events-heading" class="snf-reciprocal__events-title">
+						<?php esc_html_e( 'Club events', 'super-ninety-four' ); ?>
+					</h2>
+					<p class="snf-reciprocal__events-lede">
+						<?php esc_html_e( 'Open immerse routes for this reciprocal desk — membership plan selection matches this club.', 'super-ninety-four' ); ?>
+					</p>
+				</header>
+				<ul class="snf-reciprocal__events-list">
+					<?php foreach ( $club_events as $card ) : ?>
+						<li class="snf-reciprocal__events-item">
+							<a class="snf-reciprocal__events-link" href="<?php echo esc_url( (string) $card['url'] ); ?>">
+								<?php if ( ! empty( $card['image'] ) ) : ?>
+									<span class="snf-reciprocal__events-media" aria-hidden="true">
+										<?php
+										snf_the_optimized_image(
+											(string) $card['image'],
+											array(
+												'alt'     => '',
+												'width'   => 640,
+												'height'  => 400,
+												'loading' => 'lazy',
+											)
+										);
+										?>
+									</span>
+								<?php endif; ?>
+								<span class="snf-reciprocal__events-copy">
+									<span class="snf-reciprocal__events-item-title"><?php echo esc_html( (string) $card['title'] ); ?></span>
+									<?php if ( ! empty( $card['meta'] ) ) : ?>
+										<span class="snf-reciprocal__events-item-meta"><?php echo esc_html( (string) $card['meta'] ); ?></span>
+									<?php endif; ?>
+									<span class="snf-reciprocal__events-item-cta"><?php esc_html_e( 'View event', 'super-ninety-four' ); ?></span>
+								</span>
+							</a>
+						</li>
+					<?php endforeach; ?>
+				</ul>
+			</div>
+		</section>
+	<?php endif; ?>
+
 	<section class="snf-reciprocal__gallery" data-figma-slot="image-section-3" aria-label="<?php echo esc_attr( $club['title'] ); ?>">
 		<?php foreach ( $gallery as $index => $gallery_src ) : ?>
 			<figure class="snf-reciprocal__gallery-item">
