@@ -28,6 +28,34 @@ function snf_get_mapbox_token() {
 }
 
 /**
+ * Mirror SNF_MAPBOX_TOKEN into the snf_mapbox_token option and refresh health.
+ */
+function snf_mapbox_mirror_token_option() {
+	if ( ! defined( 'SNF_MAPBOX_TOKEN' ) || ! SNF_MAPBOX_TOKEN ) {
+		return;
+	}
+
+	$const = (string) SNF_MAPBOX_TOKEN;
+	$saved = (string) get_option( 'snf_mapbox_token', '' );
+	if ( $saved === $const ) {
+		return;
+	}
+
+	update_option( 'snf_mapbox_token', $const, false );
+
+	if ( function_exists( 'snf_stripe_refresh_api_health' ) ) {
+		snf_stripe_refresh_api_health( false );
+	} else {
+		$health           = get_option( 'snf_api_health_cache', array() );
+		$health           = is_array( $health ) ? $health : array();
+		$health['mapbox'] = 'ok';
+		update_option( 'snf_api_health_cache', $health, false );
+	}
+}
+add_action( 'admin_init', 'snf_mapbox_mirror_token_option', 5 );
+add_action( 'rest_api_init', 'snf_mapbox_mirror_token_option', 1 );
+
+/**
  * Whether the current user may broadcast as lead rider.
  *
  * @return bool
@@ -51,11 +79,11 @@ function snf_user_can_use_lead_rider() {
 }
 
 /**
- * Seeded scenic route GeoJSON FeatureCollections keyed by route id.
+ * Seeded scenic route waypoints keyed by route id (pre-Directions).
  *
  * @return array<string, array<string, mixed>>
  */
-function snf_get_lead_rider_routes() {
+function snf_get_lead_rider_route_seeds() {
 	$routes = array(
 		'charlotte-salem'    => array(
 			'id'          => 'charlotte-salem',
@@ -103,11 +131,189 @@ function snf_get_lead_rider_routes() {
 	);
 
 	/**
-	 * Filter lead rider scenic routes.
+	 * Filter lead rider scenic route seeds.
 	 *
 	 * @param array $routes Route definitions.
 	 */
 	return apply_filters( 'snf_lead_rider_routes', $routes );
+}
+
+/**
+ * Cached Mapbox Directions polylines keyed by route id.
+ *
+ * Stored as JSON string for reliable large payloads.
+ *
+ * @return array<string, array{coordinates: array<int, array{0: float, 1: float}>, syncedAt?: string}>
+ */
+function snf_get_lead_rider_route_geometries() {
+	$raw = get_option( 'snf_lead_rider_route_geometries', '' );
+	if ( is_array( $raw ) ) {
+		return $raw;
+	}
+	if ( is_string( $raw ) && '' !== $raw ) {
+		$decoded = json_decode( $raw, true );
+		return is_array( $decoded ) ? $decoded : array();
+	}
+	return array();
+}
+
+/**
+ * Persist Mapbox Directions polylines.
+ *
+ * @param array<string, array{coordinates: array<int, array{0: float, 1: float}>, syncedAt?: string}> $geometries Geometries.
+ * @return bool
+ */
+function snf_save_lead_rider_route_geometries( array $geometries ) {
+	$json = wp_json_encode( $geometries );
+	if ( ! is_string( $json ) || '' === $json ) {
+		return false;
+	}
+	return (bool) update_option( 'snf_lead_rider_route_geometries', $json, false );
+}
+
+/**
+ * Fetch a driving polyline from Mapbox Directions for waypoint seeds.
+ *
+ * @param array<int, array{0: float, 1: float}> $waypoints Lon/lat pairs.
+ * @param string                                 $token     Mapbox token.
+ * @return array<int, array{0: float, 1: float}>|WP_Error
+ */
+function snf_mapbox_fetch_driving_geometry( array $waypoints, $token ) {
+	if ( count( $waypoints ) < 2 ) {
+		return new WP_Error( 'snf_mapbox_waypoints', 'Need at least two waypoints.' );
+	}
+
+	// Directions allows up to 25 coordinates; keep seeds as-is.
+	$parts = array();
+	foreach ( $waypoints as $pair ) {
+		if ( ! is_array( $pair ) || count( $pair ) < 2 ) {
+			continue;
+		}
+		$parts[] = rawurlencode( (string) (float) $pair[0] ) . ',' . rawurlencode( (string) (float) $pair[1] );
+	}
+	if ( count( $parts ) < 2 ) {
+		return new WP_Error( 'snf_mapbox_waypoints', 'Need at least two valid waypoints.' );
+	}
+
+	$url = sprintf(
+		'https://api.mapbox.com/directions/v5/mapbox/driving/%s?geometries=geojson&overview=simplified&access_token=%s',
+		implode( ';', $parts ),
+		rawurlencode( (string) $token )
+	);
+
+	$response = wp_remote_get(
+		$url,
+		array(
+			'timeout' => 20,
+			'headers' => array( 'Accept' => 'application/json' ),
+		)
+	);
+
+	if ( is_wp_error( $response ) ) {
+		return $response;
+	}
+
+	$code = (int) wp_remote_retrieve_response_code( $response );
+	$body = json_decode( (string) wp_remote_retrieve_body( $response ), true );
+	if ( 200 !== $code || ! is_array( $body ) ) {
+		$message = is_array( $body ) && ! empty( $body['message'] ) ? (string) $body['message'] : 'Mapbox Directions request failed.';
+		return new WP_Error( 'snf_mapbox_directions', $message, array( 'status' => $code ) );
+	}
+
+	$coords = $body['routes'][0]['geometry']['coordinates'] ?? null;
+	if ( ! is_array( $coords ) || count( $coords ) < 2 ) {
+		return new WP_Error( 'snf_mapbox_directions', 'No route geometry returned.' );
+	}
+
+	$out = array();
+	foreach ( $coords as $pair ) {
+		if ( ! is_array( $pair ) || count( $pair ) < 2 ) {
+			continue;
+		}
+		$out[] = array( (float) $pair[0], (float) $pair[1] );
+	}
+
+	return count( $out ) >= 2 ? $out : new WP_Error( 'snf_mapbox_directions', 'Empty geometry.' );
+}
+
+/**
+ * Sync all lead-rider route polylines via Mapbox Directions.
+ *
+ * @return array{ok: bool, synced: int, failed: int, errors: array<string, string>, geometries: array}
+ */
+function snf_sync_lead_rider_route_geometries() {
+	$token  = snf_get_mapbox_token();
+	$result = array(
+		'ok'         => false,
+		'synced'     => 0,
+		'failed'     => 0,
+		'errors'     => array(),
+		'geometries' => array(),
+	);
+
+	if ( '' === $token ) {
+		$result['errors']['_token'] = 'Mapbox token missing.';
+		return $result;
+	}
+
+	$seeds   = snf_get_lead_rider_route_seeds();
+	$current = snf_get_lead_rider_route_geometries();
+	$now     = gmdate( 'c' );
+
+	foreach ( $seeds as $id => $route ) {
+		$waypoints = isset( $route['coordinates'] ) && is_array( $route['coordinates'] ) ? $route['coordinates'] : array();
+		$geometry  = snf_mapbox_fetch_driving_geometry( $waypoints, $token );
+		if ( is_wp_error( $geometry ) ) {
+			$result['failed']++;
+			$result['errors'][ (string) $id ] = $geometry->get_error_message();
+			if ( isset( $current[ $id ] ) && is_array( $current[ $id ] ) ) {
+				$result['geometries'][ $id ] = $current[ $id ];
+			}
+			continue;
+		}
+
+		$result['synced']++;
+		$result['geometries'][ $id ] = array(
+			'coordinates' => $geometry,
+			'syncedAt'    => $now,
+		);
+	}
+
+	snf_save_lead_rider_route_geometries( $result['geometries'] );
+	update_option(
+		'snf_lead_rider_route_sync_meta',
+		array(
+			'syncedAt' => $now,
+			'synced'   => $result['synced'],
+			'failed'   => $result['failed'],
+			'errors'   => $result['errors'],
+		),
+		false
+	);
+
+	$result['ok'] = $result['synced'] > 0 && 0 === $result['failed'];
+	return $result;
+}
+
+/**
+ * Scenic routes with Directions polylines when cached, else seeds.
+ *
+ * @return array<string, array<string, mixed>>
+ */
+function snf_get_lead_rider_routes() {
+	$routes     = snf_get_lead_rider_route_seeds();
+	$geometries = snf_get_lead_rider_route_geometries();
+
+	foreach ( $routes as $id => &$route ) {
+		if ( empty( $geometries[ $id ]['coordinates'] ) || ! is_array( $geometries[ $id ]['coordinates'] ) ) {
+			continue;
+		}
+		$route['coordinates'] = $geometries[ $id ]['coordinates'];
+		$route['geometrySource'] = 'mapbox-directions';
+	}
+	unset( $route );
+
+	return $routes;
 }
 
 /**
@@ -121,12 +327,19 @@ function snf_get_expo_js_bootstrap( $audience = 'members' ) {
 	$route_payload = array();
 	foreach ( $routes as $route ) {
 		$route_payload[] = array(
-			'id'          => $route['id'],
-			'title'       => $route['title'],
-			'center'      => $route['center'],
-			'zoom'        => $route['zoom'],
-			'coordinates' => $route['coordinates'],
+			'id'             => $route['id'],
+			'title'          => $route['title'],
+			'center'         => $route['center'],
+			'zoom'           => $route['zoom'],
+			'coordinates'    => $route['coordinates'],
+			'geometrySource' => isset( $route['geometrySource'] ) ? $route['geometrySource'] : 'seed',
 		);
+	}
+
+	if ( ! $audience ) {
+		$audience = ( function_exists( 'snf_user_can_access_member_areas' ) && snf_user_can_access_member_areas() )
+			? 'members'
+			: 'non-members';
 	}
 
 	$is_members = ( 'members' === $audience );
@@ -145,10 +358,11 @@ function snf_get_expo_js_bootstrap( $audience = 'members' ) {
 		'defaultRouteId' => 'charlotte-salem',
 		'ice'            => $ice,
 		'rest'           => array(
-			'position' => esc_url_raw( rest_url( 'snf/v1/lead-rider/position' ) ),
-			'signal'   => esc_url_raw( rest_url( 'snf/v1/lead-rider/signal' ) ),
-			'peers'    => esc_url_raw( rest_url( 'snf/v1/lead-rider/peers' ) ),
-			'nonce'    => wp_create_nonce( 'wp_rest' ),
+			'bootstrap' => esc_url_raw( rest_url( 'snf/v1/expo/bootstrap' ) ),
+			'position'  => esc_url_raw( rest_url( 'snf/v1/lead-rider/position' ) ),
+			'signal'    => esc_url_raw( rest_url( 'snf/v1/lead-rider/signal' ) ),
+			'peers'     => esc_url_raw( rest_url( 'snf/v1/lead-rider/peers' ) ),
+			'nonce'     => wp_create_nonce( 'wp_rest' ),
 		),
 		'pollMs'         => 4000,
 		'i18n'           => array(
@@ -173,6 +387,23 @@ function snf_get_expo_js_bootstrap( $audience = 'members' ) {
 	 * @param string $audience Audience key.
 	 */
 	return apply_filters( 'snf_expo_js_bootstrap', $boot, $audience );
+}
+
+/**
+ * REST: public Expo / lead-rider bootstrap (pk token intentional).
+ *
+ * @param WP_REST_Request $request Request.
+ * @return WP_REST_Response
+ */
+function snf_expo_rest_get_bootstrap( WP_REST_Request $request ) {
+	$audience = sanitize_key( (string) $request->get_param( 'audience' ) );
+	if ( ! in_array( $audience, array( 'members', 'non-members' ), true ) ) {
+		$audience = ( function_exists( 'snf_user_can_access_member_areas' ) && snf_user_can_access_member_areas() )
+			? 'members'
+			: 'non-members';
+	}
+
+	return rest_ensure_response( snf_get_expo_js_bootstrap( $audience ) );
 }
 
 /**
@@ -211,6 +442,23 @@ function snf_lead_rider_rest_can_broadcast() {
  * Register lead rider REST routes.
  */
 function snf_lead_rider_register_rest_routes() {
+	register_rest_route(
+		'snf/v1',
+		'/expo/bootstrap',
+		array(
+			'methods'             => WP_REST_Server::READABLE,
+			'callback'            => 'snf_expo_rest_get_bootstrap',
+			'permission_callback' => '__return_true',
+			'args'                => array(
+				'audience' => array(
+					'type'              => 'string',
+					'required'          => false,
+					'sanitize_callback' => 'sanitize_key',
+				),
+			),
+		)
+	);
+
 	register_rest_route(
 		'snf/v1',
 		'/lead-rider/position',

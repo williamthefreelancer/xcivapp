@@ -290,6 +290,17 @@ function snf_admin_collect_notices() {
 			'message' => __( 'Mapbox token is present.', 'super-ninety-four' ),
 		);
 	}
+	if ( isset( $_GET['mapbox_routes'] ) && 'ok' === $_GET['mapbox_routes'] ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$notices[] = array(
+			'type'    => 'success',
+			'message' => __( 'Mapbox scenic route polylines synced from Directions.', 'super-ninety-four' ),
+		);
+	} elseif ( isset( $_GET['mapbox_routes'] ) && 'partial' === $_GET['mapbox_routes'] ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$notices[] = array(
+			'type'    => 'warn',
+			'message' => __( 'Mapbox route sync finished with errors — check Club → Mapbox last sync details.', 'super-ninety-four' ),
+		);
+	}
 	if ( isset( $_GET['lookup'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$lookup = sanitize_key( wp_unslash( (string) $_GET['lookup'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		if ( 'ok' === $lookup ) {
@@ -2730,12 +2741,14 @@ function snf_admin_render_critical_ops_panels( $context = 'club' ) {
 	$lookup_email = (string) get_transient( 'snf_admin_lookup_email_' . get_current_user_id() );
 	$mapbox       = function_exists( 'snf_get_mapbox_token' ) ? (string) snf_get_mapbox_token() : (string) get_option( 'snf_mapbox_token', '' );
 	$x_ads        = function_exists( 'snf_get_x_ads_pixel_settings' ) ? snf_get_x_ads_pixel_settings() : array();
+	$route_sync   = get_option( 'snf_lead_rider_route_sync_meta', array() );
+	$route_sync   = is_array( $route_sync ) ? $route_sync : array();
 
 	if ( 'club' === $context ) :
 		?>
 		<section class="snf-admin__panel">
 			<h2><?php esc_html_e( 'Mapbox', 'super-ninety-four' ); ?></h2>
-			<p class="snf-admin__panel-desc"><?php esc_html_e( 'Lead rider / Expo map token. Constant SNF_MAPBOX_TOKEN overrides the option when defined.', 'super-ninety-four' ); ?></p>
+			<p class="snf-admin__panel-desc"><?php esc_html_e( 'Lead rider / Expo map token. Constant SNF_MAPBOX_TOKEN overrides the option when defined. Sync pulls driving polylines from Mapbox Directions for scenic routes.', 'super-ninety-four' ); ?></p>
 			<form class="snf-admin__form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 				<input type="hidden" name="action" value="snf_club_save_critical">
 				<?php wp_nonce_field( 'snf_club_critical', 'snf_club_critical_nonce' ); ?>
@@ -2751,6 +2764,24 @@ function snf_admin_render_critical_ops_panels( $context = 'club' ) {
 					</tr>
 				</table>
 				<?php submit_button( __( 'Save Mapbox token', 'super-ninety-four' ), 'primary', 'submit', false ); ?>
+			</form>
+			<form class="snf-admin__form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin-block-start:1rem">
+				<input type="hidden" name="action" value="snf_ops_sync_mapbox_routes">
+				<?php wp_nonce_field( 'snf_ops_sync_mapbox_routes', 'snf_ops_sync_mapbox_routes_nonce' ); ?>
+				<?php submit_button( __( 'Sync Mapbox routes', 'super-ninety-four' ), 'secondary', 'submit', false ); ?>
+				<?php if ( ! empty( $route_sync['syncedAt'] ) ) : ?>
+					<p class="description">
+						<?php
+						printf(
+							/* translators: 1: ISO datetime, 2: synced count, 3: failed count */
+							esc_html__( 'Last sync %1$s — %2$d ok, %3$d failed.', 'super-ninety-four' ),
+							esc_html( (string) $route_sync['syncedAt'] ),
+							(int) ( $route_sync['synced'] ?? 0 ),
+							(int) ( $route_sync['failed'] ?? 0 )
+						);
+						?>
+					</p>
+				<?php endif; ?>
 			</form>
 		</section>
 
@@ -3224,6 +3255,28 @@ function snf_admin_handle_critical_save() {
 	exit;
 }
 add_action( 'admin_post_snf_club_save_critical', 'snf_admin_handle_critical_save' );
+
+/**
+ * Sync Mapbox Directions polylines for lead-rider scenic routes.
+ */
+function snf_admin_handle_ops_sync_mapbox_routes() {
+	if ( ! isset( $_POST['snf_ops_sync_mapbox_routes_nonce'] ) ) {
+		return;
+	}
+	check_admin_referer( 'snf_ops_sync_mapbox_routes', 'snf_ops_sync_mapbox_routes_nonce' );
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_die( esc_html__( 'Forbidden.', 'super-ninety-four' ) );
+	}
+
+	$result = function_exists( 'snf_sync_lead_rider_route_geometries' )
+		? snf_sync_lead_rider_route_geometries()
+		: array( 'ok' => false, 'synced' => 0, 'failed' => 1 );
+
+	$flag = ! empty( $result['ok'] ) ? 'mapbox_routes=ok' : 'mapbox_routes=partial';
+	wp_safe_redirect( admin_url( 'admin.php?page=snf-club-settings&updated=1&' . $flag ) );
+	exit;
+}
+add_action( 'admin_post_snf_ops_sync_mapbox_routes', 'snf_admin_handle_ops_sync_mapbox_routes' );
 
 /**
  * Save X Ads pixel settings.

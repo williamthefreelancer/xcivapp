@@ -129,8 +129,11 @@ define( 'SNF_SUPABASE_URL', 'https://….supabase.co' );
 define( 'SNF_SUPABASE_ANON_KEY', 'eyJ…' ); // or sb_publishable_…
 define( 'SNF_SUPABASE_SERVICE_ROLE_KEY', 'eyJ…' ); // server-only; subscription lookups
 
-// Expo lead rider map
+// Expo lead rider map (pk token; also mirrored to snf_mapbox_token option)
+// DreamHost production: set the same constant in that environment's wp-config.php
 define( 'SNF_MAPBOX_TOKEN', 'pk.…' );
+// Optional: refresh driving polylines after deploy
+// wp eval-file wp-content/themes/super-ninety-four/bin/snf-sync-mapbox-routes.php
 
 // X Ads Conversion API (or set env X_PIXEL_TOKEN — see .env.example)
 define( 'X_PIXEL_TOKEN', '…' );

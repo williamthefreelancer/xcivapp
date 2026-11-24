@@ -1,10 +1,16 @@
 <script setup lang="ts">
+import 'mapbox-gl/dist/mapbox-gl.css'
+import type { ExpoBootstrap } from '~/composables/useLeadRider'
+
 const { api } = useWpApi()
+const { fetchBootstrap } = useLeadRider()
 const q = ref('')
 
 const { data, refresh } = await useAsyncData('marketplace', () =>
   api<any>(`snf/v1/marketplace${q.value ? `?q=${encodeURIComponent(q.value)}` : ''}`),
 )
+
+const { data: boot } = await useAsyncData('expo-bootstrap', () => fetchBootstrap())
 
 const items = computed(() => {
   const d = data.value
@@ -58,7 +64,12 @@ useSeoMeta({ title: 'Expo — SUPER NINETY FOUR' })
           <h2 class="m-0 text-[1.0625rem] font-semibold" style="margin-block-start: 0.65rem">
             {{ item.title || item.name }}
           </h2>
-          <p v-if="item.price_html || item.price" class="m-0 text-snf-cream" style="margin-block-start: 0.35rem" v-html="item.price_html || item.price" />
+          <p
+            v-if="item.price_html || item.price"
+            class="m-0 text-snf-cream"
+            style="margin-block-start: 0.35rem"
+            v-html="item.price_html || item.price"
+          />
           <UiButton
             v-if="item.slug"
             :to="`/product/${item.slug}`"
@@ -71,6 +82,15 @@ useSeoMeta({ title: 'Expo — SUPER NINETY FOUR' })
         </article>
       </div>
       <p v-if="!items.length" class="m-0 text-white/65" style="margin-block-start: 1rem">No listings matched.</p>
+    </section>
+
+    <section class="snf-section snf-frame">
+      <ClientOnly>
+        <ExpoLeadRiderMap v-if="boot" :boot="(boot as ExpoBootstrap)" />
+        <template #fallback>
+          <p class="m-0 text-white/65">Loading lead rider map…</p>
+        </template>
+      </ClientOnly>
     </section>
 
     <section class="snf-section snf-frame" style="max-width: var(--snf-content-narrow-w)">

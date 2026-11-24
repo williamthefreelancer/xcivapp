@@ -17,14 +17,14 @@ export default defineNuxtConfig({
     public: {
       wpUrl: process.env.NUXT_PUBLIC_WP_URL || 'https://localhost/super-ninety-four',
       appName: 'Super Ninety Four',
+      mapboxToken: process.env.NUXT_PUBLIC_MAPBOX_TOKEN || '',
     },
   },
 
   // Child wins over WooNuxt demo routes for the SNF theme surface
   routeRules: {
     '/': { prerender: false },
-    '/expo': { redirect: '/' },
-    '/expo/**': { redirect: '/' },
+    '/expo': { prerender: false },
     '/inquiries': { redirect: '/?s=help' },
     '/about': { redirect: '/?s=fit' },
     '/media': { redirect: '/?s=newsletter' },
