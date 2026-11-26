@@ -15,16 +15,19 @@ $snf_is_member     = function_exists( 'snf_user_can_access_member_areas' ) && sn
 ?>
 <header class="snf-header snf-header--with-nav<?php echo $snf_logged_in ? ' snf-header--member' : ' snf-header--guest'; ?>">
 	<div class="snf-container snf-header__container">
-		<a class="snf-header__logo" href="<?php echo esc_url( home_url( '/' ) ); ?>">
-			<img
-				src="<?php echo esc_url( get_template_directory_uri() . '/assets/icons/logo-white.svg' ); ?>"
-				alt="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>"
-				width="209"
-				height="20"
-				decoding="async"
-				fetchpriority="high"
-			>
-		</a>
+		<div class="snf-header__brand">
+			<a class="snf-header__logo" href="<?php echo esc_url( home_url( '/' ) ); ?>">
+				<img
+					src="<?php echo esc_url( get_template_directory_uri() . '/assets/icons/logo-white.svg' ); ?>"
+					alt="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>"
+					width="209"
+					height="20"
+					decoding="async"
+					fetchpriority="high"
+				>
+			</a>
+			<?php snf_render_product_switcher(); ?>
+		</div>
 
 		<nav class="snf-primary-nav" aria-label="<?php esc_attr_e( 'Primary', 'super-ninety-four' ); ?>">
 			<button

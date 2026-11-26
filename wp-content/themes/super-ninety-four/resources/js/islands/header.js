@@ -3,12 +3,29 @@
  */
 export function initHeader() {
   const accountRoot = document.querySelector('.snf-account');
+  const productRoot = document.querySelector('[data-snf-product-switcher]');
+  const productTrigger = productRoot
+    ? productRoot.querySelector('[data-snf-product-switcher-trigger]')
+    : null;
+  const productMenu = productRoot
+    ? productRoot.querySelector('[data-snf-product-switcher-menu]')
+    : null;
+
+  let setAccountOpen = null;
+
+  const setProductOpen = (open) => {
+    if (!productRoot || !productTrigger || !productMenu) return;
+    productTrigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+    productMenu.hidden = !open;
+    productRoot.classList.toggle('is-open', open);
+  };
+
   if (accountRoot) {
     const toggle = accountRoot.querySelector('.snf-account__toggle');
     const menu = accountRoot.querySelector('.snf-account__menu');
 
     if (toggle && menu) {
-      const setOpen = (open) => {
+      setAccountOpen = (open) => {
         toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
         menu.hidden = !open;
         accountRoot.classList.toggle('is-open', open);
@@ -16,22 +33,48 @@ export function initHeader() {
 
       toggle.addEventListener('click', (event) => {
         event.stopPropagation();
-        setOpen(menu.hidden);
+        const willOpen = menu.hidden;
+        setProductOpen(false);
+        setAccountOpen(willOpen);
       });
 
       document.addEventListener('click', (event) => {
         if (!accountRoot.contains(event.target)) {
-          setOpen(false);
+          setAccountOpen(false);
         }
       });
 
       document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') {
-          setOpen(false);
+          setAccountOpen(false);
           toggle.focus();
         }
       });
     }
+  }
+
+  if (productTrigger && productMenu) {
+    productTrigger.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const willOpen = productMenu.hidden;
+      if (typeof setAccountOpen === 'function') {
+        setAccountOpen(false);
+      }
+      setProductOpen(willOpen);
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!productRoot.contains(event.target)) {
+        setProductOpen(false);
+      }
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        setProductOpen(false);
+      }
+    });
   }
 
   const nav = document.querySelector('.snf-primary-nav');

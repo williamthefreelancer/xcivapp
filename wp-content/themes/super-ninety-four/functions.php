@@ -971,6 +971,145 @@ function snf_get_service_inquiry( $slug = '' ) {
 }
 
 /**
+ * Sister products for the Uber-style product switcher.
+ *
+ * @return array<int, array{id:string,label:string,short:string,glyph:string,blurb:string,url:string,current:bool,external:bool}>
+ */
+function snf_product_switcher_items() {
+	$items = array(
+		array(
+			'id'       => 'superninetyfour',
+			'label'    => __( 'Super Ninety Four', 'super-ninety-four' ),
+			'short'    => __( 'SN4', 'super-ninety-four' ),
+			'glyph'    => '94',
+			'blurb'    => __( 'Culture, drops & merch', 'super-ninety-four' ),
+			'url'      => home_url( '/' ),
+			'current'  => true,
+			'external' => false,
+		),
+		array(
+			'id'       => 'courier',
+			'label'    => __( 'XCIV Courier', 'super-ninety-four' ),
+			'short'    => __( 'Courier', 'super-ninety-four' ),
+			'glyph'    => 'C',
+			'blurb'    => __( 'On-demand delivery & pickup', 'super-ninety-four' ),
+			'url'      => 'https://xcivcourier.com/',
+			'current'  => false,
+			'external' => true,
+		),
+		array(
+			'id'       => 'xcivsocial',
+			'label'    => __( 'XCIV Social', 'super-ninety-four' ),
+			'short'    => __( 'Social', 'super-ninety-four' ),
+			'glyph'    => 'S',
+			'blurb'    => __( 'Connect with the community', 'super-ninety-four' ),
+			'url'      => 'https://xcivsocial.com/',
+			'current'  => false,
+			'external' => true,
+		),
+	);
+
+	/**
+	 * Filter product switcher destinations.
+	 *
+	 * @param array<int, array{id:string,label:string,short:string,glyph:string,blurb:string,url:string,current:bool,external:bool}> $items Products.
+	 */
+	return apply_filters( 'snf_product_switcher_items', $items );
+}
+
+/**
+ * Render header product switcher (SN4 / Courier / Social).
+ */
+function snf_render_product_switcher() {
+	$items   = snf_product_switcher_items();
+	$current = array(
+		'id'    => 'superninetyfour',
+		'short' => __( 'SN4', 'super-ninety-four' ),
+		'glyph' => '94',
+		'label' => __( 'Super Ninety Four', 'super-ninety-four' ),
+	);
+
+	foreach ( $items as $item ) {
+		if ( ! empty( $item['current'] ) ) {
+			$current['id']    = (string) $item['id'];
+			$current['short'] = (string) ( $item['short'] ?? $item['label'] );
+			$current['glyph'] = (string) ( $item['glyph'] ?? ( function_exists( 'mb_substr' ) ? mb_substr( $current['short'], 0, 1 ) : substr( $current['short'], 0, 1 ) ) );
+			$current['label'] = (string) $item['label'];
+			break;
+		}
+	}
+
+	$switch_label = sprintf(
+		/* translators: %s: current product short name */
+		__( 'Switch product, current: %s', 'super-ninety-four' ),
+		$current['short']
+	);
+	?>
+	<div class="snf-product-switcher" data-snf-product-switcher>
+		<button
+			type="button"
+			class="snf-product-switcher__trigger"
+			data-snf-product-switcher-trigger
+			aria-expanded="false"
+			aria-haspopup="menu"
+			aria-controls="snf-product-switcher-menu"
+			aria-label="<?php echo esc_attr( $switch_label ); ?>"
+		>
+			<span class="snf-product-switcher__glyph" aria-hidden="true"><?php echo esc_html( $current['glyph'] ); ?></span>
+			<span class="snf-product-switcher__current"><?php echo esc_html( $current['short'] ); ?></span>
+			<svg class="snf-product-switcher__chevron" width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+				<path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+			</svg>
+		</button>
+
+		<div
+			id="snf-product-switcher-menu"
+			class="snf-product-switcher__menu"
+			data-snf-product-switcher-menu
+			role="menu"
+			aria-label="<?php esc_attr_e( 'Switch product', 'super-ninety-four' ); ?>"
+			hidden
+		>
+			<?php foreach ( $items as $item ) : ?>
+				<?php
+				$is_current = ! empty( $item['current'] );
+				$classes    = 'snf-product-switcher__item';
+				if ( $is_current ) {
+					$classes .= ' is-current';
+				}
+				$glyph = (string) ( $item['glyph'] ?? '' );
+				$blurb = (string) ( $item['blurb'] ?? '' );
+				?>
+				<a
+					class="<?php echo esc_attr( $classes ); ?>"
+					role="menuitem"
+					href="<?php echo esc_url( (string) $item['url'] ); ?>"
+					<?php echo $is_current ? 'aria-current="page"' : ''; ?>
+					<?php echo ! empty( $item['external'] ) ? 'rel="noopener noreferrer"' : ''; ?>
+					data-snf-product="<?php echo esc_attr( (string) $item['id'] ); ?>"
+				>
+					<span class="snf-product-switcher__item-glyph" aria-hidden="true"><?php echo esc_html( $glyph ); ?></span>
+					<span class="snf-product-switcher__item-text">
+						<span class="snf-product-switcher__item-label"><?php echo esc_html( (string) $item['label'] ); ?></span>
+						<?php if ( $blurb !== '' ) : ?>
+							<span class="snf-product-switcher__item-blurb"><?php echo esc_html( $blurb ); ?></span>
+						<?php endif; ?>
+					</span>
+					<?php if ( $is_current ) : ?>
+						<svg class="snf-product-switcher__check" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+							<path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+						</svg>
+					<?php else : ?>
+						<span class="snf-product-switcher__check-spacer" aria-hidden="true"></span>
+					<?php endif; ?>
+				</a>
+			<?php endforeach; ?>
+		</div>
+	</div>
+	<?php
+}
+
+/**
  * Center header navigation (audience-aware; BuddyPress-free).
  *
  * @return array<int, array<string, mixed>>
