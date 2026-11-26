@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'SNF_VERSION', '2.38.2' );
+define( 'SNF_VERSION', '2.38.3' );
 
 $snf_autoload = get_template_directory() . '/vendor/autoload.php';
 if ( file_exists( $snf_autoload ) ) {
@@ -1004,6 +1004,16 @@ function snf_product_switcher_items() {
 			'glyph'    => 'S',
 			'blurb'    => __( 'Connect with the community', 'super-ninety-four' ),
 			'url'      => 'https://xcivsocial.com/',
+			'current'  => false,
+			'external' => true,
+		),
+		array(
+			'id'       => 'holdings',
+			'label'    => __( 'SUPR XCIV Holdings', 'super-ninety-four' ),
+			'short'    => __( 'Holdings', 'super-ninety-four' ),
+			'glyph'    => 'H',
+			'blurb'    => __( 'Parent company & platforms', 'super-ninety-four' ),
+			'url'      => 'https://www.suprxcivplatformholdings.com/',
 			'current'  => false,
 			'external' => true,
 		),

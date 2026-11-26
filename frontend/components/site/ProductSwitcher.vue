@@ -41,6 +41,16 @@ const items: ProductItem[] = [
     current: false,
     external: true,
   },
+  {
+    id: 'holdings',
+    label: 'SUPR XCIV Holdings',
+    short: 'Holdings',
+    glyph: 'H',
+    blurb: 'Parent company & platforms',
+    url: 'https://www.suprxcivplatformholdings.com/',
+    current: false,
+    external: true,
+  },
 ]
 
 const open = ref(false)
