@@ -28,20 +28,23 @@ function isCurrent(path: string) {
 <template>
   <header class="snf-site-header" :class="{ 'is-open': open }">
     <div class="snf-site-header__bar snf-frame">
-      <NuxtLink
-        :to="menus.brand.path"
-        class="snf-site-header__logo"
-        :aria-label="menus.brand.name"
-      >
-        <img
-          src="/icons/the-super-ninety-four-app-white.svg"
-          alt=""
-          width="209"
-          height="20"
-          decoding="async"
-          fetchpriority="high"
+      <div class="snf-site-header__brand">
+        <NuxtLink
+          :to="menus.brand.path"
+          class="snf-site-header__logo"
+          :aria-label="menus.brand.name"
         >
-      </NuxtLink>
+          <img
+            src="/icons/the-super-ninety-four-app-white.svg"
+            alt=""
+            width="209"
+            height="20"
+            decoding="async"
+            fetchpriority="high"
+          >
+        </NuxtLink>
+        <SiteProductSwitcher />
+      </div>
 
       <nav class="snf-site-header__nav" aria-label="Primary">
         <NuxtLink
