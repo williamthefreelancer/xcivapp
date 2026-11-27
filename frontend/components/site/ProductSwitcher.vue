@@ -42,6 +42,16 @@ const items: ProductItem[] = [
     external: true,
   },
   {
+    id: 'litterpickup',
+    label: 'Litter Pickup Service',
+    short: 'Litter',
+    glyph: 'L',
+    blurb: 'Exterior litter pickup routes',
+    url: 'https://www.litterpickupserviceatsuperninetyfour.com/',
+    current: false,
+    external: true,
+  },
+  {
     id: 'holdings',
     label: 'SUPR XCIV Holdings',
     short: 'Holdings',

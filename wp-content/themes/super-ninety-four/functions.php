@@ -1008,6 +1008,16 @@ function snf_product_switcher_items() {
 			'external' => true,
 		),
 		array(
+			'id'       => 'litterpickup',
+			'label'    => __( 'Litter Pickup Service', 'super-ninety-four' ),
+			'short'    => __( 'Litter', 'super-ninety-four' ),
+			'glyph'    => 'L',
+			'blurb'    => __( 'Exterior litter pickup routes', 'super-ninety-four' ),
+			'url'      => 'https://www.litterpickupserviceatsuperninetyfour.com/',
+			'current'  => false,
+			'external' => true,
+		),
+		array(
 			'id'       => 'holdings',
 			'label'    => __( 'SUPR XCIV Holdings', 'super-ninety-four' ),
 			'short'    => __( 'Holdings', 'super-ninety-four' ),
