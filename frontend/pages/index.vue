@@ -38,19 +38,6 @@ type HomePayload = {
       plans?: Array<{ name: string; price: string; cadence?: string; term?: string; benefits?: string[] }>
       cta?: { label?: string; url?: string }
     }
-    gatherings?: {
-      title: string
-      lede?: string
-      cards: Array<{
-        slug?: string
-        title: string
-        body?: string
-        price?: string
-        url?: string
-        image?: string
-        cta?: string
-      }>
-    }
     newsletter?: {
       title?: string
       lede?: string
@@ -175,20 +162,6 @@ const fallbackMembership = {
   cta: { label: 'Apply for consideration', url: '/apply' },
 }
 
-const fallbackGatherings = {
-  title: '',
-  lede: '',
-  cards: [] as Array<{
-    slug?: string
-    title: string
-    body?: string
-    price?: string
-    url?: string
-    image?: string
-    cta?: string
-  }>,
-}
-
 const fallbackNewsletter = {
   title: 'The Zircoria Cryon Newsletter',
   lede: 'Films, live rooms, and circuit drops — subscribe and SureContact delivers the details.',
@@ -210,20 +183,7 @@ const help = computed(() => {
 const audienceFor = computed(() => content.value?.audience?.for || fallbackAudience.for)
 const audienceNotFor = computed(() => content.value?.audience?.not_for || fallbackAudience.not_for)
 const membership = computed(() => content.value?.membership || fallbackMembership)
-const gatherings = computed(() => {
-  const source = content.value?.gatherings
-  if (source?.cards?.length) {
-    return {
-      ...source,
-      cards: source.cards.filter(
-        (card) => !/(city club private party)/i.test(card.title || ''),
-      ),
-    }
-  }
-  return fallbackGatherings
-})
 const newsletter = computed(() => content.value?.newsletter || fallbackNewsletter)
-const showGatherings = computed(() => (gatherings.value.cards?.length || 0) > 0)
 
 useSeoMeta({
   title: 'SUPER NINETY FOUR',
@@ -233,7 +193,7 @@ useSeoMeta({
 })
 
 const route = useRoute()
-const sectionIds = ['help', 'gatherings', 'fit', 'pricing', 'newsletter'] as const
+const sectionIds = ['help', 'fit', 'pricing', 'newsletter'] as const
 
 function scrollToSection(id: string) {
   if (!import.meta.client) return
@@ -280,13 +240,6 @@ onMounted(() => {
       :title="help.title"
       :lede="help.lede"
       :cards="help.cards"
-    />
-
-    <HomeGatherings
-      v-if="showGatherings"
-      :title="gatherings.title"
-      :lede="gatherings.lede"
-      :cards="gatherings.cards"
     />
 
     <HomeAudience

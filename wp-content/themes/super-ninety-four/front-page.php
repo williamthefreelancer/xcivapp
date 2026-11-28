@@ -11,7 +11,6 @@ $audience   = isset( $home['audience'] ) ? $home['audience'] : array();
 $for        = isset( $audience['for'] ) ? $audience['for'] : array();
 $not_for    = isset( $audience['not_for'] ) ? $audience['not_for'] : array();
 $membership = isset( $home['membership'] ) ? $home['membership'] : array();
-$gatherings = isset( $home['gatherings'] ) ? $home['gatherings'] : array();
 $newsletter = isset( $home['newsletter'] ) ? $home['newsletter'] : array();
 
 $newsletter_status = isset( $_GET['snf_newsletter'] ) ? sanitize_key( wp_unslash( $_GET['snf_newsletter'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
@@ -117,46 +116,6 @@ $mem_cta_url   = isset( $membership['cta']['url'] ) ? snf_home_resolve_href( $me
 							</span>
 						</span>
 					</a>
-				<?php endforeach; ?>
-			</div>
-		</section>
-	<?php endif; ?>
-
-	<?php if ( ! empty( $gatherings['cards'] ) ) : ?>
-		<section id="gatherings" class="snf-section snf-frame snf-home-reveal" aria-labelledby="snf-home-gatherings-heading">
-			<header class="snf-home-section__header snf-home-section__header--center">
-				<h2 id="snf-home-gatherings-heading" class="snf-home-section__title"><?php echo esc_html( $gatherings['title'] ); ?></h2>
-				<?php if ( ! empty( $gatherings['lede'] ) ) : ?>
-					<p class="snf-home-section__lede"><?php echo esc_html( $gatherings['lede'] ); ?></p>
-				<?php endif; ?>
-			</header>
-			<div class="snf-home-gatherings snf-home-gatherings--two">
-				<?php foreach ( $gatherings['cards'] as $card ) : ?>
-					<article class="snf-home-gathering">
-						<?php if ( ! empty( $card['image'] ) ) : ?>
-							<div class="snf-home-gathering__media">
-								<img
-									class="snf-home-gathering__img"
-									src="<?php echo esc_url( $card['image'] ); ?>"
-									alt="<?php echo esc_attr( $card['title'] ); ?>"
-									loading="lazy"
-									decoding="async"
-								>
-							</div>
-						<?php endif; ?>
-						<div class="snf-home-gathering__copy">
-							<h3 class="snf-home-gathering__title"><?php echo esc_html( $card['title'] ); ?></h3>
-							<?php if ( ! empty( $card['price'] ) ) : ?>
-								<p class="snf-home-gathering__price"><?php echo esc_html( $card['price'] ); ?></p>
-							<?php endif; ?>
-							<?php if ( ! empty( $card['body'] ) ) : ?>
-								<p class="snf-home-gathering__body"><?php echo esc_html( $card['body'] ); ?></p>
-							<?php endif; ?>
-							<a class="snf-home-btn snf-home-btn--primary snf-home-gathering__cta" href="<?php echo esc_url( snf_home_resolve_href( isset( $card['url'] ) ? $card['url'] : '' ) ); ?>">
-								<?php echo esc_html( ! empty( $card['cta'] ) ? $card['cta'] : __( 'View event', 'super-ninety-four' ) ); ?>
-							</a>
-						</div>
-					</article>
 				<?php endforeach; ?>
 			</div>
 		</section>

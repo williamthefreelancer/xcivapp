@@ -314,12 +314,6 @@ function snf_get_home_content() {
 				'url'   => '/apply',
 			),
 		),
-		/* Home one-pager no longer lists gatherings; workshop lives under help. */
-		'gatherings' => array(
-			'title' => '',
-			'lede'  => '',
-			'cards' => array(),
-		),
 		/* YouTube newsletter + live video / audio teaser */
 		'newsletter' => array(
 			'title'      => __( 'The Zircoria Cryon Newsletter', 'super-ninety-four' ),
