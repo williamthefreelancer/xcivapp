@@ -993,7 +993,7 @@ function snf_product_switcher_items() {
 			'short'    => __( 'Courier', 'super-ninety-four' ),
 			'glyph'    => 'C',
 			'blurb'    => __( 'On-demand delivery & pickup', 'super-ninety-four' ),
-			'url'      => 'https://xcivcourier.com/',
+			'url'      => 'https://www.xcivcourier.com/',
 			'current'  => false,
 			'external' => true,
 		),

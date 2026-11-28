@@ -27,7 +27,7 @@ const items: ProductItem[] = [
     short: 'Courier',
     glyph: 'C',
     blurb: 'On-demand delivery & pickup',
-    url: 'https://xcivcourier.com/',
+    url: 'https://www.xcivcourier.com/',
     current: false,
     external: true,
   },
