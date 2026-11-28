@@ -69,6 +69,7 @@ const brandName = computed(() => data.value?.brand?.name || 'SUPER NINETY FOUR')
 const helpImages = {
   litter: '/images/services/litter-pickup-service-image-2.webp',
   courier: '/images/services/lifestyle-service-image-1.webp',
+  workshop: '/images/events/lcc-workshop.webp',
 } as const
 
 const fallbackHelp = {
@@ -89,6 +90,14 @@ const fallbackHelp = {
       image: helpImages.courier,
       cta: 'Open the desk',
     },
+    {
+      title: 'The Lifestyle Concierge Club Workshop',
+      meta: 'Open admission · Circuit operators',
+      body: 'Open admission workshop desk for circuit operators and advisors. For new guests and members.',
+      url: '/product/the-lifestyle-concierge-club-workshop',
+      image: helpImages.workshop,
+      cta: 'Reserve seat',
+    },
   ],
 }
 
@@ -96,15 +105,17 @@ function withHelpImages(
   cards: Array<{ title: string; meta?: string; body?: string; url?: string; image?: string; cta?: string }>,
 ) {
   return cards
-    .filter((card) => !/(janitor|janitorial)/i.test(card.title || ''))
+    .filter((card) => !/(janitor|janitorial|city club private party)/i.test(card.title || ''))
     .map((card, i) => {
-      const byOrder = [helpImages.litter, helpImages.courier][i]
+      const byOrder = [helpImages.litter, helpImages.courier, helpImages.workshop][i]
       const title = (card.title || '').toLowerCase()
       const byTitle = title.includes('litter')
         ? helpImages.litter
         : title.includes('line') || title.includes('courier')
           ? helpImages.courier
-          : byOrder
+          : title.includes('workshop') || title.includes('concierge')
+            ? helpImages.workshop
+            : byOrder
       return { ...card, image: byTitle || card.image }
     })
 }
@@ -165,28 +176,17 @@ const fallbackMembership = {
 }
 
 const fallbackGatherings = {
-  title: 'Upcoming gatherings',
-  lede: 'Open admission for logged-out guests and members — City Club Private Party and the Lifestyle Concierge Club Workshop.',
-  cards: [
-    {
-      slug: 'the-city-club-private-party',
-      title: 'The City Club Private Party',
-      body: 'Open admission City Clubs gathering — coach, credentials, and a closed room. For new guests and members.',
-      price: '$397.00 · Open admission',
-      image: '/images/events/city-club-private-party.webp',
-      url: '/events/the-city-club-private-party',
-      cta: 'Get e-ticket',
-    },
-    {
-      slug: 'the-lifestyle-concierge-club-workshop',
-      title: 'The Lifestyle Concierge Club Workshop',
-      body: 'Open admission workshop desk for circuit operators and advisors. For new guests and members.',
-      price: 'Open admission',
-      image: '/images/events/lcc-workshop.webp',
-      url: '/product/the-lifestyle-concierge-club-workshop',
-      cta: 'Reserve seat',
-    },
-  ],
+  title: '',
+  lede: '',
+  cards: [] as Array<{
+    slug?: string
+    title: string
+    body?: string
+    price?: string
+    url?: string
+    image?: string
+    cta?: string
+  }>,
 }
 
 const fallbackNewsletter = {
@@ -212,10 +212,18 @@ const audienceNotFor = computed(() => content.value?.audience?.not_for || fallba
 const membership = computed(() => content.value?.membership || fallbackMembership)
 const gatherings = computed(() => {
   const source = content.value?.gatherings
-  if (source?.cards?.length) return source
+  if (source?.cards?.length) {
+    return {
+      ...source,
+      cards: source.cards.filter(
+        (card) => !/(city club private party)/i.test(card.title || ''),
+      ),
+    }
+  }
   return fallbackGatherings
 })
 const newsletter = computed(() => content.value?.newsletter || fallbackNewsletter)
+const showGatherings = computed(() => (gatherings.value.cards?.length || 0) > 0)
 
 useSeoMeta({
   title: 'SUPER NINETY FOUR',
@@ -275,6 +283,7 @@ onMounted(() => {
     />
 
     <HomeGatherings
+      v-if="showGatherings"
       :title="gatherings.title"
       :lede="gatherings.lede"
       :cards="gatherings.cards"

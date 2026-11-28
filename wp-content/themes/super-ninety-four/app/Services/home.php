@@ -85,8 +85,15 @@ function snf_home_icon_svg( $name ) {
  * @return array<int, array<string, mixed>>
  */
 function snf_get_home_help_cards() {
-	$img_base = get_template_directory_uri() . '/assets/images/services/';
-	$cards    = array(
+	$img_base     = get_template_directory_uri() . '/assets/images/services/';
+	$workshop_img = function_exists( 'snf_get_event_default_image_url' )
+		? snf_get_event_default_image_url( 'the-lifestyle-concierge-club-workshop' )
+		: get_template_directory_uri() . '/assets/images/events/lcc-workshop.jpg';
+	$workshop_url = function_exists( 'snf_get_workshop_landing_url' )
+		? snf_get_workshop_landing_url()
+		: '/product/the-lifestyle-concierge-club-workshop';
+
+	$cards = array(
 		array(
 			'title' => __( 'Litter Pickup Service', 'super-ninety-four' ),
 			'meta'  => __( 'Parking lots · Commercial grounds', 'super-ninety-four' ),
@@ -102,6 +109,14 @@ function snf_get_home_help_cards() {
 			'url'   => 'https://www.xcivcourier.com/',
 			'image' => $img_base . 'lifestyle-service-image-1.jpg',
 			'cta'   => __( 'Open the desk', 'super-ninety-four' ),
+		),
+		array(
+			'title' => __( 'The Lifestyle Concierge Club Workshop', 'super-ninety-four' ),
+			'meta'  => __( 'Open admission · Circuit operators', 'super-ninety-four' ),
+			'body'  => __( 'Open admission workshop desk for circuit operators and advisors. For new guests and members.', 'super-ninety-four' ),
+			'url'   => $workshop_url,
+			'image' => $workshop_img,
+			'cta'   => __( 'Reserve seat', 'super-ninety-four' ),
 		),
 	);
 
@@ -156,9 +171,6 @@ function snf_get_home_program_cards() {
  * @return array<int, array<string, mixed>>
  */
 function snf_get_upcoming_gathering_cards() {
-	$city_img     = function_exists( 'snf_get_event_default_image_url' )
-		? snf_get_event_default_image_url( 'the-city-club-private-party' )
-		: get_template_directory_uri() . '/assets/images/events/city-club-private-party.webp';
 	$workshop_img = function_exists( 'snf_get_event_default_image_url' )
 		? snf_get_event_default_image_url( 'the-lifestyle-concierge-club-workshop' )
 		: get_template_directory_uri() . '/assets/images/events/lcc-workshop.jpg';
@@ -166,20 +178,7 @@ function snf_get_upcoming_gathering_cards() {
 		? snf_get_workshop_landing_url()
 		: '/product/the-lifestyle-concierge-club-workshop';
 
-	$city_url = function_exists( 'snf_get_city_club_private_party_url' )
-		? snf_get_city_club_private_party_url()
-		: '/product/the-city-club-private-party';
-
 	$cards = array(
-		array(
-			'slug'  => 'the-city-club-private-party',
-			'title' => __( 'The City Club Private Party', 'super-ninety-four' ),
-			'body'  => __( 'Open admission City Clubs gathering — coach, credentials, and a closed room. For new guests and members.', 'super-ninety-four' ),
-			'price' => __( '$397.00 · Open admission', 'super-ninety-four' ),
-			'image' => $city_img,
-			'url'   => $city_url,
-			'cta'   => __( 'Get e-ticket', 'super-ninety-four' ),
-		),
 		array(
 			'slug'  => 'the-lifestyle-concierge-club-workshop',
 			'title' => __( 'The Lifestyle Concierge Club Workshop', 'super-ninety-four' ),
@@ -315,11 +314,11 @@ function snf_get_home_content() {
 				'url'   => '/apply',
 			),
 		),
-		/* Open-admission upcoming gatherings for guests + members */
+		/* Home one-pager no longer lists gatherings; workshop lives under help. */
 		'gatherings' => array(
-			'title' => __( 'Upcoming gatherings', 'super-ninety-four' ),
-			'lede'  => __( 'Open admission for logged-out guests and members — City Club Private Party and the Lifestyle Concierge Club Workshop.', 'super-ninety-four' ),
-			'cards' => snf_get_upcoming_gathering_cards(),
+			'title' => '',
+			'lede'  => '',
+			'cards' => array(),
 		),
 		/* YouTube newsletter + live video / audio teaser */
 		'newsletter' => array(
