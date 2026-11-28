@@ -15,7 +15,7 @@
 	<!-- /wp:heading -->
 
 	<!-- wp:paragraph {"className":"is-style-lede"} -->
-	<p class="is-style-lede"><?php echo esc_html__( 'Request a quote for litter pickup, line sitting & courier, or janitorial cleaning.', 'super-ninety-four' ); ?></p>
+	<p class="is-style-lede"><?php echo esc_html__( 'Request a quote for litter pickup or line sitting & courier.', 'super-ninety-four' ); ?></p>
 	<!-- /wp:paragraph -->
 
 	<!-- wp:snf/listing-grid {"source":"service-inquiries","align":"wide"} /-->

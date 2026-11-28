@@ -3,9 +3,9 @@
  * Service quote landings (Figma quote-single-page 2166:165).
  *
  * Hook contract:
- * - Listen: template_redirect (legacy redirects), init/admin product seed.
+ * - Listen: template_redirect (legacy + external redirects), init/admin product seed.
  * - Emit: snf_service_quote_content, snf_service_quote_cta_url, snf_service_quote_order_processed.
- * - CTA: WooCommerce add-to-cart / checkout (not Apply).
+ * - CTA: external sister sites for litter/courier. Janitorial Woo product is retired.
  *
  * @package Super_Ninety_Four
  */
@@ -15,33 +15,69 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * WooCommerce product slugs that use the quote-single landing.
+ * Sister-site URLs for services that are no longer WooCommerce products.
  *
- * @return string[]
+ * @return array<string, string>
  */
-function snf_get_service_quote_product_slugs() {
+function snf_get_service_quote_external_urls() {
 	return array(
-		'litter-pickup-service',
-		'professional-line-sitting-courier-service',
-		'janitorial-cleaning-service',
+		'litter-pickup-service'                     => 'https://www.litterpickupserviceatsuperninetyfour.com/',
+		'professional-line-sitting-courier-service' => 'https://www.xcivcourier.com/',
+		'grounds-litter-pickup'                     => 'https://www.litterpickupserviceatsuperninetyfour.com/',
+		'line-sitting-service'                      => 'https://www.xcivcourier.com/',
+		'courier-service'                           => 'https://www.xcivcourier.com/',
+		'professional-line-sitting-service'         => 'https://www.xcivcourier.com/',
 	);
 }
 
 /**
- * Legacy page slug → product slug redirects.
+ * WooCommerce product slugs that still use the quote-single landing.
+ *
+ * @return string[]
+ */
+function snf_get_service_quote_product_slugs() {
+	return array();
+}
+
+/**
+ * Retired service product slugs redirected to the home page (no sister site).
+ *
+ * @return string[]
+ */
+function snf_get_service_quote_retired_home_slugs() {
+	return array(
+		'janitorial-cleaning-service',
+		'commercial-janitor-cleaning',
+	);
+}
+
+/**
+ * All service quote slugs (Woo + external).
+ *
+ * @return string[]
+ */
+function snf_get_service_quote_slugs() {
+	return array_values(
+		array_unique(
+			array_merge(
+				array_keys( snf_get_service_quote_external_urls() ),
+				snf_get_service_quote_product_slugs()
+			)
+		)
+	);
+}
+
+/**
+ * Legacy page slug → service quote slug redirects.
  *
  * @return array<string, string>
  */
 function snf_get_service_quote_legacy_redirects() {
 	return array(
-		'grounds-litter-pickup'                     => 'litter-pickup-service',
-		'line-sitting-service'                      => 'professional-line-sitting-courier-service',
-		'courier-service'                           => 'professional-line-sitting-courier-service',
-		'professional-line-sitting-service'         => 'professional-line-sitting-courier-service',
-		'commercial-janitor-cleaning'               => 'janitorial-cleaning-service',
-		'litter-pickup-service'                     => 'litter-pickup-service',
-		'janitorial-cleaning-service'               => 'janitorial-cleaning-service',
-		'professional-line-sitting-courier-service' => 'professional-line-sitting-courier-service',
+		'grounds-litter-pickup'             => 'litter-pickup-service',
+		'line-sitting-service'              => 'professional-line-sitting-courier-service',
+		'courier-service'                   => 'professional-line-sitting-courier-service',
+		'professional-line-sitting-service' => 'professional-line-sitting-courier-service',
 	);
 }
 
@@ -61,13 +97,45 @@ function snf_is_service_quote_product( $post = null ) {
 }
 
 /**
- * Permalink for a service quote product by slug.
+ * Redirect to an absolute URL (allows sister-site hosts).
  *
- * @param string $slug Product slug.
+ * @param string $url  Destination.
+ * @param int    $code HTTP status.
+ */
+function snf_service_quote_redirect( $url, $code = 301 ) {
+	$url = esc_url_raw( (string) $url );
+	if ( ! $url ) {
+		return;
+	}
+
+	$host = wp_parse_url( $url, PHP_URL_HOST );
+	if ( $host ) {
+		add_filter(
+			'allowed_redirect_hosts',
+			static function ( $hosts ) use ( $host ) {
+				$hosts[] = $host;
+				return array_unique( $hosts );
+			}
+		);
+	}
+
+	wp_safe_redirect( $url, (int) $code );
+	exit;
+}
+
+/**
+ * Permalink / destination for a service quote by slug.
+ *
+ * @param string $slug Product or service slug.
  * @return string
  */
 function snf_get_service_quote_product_url( $slug ) {
-	$slug    = sanitize_title( $slug );
+	$slug      = sanitize_title( $slug );
+	$externals = snf_get_service_quote_external_urls();
+	if ( isset( $externals[ $slug ] ) ) {
+		return $externals[ $slug ];
+	}
+
 	$product = get_page_by_path( $slug, OBJECT, 'product' );
 	if ( $product instanceof WP_Post && 'publish' === $product->post_status ) {
 		return get_permalink( $product );
@@ -77,18 +145,22 @@ function snf_get_service_quote_product_url( $slug ) {
 }
 
 /**
- * Primary CTA URL for a service quote product (ATC → cart/checkout).
+ * Primary CTA URL for a service quote (external link or ATC → cart/checkout).
  *
  * @param string $slug Product slug.
  * @return string
  */
 function snf_get_service_quote_cta_url( $slug ) {
-	$slug = sanitize_title( (string) $slug );
-	$url  = snf_get_service_quote_product_url( $slug );
-
-	$product = get_page_by_path( $slug, OBJECT, 'product' );
-	if ( $product instanceof WP_Post && function_exists( 'wc_get_cart_url' ) ) {
-		$url = add_query_arg( 'add-to-cart', (int) $product->ID, wc_get_cart_url() );
+	$slug      = sanitize_title( (string) $slug );
+	$externals = snf_get_service_quote_external_urls();
+	if ( isset( $externals[ $slug ] ) ) {
+		$url = $externals[ $slug ];
+	} else {
+		$url     = snf_get_service_quote_product_url( $slug );
+		$product = get_page_by_path( $slug, OBJECT, 'product' );
+		if ( $product instanceof WP_Post && function_exists( 'wc_get_cart_url' ) ) {
+			$url = add_query_arg( 'add-to-cart', (int) $product->ID, wc_get_cart_url() );
+		}
 	}
 
 	/**
@@ -165,33 +237,6 @@ function snf_get_service_quote( $slug = '' ) {
 			'cta_label'        => __( 'Get Quote Now', 'super-ninety-four' ),
 			'cta_url'          => snf_get_service_quote_cta_url( 'professional-line-sitting-courier-service' ),
 		),
-		'janitorial-cleaning-service' => array(
-			'title'            => __( 'Janitorial Cleaning Service', 'super-ninety-four' ),
-			'lede'             => __( 'Interior janitorial coverage for business-park suites and bar tenants — restrooms, floors, and back-of-house reset on a calendar you can audit.', 'super-ninety-four' ),
-			'image'            => $img_base . 'commercial-janitor-cleaning.jpg',
-			'can_heading'      => __( 'What Can SUPER NINETY FOUR Do For You?', 'super-ninety-four' ),
-			'can_items'        => array(
-				__( 'Restroom and floor reset to a written checklist', 'super-ninety-four' ),
-				__( 'Bar back-of-house wipe-down after service hours', 'super-ninety-four' ),
-				__( 'Suite common areas kept tenant-ready', 'super-ninety-four' ),
-				__( 'Supply restock notes for managers', 'super-ninety-four' ),
-				__( 'Recurring calendar with visit confirmation', 'super-ninety-four' ),
-			),
-			'cannot_heading'   => __( 'What SUPER NINETY FOUR Can Not Do For You?', 'super-ninety-four' ),
-			'cannot_items'     => array(
-				__( 'Exterior litter routes or parking-lot grounds work', 'super-ninety-four' ),
-				__( 'Construction debris or post-renovation deep cleans', 'super-ninety-four' ),
-				__( 'Biohazard or trauma remediation', 'super-ninety-four' ),
-				__( 'Unscheduled overnight cleans without a booked visit', 'super-ninety-four' ),
-				__( 'Cash-only work outside the recurring contract', 'super-ninety-four' ),
-			),
-			'pricing_heading'  => __( 'Service Pricing Is', 'super-ninety-four' ),
-			'plan_title'       => __( '4X/Weekly Overnight (Sun-Wed)', 'super-ninety-four' ),
-			'price'            => '$400.00/mo',
-			'card_description' => __( 'Commercial janitorial cleaning for suites and bar tenants: checklist-driven interior reset on a recurring overnight cadence you can verify.', 'super-ninety-four' ),
-			'cta_label'        => __( 'Get Quote Now', 'super-ninety-four' ),
-			'cta_url'          => snf_get_service_quote_cta_url( 'janitorial-cleaning-service' ),
-		),
 	);
 
 	/**
@@ -242,14 +287,10 @@ add_action( 'after_switch_theme', 'snf_delete_service_inquiry_scaffolding_pages'
 add_action( 'admin_init', 'snf_delete_service_inquiry_scaffolding_pages', 32 );
 
 /**
- * Redirect legacy service page URLs to WooCommerce quote products.
+ * Redirect retired service product URLs and legacy pages to sister sites / remaining products.
  */
 function snf_redirect_legacy_service_quote_pages() {
 	if ( is_admin() || wp_doing_ajax() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
-		return;
-	}
-
-	if ( function_exists( 'is_product' ) && is_product() ) {
 		return;
 	}
 
@@ -258,13 +299,29 @@ function snf_redirect_legacy_service_quote_pages() {
 		return;
 	}
 
-	foreach ( snf_get_service_quote_legacy_redirects() as $legacy_slug => $product_slug ) {
-		if ( preg_match( '#/product/' . preg_quote( $product_slug, '#' ) . '/?$#', $request_path ) ) {
-			continue;
+	$externals = snf_get_service_quote_external_urls();
+	foreach ( $externals as $slug => $external_url ) {
+		if ( preg_match( '#/product/' . preg_quote( $slug, '#' ) . '/?$#', $request_path ) ) {
+			snf_service_quote_redirect( $external_url, 301 );
 		}
+	}
+
+	foreach ( snf_get_service_quote_retired_home_slugs() as $slug ) {
+		if (
+			preg_match( '#/product/' . preg_quote( $slug, '#' ) . '/?$#', $request_path )
+			|| preg_match( '#/' . preg_quote( $slug, '#' ) . '/?$#', $request_path )
+		) {
+			snf_service_quote_redirect( home_url( '/' ), 301 );
+		}
+	}
+
+	if ( function_exists( 'is_product' ) && is_product() ) {
+		return;
+	}
+
+	foreach ( snf_get_service_quote_legacy_redirects() as $legacy_slug => $product_slug ) {
 		if ( preg_match( '#/' . preg_quote( $legacy_slug, '#' ) . '/?$#', $request_path ) ) {
-			wp_safe_redirect( snf_get_service_quote_product_url( $product_slug ), 301 );
-			exit;
+			snf_service_quote_redirect( snf_get_service_quote_product_url( $product_slug ), 301 );
 		}
 	}
 }
@@ -360,15 +417,37 @@ function snf_ensure_service_quote_product( $slug ) {
 }
 
 /**
- * Ensure all service quote products exist (undoes prior retirement cleanup).
+ * Remove retired service Woo products (litter/courier → sister sites; janitorial removed).
+ */
+function snf_retire_external_service_quote_products() {
+	if ( get_option( 'snf_retired_service_quote_products_v2' ) ) {
+		return;
+	}
+
+	$retire = array(
+		'litter-pickup-service',
+		'professional-line-sitting-courier-service',
+		'janitorial-cleaning-service',
+	);
+
+	foreach ( $retire as $slug ) {
+		$post = get_page_by_path( $slug, OBJECT, 'product' );
+		if ( $post instanceof WP_Post ) {
+			wp_trash_post( (int) $post->ID );
+		}
+	}
+
+	update_option( 'snf_retired_service_quote_products_v2', 1, false );
+}
+add_action( 'after_switch_theme', 'snf_retire_external_service_quote_products' );
+add_action( 'admin_init', 'snf_retire_external_service_quote_products', 32 );
+
+/**
+ * Ensure remaining service quote Woo products exist.
  */
 function snf_ensure_service_quote_products() {
 	if ( ! class_exists( 'WooCommerce' ) ) {
 		return;
-	}
-
-	if ( get_option( 'snf_deleted_line_sitting_courier_product_v1' ) ) {
-		delete_option( 'snf_deleted_line_sitting_courier_product_v1' );
 	}
 
 	if ( function_exists( 'snf_ensure_serp_product_categories' ) ) {

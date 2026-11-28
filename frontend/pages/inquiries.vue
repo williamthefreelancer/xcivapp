@@ -25,14 +25,24 @@ useSeoMeta({ title: 'Service inquiries — SUPER NINETY FOUR' })
         <article class="m-0 border-t border-white/15" style="padding-block-start: 0.85rem">
           <h2 class="m-0 text-[1.125rem] font-semibold uppercase">Litter pickup & grounds</h2>
           <p class="m-0 text-white/70" style="margin-block-start: 0.5rem">Commercial grounds and parking-lot cleaning on the circuit.</p>
+          <UiButton
+            href="https://www.litterpickupserviceatsuperninetyfour.com/"
+            variant="outline"
+            style="margin-block-start: 0.75rem"
+          >
+            Open litter desk
+          </UiButton>
         </article>
         <article class="m-0 border-t border-white/15" style="padding-block-start: 0.85rem">
           <h2 class="m-0 text-[1.125rem] font-semibold uppercase">Line sitting & courier</h2>
           <p class="m-0 text-white/70" style="margin-block-start: 0.5rem">Professional line sitting and courier for properties and events.</p>
-        </article>
-        <article class="m-0 border-t border-white/15" style="padding-block-start: 0.85rem">
-          <h2 class="m-0 text-[1.125rem] font-semibold uppercase">Janitorial cleaning</h2>
-          <p class="m-0 text-white/70" style="margin-block-start: 0.5rem">Commercial janitorial cleaning and consulting.</p>
+          <UiButton
+            href="https://www.xcivcourier.com/"
+            variant="outline"
+            style="margin-block-start: 0.75rem"
+          >
+            Open courier desk
+          </UiButton>
         </article>
         <article class="m-0 border-t border-white/15" style="padding-block-start: 0.85rem">
           <h2 class="m-0 text-[1.125rem] font-semibold uppercase">Reciprocal club inquiry</h2>

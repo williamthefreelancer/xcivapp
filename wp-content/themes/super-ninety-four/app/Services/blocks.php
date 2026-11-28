@@ -97,7 +97,6 @@ function snf_block_resolve_cta_url( array $attrs ) {
 			return function_exists( 'snf_get_workshop_landing_url' ) ? snf_get_workshop_landing_url() : home_url( '/' );
 		case 'litter-pickup-service':
 		case 'professional-line-sitting-courier-service':
-		case 'janitorial-cleaning-service':
 			return function_exists( 'snf_get_service_quote_product_url' )
 				? snf_get_service_quote_product_url( $target )
 				: home_url( '/' );
@@ -204,8 +203,16 @@ function snf_render_block_listing_grid( $attrs ) {
 		<?php else : ?>
 			<ul class="snf-block-listing-grid__list">
 				<?php foreach ( $cards as $card ) : ?>
+					<?php
+					$card_url      = isset( $card['url'] ) ? (string) $card['url'] : '#';
+					$card_external = (bool) preg_match( '#^https?://#i', $card_url );
+					?>
 					<li class="snf-block-listing-grid__item">
-						<a class="snf-block-listing-grid__card" href="<?php echo esc_url( isset( $card['url'] ) ? $card['url'] : '#' ); ?>">
+						<a
+							class="snf-block-listing-grid__card"
+							href="<?php echo esc_url( $card_url ); ?>"
+							<?php echo $card_external ? ' rel="noopener noreferrer"' : ''; ?>
+						>
 							<?php if ( ! empty( $card['image'] ) ) : ?>
 								<span class="snf-block-listing-grid__media" style="background-image:url(<?php echo esc_url( $card['image'] ); ?>)"></span>
 							<?php endif; ?>

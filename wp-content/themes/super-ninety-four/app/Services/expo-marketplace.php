@@ -456,7 +456,6 @@ function snf_get_expo_platform_professional_directory() {
 	$slugs   = array(
 		'litter-pickup-service',
 		'professional-line-sitting-courier-service',
-		'janitorial-cleaning-service',
 	);
 
 	foreach ( $slugs as $slug ) {

@@ -712,7 +712,9 @@ function snf_get_dashboard_service_inquiry_cards() {
 	$img_base = get_template_directory_uri() . '/assets/images/services/';
 	$url_for  = function_exists( 'snf_get_service_quote_product_url' )
 		? 'snf_get_service_quote_product_url'
-		: 'snf_get_page_url';
+		: static function ( $slug ) {
+			return home_url( '/product/' . sanitize_title( (string) $slug ) . '/' );
+		};
 	$cards    = array(
 		array(
 			'title' => __( 'Litter Pickup Service', 'super-ninety-four' ),
@@ -725,12 +727,6 @@ function snf_get_dashboard_service_inquiry_cards() {
 			'meta'  => __( 'Busy lines · Shopping runs · Handoffs', 'super-ninety-four' ),
 			'url'   => call_user_func( $url_for, 'professional-line-sitting-courier-service' ),
 			'image' => $img_base . 'lifestyle-service-image-1.jpg',
-		),
-		array(
-			'title' => __( 'Janitorial Cleaning Service', 'super-ninety-four' ),
-			'meta'  => __( 'Suites · Bars · Overnight reset', 'super-ninety-four' ),
-			'url'   => call_user_func( $url_for, 'janitorial-cleaning-service' ),
-			'image' => $img_base . 'commercial-janitor-cleaning.jpg',
 		),
 	);
 
@@ -949,7 +945,6 @@ function snf_get_service_inquiry( $slug = '' ) {
 		'line-sitting-service'              => 'professional-line-sitting-courier-service',
 		'courier-service'                   => 'professional-line-sitting-courier-service',
 		'professional-line-sitting-service' => 'professional-line-sitting-courier-service',
-		'commercial-janitor-cleaning'       => 'janitorial-cleaning-service',
 	);
 	$product_slug = isset( $map[ $slug ] ) ? $map[ $slug ] : $slug;
 	$quote        = snf_get_service_quote( $product_slug );
@@ -1808,8 +1803,16 @@ function snf_get_service_inquiry_search_results( $query = '' ) {
 	$results = array();
 	$query   = trim( (string) $query );
 
-	if ( $query && function_exists( 'snf_get_service_quote_product_slugs' ) ) {
-		foreach ( snf_get_service_quote_product_slugs() as $slug ) {
+	$slugs = array();
+	if ( function_exists( 'snf_get_service_quote' ) ) {
+		$slugs = array(
+			'litter-pickup-service',
+			'professional-line-sitting-courier-service',
+		);
+	}
+
+	if ( $query && $slugs ) {
+		foreach ( $slugs as $slug ) {
 			$quote = snf_get_service_quote( $slug );
 			if ( ! $quote ) {
 				continue;
@@ -1821,7 +1824,9 @@ function snf_get_service_inquiry_search_results( $query = '' ) {
 			$results[] = array(
 				'title' => $quote['title'],
 				'meta'  => $quote['lede'],
-				'url'   => snf_get_service_quote_product_url( $slug ),
+				'url'   => function_exists( 'snf_get_service_quote_product_url' )
+					? snf_get_service_quote_product_url( $slug )
+					: home_url( '/product/' . $slug . '/' ),
 				'image' => $quote['image'],
 			);
 		}

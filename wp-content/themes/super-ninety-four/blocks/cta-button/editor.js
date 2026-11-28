@@ -14,7 +14,6 @@
     { label: __("Expo Marketplace", "super-ninety-four"), value: "expo" },
     { label: __("Litter Pickup Service", "super-ninety-four"), value: "litter-pickup-service" },
     { label: __("Line Sitting & Courier", "super-ninety-four"), value: "professional-line-sitting-courier-service" },
-    { label: __("Janitorial Cleaning", "super-ninety-four"), value: "janitorial-cleaning-service" },
     { label: __("Custom URL", "super-ninety-four"), value: "custom" },
   ];
 
