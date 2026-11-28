@@ -69,7 +69,6 @@ const brandName = computed(() => data.value?.brand?.name || 'SUPER NINETY FOUR')
 const helpImages = {
   litter: '/images/services/litter-pickup-service-image-2.webp',
   courier: '/images/services/lifestyle-service-image-1.webp',
-  janitorial: '/images/services/commercial-janitor-cleaning.webp',
 } as const
 
 const fallbackHelp = {
@@ -79,22 +78,15 @@ const fallbackHelp = {
     {
       title: 'Litter Pickup Service',
       body: 'Lots look like you mean business — overnight, not eventually.',
-      url: '/product/litter-pickup-service',
+      url: 'https://www.litterpickupserviceatsuperninetyfour.com/',
       image: helpImages.litter,
       cta: 'Open the desk',
     },
     {
       title: 'Line Sitting & Courier',
       body: 'Hold the line. Move the goods. Stay off the guestlist.',
-      url: '/product/professional-line-sitting-courier-service',
+      url: 'https://www.xcivcourier.com/',
       image: helpImages.courier,
-      cta: 'Open the desk',
-    },
-    {
-      title: 'Janitorial Cleaning',
-      body: 'Suites and bars reset before the next room walks in.',
-      url: '/product/janitorial-cleaning-service',
-      image: helpImages.janitorial,
       cta: 'Open the desk',
     },
   ],
@@ -103,18 +95,18 @@ const fallbackHelp = {
 function withHelpImages(
   cards: Array<{ title: string; meta?: string; body?: string; url?: string; image?: string; cta?: string }>,
 ) {
-  return cards.map((card, i) => {
-    const byOrder = [helpImages.litter, helpImages.courier, helpImages.janitorial][i]
-    const title = (card.title || '').toLowerCase()
-    const byTitle = title.includes('litter')
-      ? helpImages.litter
-      : title.includes('line') || title.includes('courier')
-        ? helpImages.courier
-        : title.includes('janitor')
-          ? helpImages.janitorial
+  return cards
+    .filter((card) => !/(janitor|janitorial)/i.test(card.title || ''))
+    .map((card, i) => {
+      const byOrder = [helpImages.litter, helpImages.courier][i]
+      const title = (card.title || '').toLowerCase()
+      const byTitle = title.includes('litter')
+        ? helpImages.litter
+        : title.includes('line') || title.includes('courier')
+          ? helpImages.courier
           : byOrder
-    return { ...card, image: byTitle || card.image }
-  })
+      return { ...card, image: byTitle || card.image }
+    })
 }
 
 const fallbackAudience = {

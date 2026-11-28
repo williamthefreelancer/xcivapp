@@ -86,7 +86,15 @@ $mem_cta_url   = isset( $membership['cta']['url'] ) ? snf_home_resolve_href( $me
 			</header>
 			<div class="snf-home-overlay-grid">
 				<?php foreach ( $help['cards'] as $card ) : ?>
-					<a class="snf-home-overlay-card" href="<?php echo esc_url( snf_home_resolve_href( isset( $card['url'] ) ? $card['url'] : '' ) ); ?>">
+					<?php
+					$card_href     = snf_home_resolve_href( isset( $card['url'] ) ? $card['url'] : '' );
+					$card_external = (bool) preg_match( '#^https?://#i', $card_href );
+					?>
+					<a
+						class="snf-home-overlay-card"
+						href="<?php echo esc_url( $card_href ); ?>"
+						<?php echo $card_external ? ' rel="noopener noreferrer"' : ''; ?>
+					>
 						<?php if ( ! empty( $card['image'] ) ) : ?>
 							<img
 								class="snf-home-overlay-card__img"

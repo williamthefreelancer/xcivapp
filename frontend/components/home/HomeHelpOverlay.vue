@@ -14,9 +14,9 @@ defineProps<{
   cards: HelpCard[]
 }>()
 
-function toPath(url?: string) {
+function toHref(url?: string) {
   if (!url) return '#'
-  if (url.startsWith('/') || url.startsWith('#')) return url
+  if (url.startsWith('/') || url.startsWith('#') || /^https?:\/\//i.test(url)) return url
   try {
     return new URL(url).pathname || '#'
   } catch {
@@ -35,8 +35,10 @@ function toPath(url?: string) {
       <NuxtLink
         v-for="(card, i) in cards"
         :key="i"
-        :to="toPath(card.url)"
+        :to="toHref(card.url)"
         class="snf-home-overlay-card"
+        :external="/^https?:\/\//i.test(card.url || '')"
+        rel="noopener noreferrer"
       >
         <img
           v-if="card.image"
